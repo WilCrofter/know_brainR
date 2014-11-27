@@ -28,11 +28,11 @@ vsd_spectrum <- function(n, lambda_peak=900, lambda_range=250){
   rng <- range(template[,"lambda"])
   ans <- data.frame(lambda=seq(rng[1], rng[2], length.out=n))
   # Smoothly interpolate from the template to this range
-  ans[,"F_base"] <- predict(loess(F ~ lambda, template), ans)
+  ans[,"F_polarized"] <- predict(loess(F ~ lambda, template), ans)
   dlnF <- predict(loess(dlnF ~ lambda, template), ans)
-  ans[,"F_depolarized"] <- ans[,"F_base"]*(1+dlnF)
+  ans[,"F_depolarized"] <- ans[,"F_polarized"]*(1+dlnF)
   # Normalize intensity curves to describe probabilities of emission.
-  ans[,"F_base"] <- ans[,"F_base"]/sum(ans[,"F_base"])
+  ans[,"F_polarized"] <- ans[,"F_polarized"]/sum(ans[,"F_polarized"])
   ans[,"F_depolarized"] <- ans[,"F_depolarized"]/sum(ans[,"F_depolarized"])
   return(ans)
 }
