@@ -21,17 +21,20 @@ Since energy per photon is $h\nu$, the corresponding number of photons is$$n(\nu
 
 ```{r echo=FALSE}
 h <- 6.626e-34  # joule·s --Planck's constant
-c <- 2.998e+108 # m/s  --Speed of light in vacuum
+c <- 2.998e+8 # m/s  --Speed of light in vacuum
 k <- 1.38065e-23 # joule/°K --Boltzmann's constant
 Temp <- 305  # °K --approximate skin temperature (NOTE: T generally stands for TRUE in R)
 lambda <- 1e-06
 hc_over_kTlambda <- h*c/(k*Temp*lambda)
+n <- 2/lambda^2/(exp(hc_over_kTlambda)-1)
 ```
 
 And since wavelength, $\lambda,$ is $c/\nu$ this may be rewritten as$$n(\lambda,T) = \frac{2}{\lambda^2}\frac{1}{e^{\frac{hc}{kT\lambda}}-1}$$
 
 Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. Using these figures,
 
-<center>$\frac{hc}{kT\lambda} \approx $ 1e+`r round(log10(hc_over_kTlambda))`</center>
+<center> $ n(\lambda,T) \approx $ `r n` </center>
 
-which implies that $n(\lambda, T) \approx 0$.
+<center>$\frac{hc}{kT\lambda} \approx $ 1e+`r hc_over_kTlambda`</center>
+
+
