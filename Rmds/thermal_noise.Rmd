@@ -28,7 +28,7 @@ lambda <- 1e-06
 hc_over_kTlambda <- h*c/(k*Temp*lambda)
 ```
 
-And since wavelength, $\lambda,$ is $c/\nu$ this may be rewritten as$$n(\lambda,T) = 2\lambda^2\frac{1}{e^{\frac{hc}{kT\lambda}}-1}$$
+And since wavelength, $\lambda,$ is $c/\nu$ this may be rewritten as$$n(\lambda,T) = \frac{2}{\lambda^2}\frac{1}{e^{\frac{hc}{kT\lambda}}-1}$$
 
 Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. Using these figures,
 
