@@ -31,10 +31,8 @@ n <- 2/lambda^2/(exp(hc_over_kTlambda)-1)
 
 And since wavelength, $\lambda,$ is $c/\nu$ this may be rewritten as$$n(\lambda,T) = \frac{2}{\lambda^2}\frac{1}{e^{\frac{hc}{kT\lambda}}-1}$$
 
-Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. Using these figures,
+Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. Using these figures, 
 
-<center> $ n(\lambda,T) \approx $ `r n` </center>
+$ n( \lambda, T) \approx $ `r n`
 
-<center>$\frac{hc}{kT\lambda} \approx $ 1e+`r hc_over_kTlambda`</center>
-
-
+Why??
