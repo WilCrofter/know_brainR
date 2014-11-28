@@ -1,0 +1,37 @@
+---
+title: "The Head is Quiet in Near Infrared"
+output: html_document
+---
+
+
+Reference: [Wikipedia](http://en.wikipedia.org/wiki/Black-body_radiation)
+
+Planck's Law gives the energy per unit time radiated per unit area of emitting surface in the normal direction per unit solid angle per unit frequency as$$I(\nu,T) = \frac{2h\nu^3}{c^2}\frac{1}{e^{\frac{h\nu}{kT}}-1}$$
+where $\nu$ is frequency in Hertz, 
+
+$h = 6.626\times 10^{-34}$ joule·s is Planck's constant,
+
+$c = 2.998\times 10^{108}$ m/s is the speed of light in vacuum,
+
+$k = 1.38065\times 10^{-23}$ joule/°K is Boltzmann's constant, and 
+
+$T$ is absolute temperature in °K
+
+Since energy per photon is $h\nu$, the corresponding number of photons is$$n(\nu,T) = \frac{2\nu^2}{c^2}\frac{1}{e^{\frac{h\nu}{kT}}-1}$$
+
+```{r echo=FALSE}
+h <- 6.626e-34  # joule·s --Planck's constant
+c <- 2.998e+108 # m/s  --Speed of light in vacuum
+k <- 1.38065e-23 # joule/°K --Boltzmann's constant
+Temp <- 305  # °K --approximate skin temperature (NOTE: T generally stands for TRUE in R)
+lambda <- 1e-06
+hc_over_kTlambda <- h*c/(k*Temp*lambda)
+```
+
+And since wavelength, $\lambda,$ is $c/\nu$ this may be rewritten as$$n(\lambda,T) = 2\lambda^2\frac{1}{e^{\frac{hc}{kT\lambda}}-1}$$
+
+Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. Using these figures,
+
+<center>$\frac{hc}{kT\lambda} \approx $ 1e+`r round(log10(hc_over_kTlambda))`</center>
+
+which implies that $n(\lambda, T) \approx 0$.
