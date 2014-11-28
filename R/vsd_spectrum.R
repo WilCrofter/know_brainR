@@ -31,6 +31,8 @@ vsd_spectrum <- function(n, lambda_peak=900, lambda_range=250){
   ans[,"F_polarized"] <- predict(loess(F ~ lambda, template), ans)
   dlnF <- predict(loess(dlnF ~ lambda, template), ans)
   ans[,"F_depolarized"] <- ans[,"F_polarized"]*(1+dlnF)
+  # Zeroize small negatives
+  ans[ans < 0] <- 0
   # Normalize intensity curves to describe probabilities of emission.
   ans[,"F_polarized"] <- ans[,"F_polarized"]/sum(ans[,"F_polarized"])
   ans[,"F_depolarized"] <- ans[,"F_depolarized"]/sum(ans[,"F_depolarized"])
