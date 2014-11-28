@@ -1,23 +1,21 @@
----
-title: "The Head is Quiet in Near Infrared"
-output: html_document
----
-
+# The Head is Quiet in Near Infrared
 
 Reference: [Wikipedia](http://en.wikipedia.org/wiki/Black-body_radiation)
 
-Planck's Law gives the energy per unit time radiated per unit area of emitting surface in the normal direction per unit solid angle per unit frequency as$$I(\nu,T) = \frac{2h\nu^3}{c^2}\frac{1}{e^{\frac{h\nu}{kT}}-1}$$
+Will thermal noise from the head interfere with detection of photons from voltage-sensitive dyes? To estimate the human head's rate of photon emission in near infrared, assume the head approximates a black body at skin temperature (305°K). 
+
+Planck's Law for black body radiation gives the energy per unit time, radiated per unit area of emitting surface, in a direction perpendicular to the surface, per unit solid angle, per unit frequency as$$I(\nu,T) = \frac{2h\nu^3}{c^2}\frac{1}{e^{\frac{h\nu}{kT}}-1}$$
 where $\nu$ is frequency in Hertz, 
 
 $h = 6.626\times 10^{-34}$ joule·s is Planck's constant,
 
-$c = 2.998\times 10^{108}$ m/s is the speed of light in vacuum,
+$c = 2.998\times 10^{8}$ m/s is the speed of light in vacuum,
 
 $k = 1.38065\times 10^{-23}$ joule/°K is Boltzmann's constant, and 
 
 $T$ is absolute temperature in °K
 
-Since energy per photon is $h\nu$, the corresponding number of photons is$$n(\nu,T) = \frac{2\nu^2}{c^2}\frac{1}{e^{\frac{h\nu}{kT}}-1}$$
+Since energy per photon is $h\nu$, the corresponding number of photons is$$n(\nu,T) = \frac{I(\nu, T)}{h\nu} = \frac{2\nu^2}{c^2}\frac{1}{e^{\frac{h\nu}{kT}}-1}$$
 
 ```{r echo=FALSE}
 h <- 6.626e-34  # joule·s --Planck's constant
@@ -27,12 +25,11 @@ Temp <- 305  # °K --approximate skin temperature (NOTE: T generally stands for 
 lambda <- 1e-06
 hc_over_kTlambda <- h*c/(k*Temp*lambda)
 n <- 2/lambda^2/(exp(hc_over_kTlambda)-1)
+spp <- 1/n
 ```
 
 And since wavelength, $\lambda,$ is $c/\nu$ this may be rewritten as$$n(\lambda,T) = \frac{2}{\lambda^2}\frac{1}{e^{\frac{hc}{kT\lambda}}-1}$$
 
-Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. Using these figures, 
+Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. using these figures,$$n(\lambda, T) \approx 6.5 \times 10^{-9},$$which corresponds to `r sprintf("%e",spp)` seconds, or `r round(spp/31556926, 2)` years per photon emission (the reciprocal of $n(\lambda,T)$.)
 
-$ n( \lambda, T) \approx $ `r n`
-
-Why??
+In other words, thermal emissions at NIR wavelengths should be neglible on millisecond time scales.
