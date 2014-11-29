@@ -34,4 +34,4 @@ Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin
 
 In other words, thermal emissions at NIR wavelengths should be neglible on millisecond time scales.
 
-[download Rmd source file](Rmds/thermal_noise.Rmd)
+[download Rmd source file](thermal_noise.Rmd)
