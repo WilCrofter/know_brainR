@@ -33,3 +33,5 @@ And since wavelength, $\lambda,$ is $c/\nu$ this may be rewritten as$$n(\lambda,
 Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. using these figures,$$n(\lambda, T) \approx 6.5 \times 10^{-9},$$which corresponds to `r sprintf("%e",spp)` seconds, or `r round(spp/31556926, 2)` years per photon emission (the reciprocal of $n(\lambda,T)$.)
 
 In other words, thermal emissions at NIR wavelengths should be neglible on millisecond time scales.
+
+[download Rmd source file](Rmds/thermal_noise.Rmd)
