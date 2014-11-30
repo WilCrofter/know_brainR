@@ -1,0 +1,13 @@
+---
+title: "Emissions"
+author: "wilcrofter"
+date: "11/30/2014"
+output: html_document
+---
+
+A mole is 6.022e+23 (Avagadro's number) of molecules per liter. VSD concentrations in tissue might be on the order of 1 micromole, 6.022e+17  molecules per liter. Since spatial resolutions on the order of millimeters are contemplated, cubic mm are an appropriate unit. Since a cubic mm is 1e-6 liters, a micromole concentration corresponds to 6.022e+11 molecules per cubic mm.
+
+Since msec time resolutions are contemplated, and since existing VSDs have half-lives in the msec range, assuming 1 msec half-lives for VSDs is a reasonable heuristic.   
+
+Cypridina luciferase has a half-life on the order of [1 hour](http://www.piercenet.com/product/pierce-cypridina-luciferase-glow-assay-kit) which implies chemical conversion, hence photon emission, per millisecond equal to a fraction, $1-(1/2)^{\frac{1}{60 \times 60 \times 1000}} \approx$ 2e+07, of available molecules. At a micromole concentration, this implies $2 \times 10^{-7} \times 6.022 \times 10^{11} \approx $ 116000 cypridina luciferase emissions per millisecond, per cubic mm.
+
