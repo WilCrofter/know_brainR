@@ -1,4 +1,9 @@
-# The Head is Quiet in Near Infrared
+---
+title: "The Head is Quiet in Near Infrared"
+author: "W. Bauer"
+date: "11/30/2014"
+output: html_document
+---
 
 Reference: [Wikipedia](http://en.wikipedia.org/wiki/Black-body_radiation)
 
@@ -30,7 +35,7 @@ spp <- 1/n
 
 And since wavelength, $\lambda,$ is $c/\nu$ this may be rewritten as$$n(\lambda,T) = \frac{2}{\lambda^2}\frac{1}{e^{\frac{hc}{kT\lambda}}-1}$$
 
-Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. using these figures,$$n(\lambda, T) \approx 6.5 \times 10^{-9},$$which corresponds to `r sprintf("%e",spp)` seconds, or `r round(spp/31556926, 2)` years per photon emission (the reciprocal of $n(\lambda,T)$.)
+Wavelengths, $\lambda,$ of interest are around $900nm \approx 10^{-6}m$ and skin temperature is approximately 305°K. using these figures,$$n(\lambda, T) \approx 6.5 \times 10^{-9},$$which corresponds to `r sprintf("%g",spp)` seconds, or `r round(spp/31556926, 2)` years per photon emission (the reciprocal of $n(\lambda,T)$.)
 
 In other words, thermal emissions at NIR wavelengths should be neglible on millisecond time scales.
 
