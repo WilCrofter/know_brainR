@@ -1,0 +1,33 @@
+---
+title: "Loss"
+author: "W. Bauer"
+date: "12/01/2014"
+output: html_document
+---
+
+Reference: [Young, et. al., Behaviour of near-infrared light in the adult human head: implications for clinical near-infrared spectroscopy, British Journal of Anaesthesia 84 (1): 38–42 (2000)](http://bja.oxfordjournals.org/content/84/1/38.short)
+
+## Inverse r-squared and associated loss
+
+Photons emitted in random direction (in an isotropic medium) will impinge randomly on the surface of a sphere centered at the point of emission. Since the surface of a sphere of radius $r$ mm is $4 \pi r^2$  square mm, any square mm area of the sphere surface will get a fraction $\frac{1}{4 \pi r^2}$ of the total.
+
+For a square mm area situated on the scalp surface as indicated (light blue) in the following figure, a further loss will be incurred since it will project to a smaller area (yellow) on the surface of the sphere. For the geometry indicated,$$\frac{a}{1} = \frac{b}{\sqrt{b^2 + x^2}}.$$ Combined with inverse square loss, the total loss due to geometry is$$\frac{b}{4 \pi \left(b^2 + x^2\right)^{\frac{3}{2}}}.$$
+
+![Loss via Reduced Area][fig1]
+
+## Losses due to passage through tissue
+
+Referring to the above figure, Young et. al. measure a reduction to 0.0309 of that left after inverse square loss, between NIR emission at the skull surface and detection at cerebral cortex surface at $x = 40 mm.$ They do not specify a value for $b,$ but assuming $b \approx 10 mm,$ this corresponds to $r = \sqrt{b^2 + x^2} = 41.23 mm,$ or $0.0309^{\frac{1}{41.23}} \approx 0.92$ per mm. Combining this with the above, the following fraction photons emitted at a depth of $b$, will reach a 1 mm square area of the scalp at a distance $x$ from a point above the source.$$\frac{b}{4 \pi \left(b^2 + x^2\right)^{\frac{3}{2}}} 0.92^{\sqrt{b^2 + x^2}}.$$
+
+Assuming $b \approx 10$ and plotting this as a function of $x$.
+
+```{r echo=FALSE, fig.show='hold'}
+x <- seq(0, 50, by=1)
+b <- 10
+r <- sqrt(b^2 + x^2)
+y <- 0.92^r * b/(4 * pi * r^(3/2))
+plot(y ~ x, type='l', lwd=3, main="Fraction of photons reaching a 1 mm square area\nat a distance of x mm from a point above the emission site.", xlab="lateral distance from emission site", ylab="survival fraction")
+```
+
+
+[fig1]: ../images/reduced_area.png "Figure 1."
