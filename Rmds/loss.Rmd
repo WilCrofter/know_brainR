@@ -21,7 +21,7 @@ Referring to the above figure, Young et. al. measure a reduction to 0.0309 of th
 
 Assuming $b \approx 10$ and plotting this as a function of $x$.
 
-```{r echo=FALSE, fig.show='hold'}
+```{r echo=FALSE}
 x <- seq(0, 50, by=1)
 b <- 10
 r <- sqrt(b^2 + x^2)
