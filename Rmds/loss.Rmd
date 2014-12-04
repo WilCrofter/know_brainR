@@ -1,5 +1,5 @@
 ---
-title: "Loss"
+title: "Estimated Loss and Dispersion of Photons"
 author: "W. Bauer"
 date: "12/01/2014"
 output: html_document
