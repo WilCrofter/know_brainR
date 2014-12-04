@@ -29,5 +29,6 @@ y <- 0.92^r * b/(4 * pi * r^(3/2))
 plot(y ~ x, type='l', lwd=3, main="Fraction of photons reaching a 1 mm square area\nat a distance of x mm from a point above the emission site.", xlab="lateral distance from emission site", ylab="survival fraction")
 ```
 
+[download Rmd source file](loss.Rmd)
 
 [fig1]: ../images/reduced_area.png "Figure 1."
