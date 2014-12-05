@@ -9,7 +9,7 @@ A mole is $6.022\times 10^{23}$ (Avagadro's number) of molecules per liter. VSD 
 
 Since msec time resolutions are contemplated, and since existing VSDs have half-lives in the msec range, assuming 1 msec half-lives for VSDs is a reasonable heuristic.   
 
-The light emitting protein, cypridina luciferase, has a half-life on the order of [1 hour](http://www.piercenet.com/product/pierce-cypridina-luciferase-glow-assay-kit) which implies chemical conversion, hence photon emission, per millisecond equal to a fraction, $1-(1/2)^{\frac{1}{60 \times 60 \times 1000}} \approx 2 \times 10^7$, of available molecules. At a micromole concentration, this implies $2 \times 10^{-7} \times 6.022 \times 10^{11} \approx 116000 \approx 10^5$ cypridina luciferase emissions per millisecond, per cubic mm.
+The light emitting protein, cypridina luciferase, has a half-life on the order of [1 hour](http://www.piercenet.com/product/pierce-cypridina-luciferase-glow-assay-kit) which implies chemical conversion, hence photon emission, per millisecond equal to a fraction, $1-(1/2)^{\frac{1}{60 \times 60 \times 1000}} \approx 2 \times 10^{-7}$, of available molecules. At a micromole concentration, this implies $2 \times 10^{-7} \times 6.022 \times 10^{11} \approx 116000 \approx 10^5$ cypridina luciferase emissions per millisecond, per cubic mm.
 
 Cypridina luciferase itself is unlikely to be used in conjunction with NIR emitting VSDs. Following the proposal, assume a red-shifted analogue, referred to below as "luciferase," can be developed.
 
