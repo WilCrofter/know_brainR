@@ -1,2 +1,4 @@
 .Rproj.user
-*.md
+.Rhistory
+.RData
+R/*.R
