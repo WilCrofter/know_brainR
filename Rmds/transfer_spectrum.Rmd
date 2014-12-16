@@ -1,0 +1,48 @@
+---
+title: "Spectrum of Cerebral Cortex to Scalp Transfer Function"
+author: "W. Bauer"
+date: "12/13/2014"
+output: html_document
+---
+
+Reference: Natalie Baddour, ["Operational and convolution properties of two-dimensional Fourier transforms in polar coordinates"](http://www.researchgate.net/publication/26711481_Operational_and_convolution_properties_of_two-dimensional_Fourier_transforms_in_polar_coordinates/file/e0b4952a2409f508bc.pdf)(pdf), J. Opt. Soc. Am. A, Vol. 26, No. 8, August 2009.
+
+For an extremely simplified model, [Estimated Loss and Dispersion of Photons](loss.html) derived the following formula for the fraction photons emitted at a depth of $b$, which will reach a 1 mm square area of the scalp at a distance $r$ from a point above emitter.$$f_b(r) = \frac{b}{4 \pi \left(b^2 + r^2\right)^{\frac{3}{2}}} 0.92^{\sqrt{b^2 + r^2}}.$$
+
+For fixed $b$, $f_b(r)$ is radially symmetric and is shown below as a function of $r$ for $b=10$ mm.
+
+```{r echo=FALSE, fig.show='hold', fig.align='center'}
+# Estimates fraction of photons which will reach the scalp at a point r mm distant
+# from the point directly over their origin, assuming their origin is b mm beneath
+# the scalp.
+xfer_fct <- function(r, b){
+  b*.92^r/(4*pi*r^1.5)
+}
+local({
+  r <- seq(0, 50, by=1)
+  b <- 10
+  r1 <- sqrt(b^2 + r^2)  
+  y <- xfer_fct(r1, 10) 
+  plot(y ~ r, type='l', lwd=3, main="Fraction of photons reaching a 1 mm square area\nat a distance of r mm from a point above the emission site.", xlab="r, radial distance from a point above the emission site in mm", ylab="survival fraction")
+})
+```
+
+For this model, the number of photons per square mm per msec arriving at a point, (x,y), on the plane of its "scalp" is given by centering $f_b(r)$ on (x,y) and integrating its product with the pattern of emissions $b$ mm directly beneath. Repeating this process for every point on the "scalp" amounts to a two dimensional convolution of the survival function with the pattern of emissions at the "cerebral cortex." In other words, this simplified model is a standard linear system, and the survival function is essentially a spatial low-pass filter. Its Fourier transform, which diagonalizes the filter, hence gives its eigenvalues, is therefore of interest. The magnitude of its eigenvalues relative to measurement error and other noise levels determine the accuracy with which it can be inverted.
+
+The 2D Fourier transform of a real valued, radially symmetric function is also a real valued radially symmetric function. Letting $\rho$ represent spatial frequency in cycles per mm, and using the unitary (i.e., square norm or power preserving) version of the 2D Fourier transform is given as a function of spatial frequency, $\rho,$ by$$\hat{f}(2 \pi \rho) = \int_0^{\infty}f_b(r)J_0(2 \pi \rho r)rdr$$where $J_0$ is the zero^th^ order Bessel function the first kind.
+
+The Fourier transform is plotted as a function of $\rho$ for spatial frequencies between 0 and 1 cycle/mm. Since spatial resolution of 3 mm is desired, relative noise levels must be well below the curve at spatial frequencies of 1/3 cycles/mm, and perhaps its first couple of harmonics, 2/3 cycles/mm, and 1 cycle/mm as well. At least that is the order of magnitude suggested by this simplified model.
+
+```{r echo=FALSE, fig.show='hold', fig.align='center'}
+# Computes the Fourier transform of xfer_fct at spatial frequency f. Both the above
+# and its Fourier transform are radially symmetric.
+xform <- function(f, b){
+  integrand <- function(r){r*xfer_fct(r,b)*besselJ(2*pi*f*r,0)}
+  integrate(integrand, 0, 100)
+}
+
+# Compute transform at spatial frequencies between 0 and 1.0 cycles/mm.
+f <- seq(0, 1.0, length.out=201)
+spectrum <- sapply(f, function(phi)xform(phi, 10)$value)
+plot(f, spectrum, type='l', lwd=2, xlab="spatial frequency (cycles/mm)", ylab="amplitude", main="Cerebral Cortex to Scalp Transfer Funcion")
+```
