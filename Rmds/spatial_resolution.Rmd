@@ -32,7 +32,7 @@ xform <- function(freq, b){
 }
 ```
 
-Below is a table of spatial frequencies, $\rho,$ and corresponing eigenvalues, equivalently Fourier transform values, estimated by numerical integration of this formula. Note that for spatial frequencies above .1 cycles/mm, estimated numerical integration errors are as large as the eigenvalues themselves. Thus, the most that can be said using this approach is that eigenvalues corresponding to .2 cycles/mm and above are of magnitude $10^{-5}$ or smaller.
+Below is a table of spatial frequencies, $\rho,$ and corresponing eigenvalues, equivalently Fourier transform values, estimated by numerical integration of this formula. Note that for spatial frequencies above .1 cycles/mm, estimated numerical integration errors are as large as the eigenvalues themselves. Thus, the most that can be said using this approach is that eigenvalues corresponding to .2 cycles/mm and above are of magnitude $10^-5$ or smaller.
 
 Since spatial resolution corresponds roughly to the inverse of spatial frequency, these calculations suggest adequate spatial resolutions of around 1/.1 mm, or 1 cm.
 
@@ -43,5 +43,3 @@ Spatial Frequency | Eigenvalue | Estimated Error
 .2 | 6.233459e-06 | < 1e-04
 .3 | 1.167508e-05 | < 7.7e-05
 .33 | 1.215592e-05 | < 6.3e-05
-
-[download Rmd source file](spatial_resolution.Rmd)

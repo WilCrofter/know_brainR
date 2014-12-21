@@ -5,7 +5,9 @@ date: "12/18/2014"
 output: html_document
 ---
 
-In the previous note, [Spatial Resolution](spatial_resolution.Rmd), a very simplified model of NIR transmission from cerebral cortex to scalp was shown to be a standard linear system, amounting to a 2D spatial low-pass filter with very small eigenvalues at spatial frequencies above 1 cycle/cm. This would imply extreme difficulty in achieving spatial resolution of better than 1 cm.
+### Discrete estimation of spatial resolution
+
+In a previous note, [Spatial Resolution](spatial_resolution.Rmd), a very simplified model of NIR transmission from cerebral cortex to scalp was shown to be a standard linear system, amounting to a 2D spatial low-pass filter with very small eigenvalues at spatial frequencies above 1 cycle/cm. This would imply extreme difficulty in achieving spatial resolution of better than 1 cm.
 
 Of course, this simplified model's main virtue is its simplicity. Its accuracy is very much open to question, but it may highlight issues to check with more realistic models and data as these become available.
 
@@ -17,14 +19,15 @@ In the previous note, accuracy of numerical integration was a limiting factor. T
 # Estimates fraction of photons which will reach the scalp at a point r mm distant
 # from the point directly over their origin, assuming their origin is b mm beneath
 # the scalp.
-f_b <- function(r, b){
+
+f_b <- function(r, b) {
   r1 <- sqrt(r^2+b^2)
   b*.92^r1/(4*pi*r1^1.5)
-}
+  }
 integrand <- function(r)r*f_b(r, 10)
 ```
 
-A discrete model amenable to treatment with a fast Fourier transform, must be finite in spatial extent. Numerical integration shows that the 2D spatial filter derived previously has little relative weight beyond 128 mm from its center:$$\frac{\int_{128}^{\infty}.92^{\sqrt{r^2 + b^2}}\frac{b}{4 \pi (r^2 + b^2)^{1.5}}rdr}{\int_0^{\infty}.92^{\sqrt{r^2 + b^2}}\frac{b}{4 \pi (r^2 + b^2)^{1.5}}rdr} = 1.88 \times 10^{-5}$$A 256x256 grid will cover this radius. However, a fast Fourier transform operates on a periodic or circular grid. To avoid aliasing from wrap-around, linear dimensions should be doubled. Thus a 512x512 grid is used here.
+A discrete model amenable to treatment with a fast Fourier transform, must be finite in spatial extent. Numerical integration shows that the 2D spatial filter derived previously has little relative weight beyond 128 mm from its center:$$\frac{\int_{128}^{\infty}.92^{\sqrt{r^2 + b^2}}\frac{b}{4 \pi (r^2 + b^2)^{1.5}}rdr}{\int_0^{\infty}.92^{\sqrt{r^2 + b^2}}\frac{b}{4 \pi (r^2 + b^2)^{1.5}}rdr} = 1.88 \times 10^{-5}$$A 256x256 grid will cover this radius. However, a fast Fourier transform operates on a periodic or circular grid. To avoid aliasing from wrap-around, linear dimensions should be doubled. Thus a 512x512 grid is used.
 
 ```{r echo=FALSE, fig.show='hold', fig.align='center'}
 filter <- matrix(0,512,512)
@@ -47,24 +50,46 @@ eigenval_max <- max(abs(filter_spectrum))
 err_on_inverse <- max(abs(filter - fft(filter_spectrum, inverse=TRUE)/512))
 ```
 
-Since the spatial grid has 512 1 mm intervals in each dimension, the grid of a corresponding Fourier transform will be in units of 1/512 cycles/mm in each dimension. The spatial resolution of interest correponds to 1/3 cycles/mm, hence to a point at position 512/3 = 171 on either dimension of the Fourier transform grid. The absolute value of the eigenvalue at such a point is 9.267515e-11. This is about 8 orders of magnitude below the maximum of 0.01178317, and is not likely to be entirely inaccurate, since the inverse transform matches the original to within 16 decimal places. A logarithmic plot of eigenvalue magnitudes vs spatial frequencies follows.
+Since the spatial grid has 512 1 mm intervals in each dimension, the grid of a corresponding Fourier transform will be in units of 1/512 cycles/mm in each dimension. The spatial resolution of interest corresponds to 1/3 cycles/mm, hence to a point at position 512/3 = 171 on either dimension of the Fourier transform grid. The absolute value of the eigenvalue at such a point is 9.267515e-11. This is about 8 orders of magnitude below the maximum of 0.01178317. The precision of this small value is dubious as the following plot suggests, but it is clearly very small. The computation as a whole is accurate since the inverse transform matches the original to within 16 decimal places.
+
+A representative eigenvalue corresponding to 10 mm resolution has absolute value 1.657966e-05 which is less than 3 orders of magnitude below the maximum, suggesting as in the previous note a limiting spatial resolution of 1 cm.
 
 ```{r echo=FALSE, fig.show='hold', fig.align='center'}
 freqs <- (1:256)/512
-plot(freqs, abs(filter_spectrum[512, 1:256]), type='l', lwd=2, log='y', xlab="spatial frequency in cycles/mm", ylab="absolute value of eigenvalue", main="Eigenvalue Spectrum of Simple Model")
+plot(freqs, abs(filter_spectrum[512, 1:256]), type='l', lwd=2, log='y', xlab="spatial frequency in cycles/mm", ylab="absolute value of eigenvalue", main="Eigenvalue Spectrum")
 linear_region <- (floor(.05*512)):(floor(.2*512))
 evs <- log(abs(filter_spectrum[512, linear_region]))
 frqs <- freqs[linear_region]
 fit <- lm(evs ~ frqs)
 lines(frqs-.01, exp(fit$fitted.values), lwd=2, lty=2, col="red")
 factor_of_10 <- log(10)/coef(fit)[2]
-text(.2, 1e-05, "Factor of 10 decrease\nper 1/30 cycles/mm", col="red")
+text(.21, 1e-05, "A factor of 1000 decrease\nper .1 cycles/mm", col="red")
 ```
 
-In the linear region, eigenvalue magnitudes decrease by a factor of 10 every 1/30 cycle/mm.
+In the linear region of the spectrum, eigenvalue magnitudes decrease by a factor of 10 every 1/30 cycle/mm, or roughly 3 orders of magnitude per 1/10 of a cycle per mm.
 
-A representative eigenvalue correponding to 10 mm resolution has absolute value 1.657966e-05 which is less than 3 orders of magnitude below the maximum, suggesting as in the previous note a limiting spatial resolution of 1 cm.
+### Checkerboard images
+
+Checkerboard patterns, though biologically unrealistic as patterns of depolarization, may be useful for studying spatial resolution. The size of a visually discernible cell either at the scalp or an inferred image at the cerebral cortex should help inform intuition.
+
+
+
+```{r echo=FALSE}
+source("../R/utilities.R")
+# Form a putative spectrum
+temp <- vsd_spectrum(100)
+# Convert to probabilities
+temp[,2] <- temp[,2]/sum(temp[,2])
+temp[,3] <- temp[,3]/sum(temp[,3])
+# Compute relative rates of emission
+idx <- temp[,1] >= 900
+relative_rate <- sum(temp[idx,2])/sum(temp[idx,3]) 
+```
+
+Most experiments using voltage sensitive dyes, monitor a fixed band of wavelengths. (See Leslie M. Lowe [Design and Use of Organic Voltage Sensitive Dyes](http://scholar.google.com/scholar?q=Design+and+Use+of+Organic+Voltage+Sensitive+Dyes&btnG=Submit&hl=en&as_sdt=0%2C21).) Putative polarized and unpolarized spectra of dyes which emit in near infrared are shown below. Suppose these spectra were realistic and that wavelengths exceeding 900 nm were to constitute the monitored band. The ratio of polarized to unpolarized emission rates would then be 1.32.
 
 
 
 [download Rmd which includes source code for computations](discrete_methods.Rmd)
+
+[download R file containing code for VSD spectra](../R/utilities.R)
