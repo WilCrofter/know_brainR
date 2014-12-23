@@ -5,11 +5,11 @@ date: "12/18/2014"
 output: html_document
 ---
 
-### Discrete estimation of spatial resolution
+### Discrete estimation of eigenvalues and spatial resolution
 
-In a previous note, [Spatial Resolution](spatial_resolution.Rmd), a very simplified model of NIR transmission from cerebral cortex to scalp was shown to be a standard linear system, amounting to a 2D spatial low-pass filter with very small eigenvalues at spatial frequencies above 1 cycle/cm. This would imply extreme difficulty in achieving spatial resolution of better than 1 cm.
+In a previous note, [Spatial Resolution](spatial_resolution.Rmd), a very simplified model of NIR transmission from cerebral cortex to scalp was shown to be a standard linear system, amounting to a 2D spatial low-pass filter with very small eigenvalues at spatial frequencies above 1 cycle/cm. This suggests that achieving spatial resolution of better than 1 cm will be challenging.
 
-Of course, this simplified model's main virtue is its simplicity. Its accuracy is very much open to question, but it may highlight issues to check with more realistic models and data as these become available.
+Of course, this simplified model's main virtue is its simplicity. Its accuracy is very much open to question, but it may foreshadow potential problems in more realistic models. 
 
 In the previous note, accuracy of numerical integration was a limiting factor. This note uses a discrete form of the model, replacing integrals with sums, both in an attempt to avoid the integration issue and to facilitate quick numerical experiment.
 
@@ -48,6 +48,7 @@ eigenval_3mm_res <- abs(filter_spectrum[512, 170])
 eigenval_10mm_res <- abs(filter_spectrum[512, 51])
 eigenval_max <- max(abs(filter_spectrum))
 err_on_inverse <- max(abs(filter - fft(filter_spectrum, inverse=TRUE)/512))
+rm(filter) # we won't need it and it's big
 ```
 
 Since the spatial grid has 512 1 mm intervals in each dimension, the grid of a corresponding Fourier transform will be in units of 1/512 cycles/mm in each dimension. The spatial resolution of interest corresponds to 1/3 cycles/mm, hence to a point at position 512/3 = 171 on either dimension of the Fourier transform grid. The absolute value of the eigenvalue at such a point is 9.267515e-11. This is about 8 orders of magnitude below the maximum of 0.01178317. The precision of this small value is dubious as the following plot suggests, but it is clearly very small. The computation as a whole is accurate since the inverse transform matches the original to within 16 decimal places.
@@ -63,16 +64,12 @@ frqs <- freqs[linear_region]
 fit <- lm(evs ~ frqs)
 lines(frqs-.01, exp(fit$fitted.values), lwd=2, lty=2, col="red")
 factor_of_10 <- log(10)/coef(fit)[2]
-text(.21, 1e-05, "A factor of 1000 decrease\nper .1 cycles/mm", col="red")
+text(.21, 1e-05, "A factor of 1000 decrease\nper 1/10 cycles/mm", col="red")
 ```
 
 In the linear region of the spectrum, eigenvalue magnitudes decrease by a factor of 10 every 1/30 cycle/mm, or roughly 3 orders of magnitude per 1/10 of a cycle per mm.
 
 ### Checkerboard images
-
-Checkerboard patterns, though biologically unrealistic as patterns of depolarization, may be useful for studying spatial resolution. The size of a visually discernible cell either at the scalp or an inferred image at the cerebral cortex should help inform intuition.
-
-
 
 ```{r echo=FALSE}
 source("../R/utilities.R")
@@ -86,8 +83,101 @@ idx <- temp[,1] >= 900
 relative_rate <- sum(temp[idx,2])/sum(temp[idx,3]) 
 ```
 
-Most experiments using voltage sensitive dyes, monitor a fixed band of wavelengths. (See Leslie M. Lowe [Design and Use of Organic Voltage Sensitive Dyes](http://scholar.google.com/scholar?q=Design+and+Use+of+Organic+Voltage+Sensitive+Dyes&btnG=Submit&hl=en&as_sdt=0%2C21).) Putative polarized and unpolarized spectra of dyes which emit in near infrared are shown below. Suppose these spectra were realistic and that wavelengths exceeding 900 nm were to constitute the monitored band. The ratio of polarized to unpolarized emission rates would then be 1.32.
+Most experiments using voltage sensitive dyes, monitor a fixed band of wavelengths. (See Leslie M. Lowe [Design and Use of Organic Voltage Sensitive Dyes](http://scholar.google.com/scholar?q=Design+and+Use+of+Organic+Voltage+Sensitive+Dyes&btnG=Submit&hl=en&as_sdt=0%2C21).) Putative polarized and depolarized spectra of dyes which emit in near infrared are shown below. Suppose these spectra were realistic and that wavelengths exceeding 900 nm were monitored. The ratio of polarized to depolarized emission rates would then be 1.32.
 
+```{r echo=FALSE, fig.show='hold', fig.align='center'}
+
+```
+
+Consider a checkerboard pattern of alternating polarized and depolarized cells on the "visual cortex." Suppose the pattern is 50 mm in diameter and cells are 3 mm on a side, and that VSDs are distributed only within this region, hence this pattern is the only source of emissions. Visual comparison of the pattern on the cerebral cortex with the corresponding pattern on the skull, though not definitive, gives a sense of the challenge.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+
+checkerboard <- function(diameter, cell_size){
+  radius <- diameter/2
+  board <- matrix(0, 512, 512)
+  for(i in 1:50){
+    for(j in 1:50){
+      if(sqrt((i-25.5)^2 + (j-25.5)^2) <= radius){
+        polarized <- (floor(i/cell_size) + floor(j/cell_size))%%2
+        if (polarized){
+          board[i-25+256,j-25+256] <- 1.32
+          } else {
+            board[i-25+256,j-25+256] <- 1.0
+            }
+        }
+      }
+    }
+  return(board)
+  }
+
+cc_to_scalp <- function(board, filter_spectrum){
+  # 2D convolution by fft, removing imaginary part which should be zero 
+  temp <- abs(fft( filter_spectrum*fft(board)/512, inverse=TRUE )/512)
+  # Shift origin to center for visualization
+  scalp <- matrix(0, 512, 512)
+  for(i in 1:512){
+    for(j in 1:512){
+      scalp[(255+i)%%512, (255+j)%%512] <- temp[i,j]
+      }
+    }
+  return(scalp)
+}
+
+central_image <- function(img, radius, main=""){
+  ctr <- floor(dim(img)/2)
+  x <- -radius:radius
+  image(x, x, img[ctr[1]+x, ctr[2]+x], xlab="mm", ylab="mm", main=main, col=terrain.colors(12))
+}
+
+cc_and_scalp_figure <- function(diameter, cell_size, filter_spectrum){
+  par(mfrow=c(1,2))
+  board <- checkerboard(diameter, cell_size)
+  scalp <- cc_to_scalp(board, filter_spectrum)
+  central_image(board, diameter, paste0("Pattern at Cerebral Cortex \n(", cell_size, " mm cell size)"))
+  central_image(scalp, diameter, "Pattern at Scalp")
+  par(mfrow=(c(1,2)))
+  }
+
+cc_and_scalp_figure(50, 3, filter_spectrum)
+```
+
+
+Without noise, other than the limits of computational precision, the original pattern can actually be recovered by deconvolution.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+recover_checkerboard_figure <- function(diameter, cell_size, filter_spectrum, noise=0){
+  board <- checkerboard(diameter, cell_size)
+  scalp <- cc_to_scalp(board, filter_spectrum)
+  scalp <- scalp + max(scalp)*noise*matrix(rnorm(512*512), 512, 512)
+  # recovery: divide fft of scalp by filter spectrum
+  cc <- fft(scalp)/512/filter_spectrum
+  rm(scalp)
+  # invert transform
+  cc <- abs(fft(cc, inverse=TRUE)/512)
+  # Shift origin to center for visualization
+  recovered <- matrix(0, 512, 512)
+  for(i in 1:512){
+    for(j in 1:512){
+      recovered[(255+i)%%512, (255+j)%%512] <- cc[i,j]
+      }
+    }
+  rm(cc)
+  par(mfrow=c(1,2))
+  central_image(board, diameter, paste0("Pattern at Cerebral Cortex \n(", cell_size, " mm cell size)"))
+  central_image(recovered, diameter, paste0("Pattern Recovered from Image\n ",
+                                            "at Scalp (noise level = ", noise,")"))
+  par(mfrow=(c(1,2)))
+}
+
+recover_checkerboard_figure(50, 3, filter_spectrum)
+```
+
+However, even very low noise levels at the scalp prevent recovery by simple deconvolution.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+recover_checkerboard_figure(50, 3, filter_spectrum, noise=1e-10)
+```
 
 
 [download Rmd which includes source code for computations](discrete_methods.Rmd)
