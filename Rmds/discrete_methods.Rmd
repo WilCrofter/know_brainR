@@ -90,7 +90,7 @@ matplot(temp[,1], temp[,2:3], type='l', lwd=2, col=1:2, lty=1, xlab="Wavelength 
 legend("topright", c("Polarized", "Depolarized"), lwd=2, col=1:2, lty=1)
 ```
 
-Consider a checkerboard pattern of alternating polarized and depolarized cells on the "visual cortex." Suppose the pattern is 50 mm in diameter and cells are 3 mm on a side, and that VSDs are distributed only within this region, hence this pattern is the only source of emissions. Visual comparison of the pattern on the cerebral cortex with the corresponding pattern on the skull, though not definitive, gives a sense of the challenge.
+Consider a checkerboard pattern of alternating polarized and depolarized cells on the "cerebral cortex." Suppose the pattern is 50 mm in diameter and cells are 3 mm on a side, and that VSDs are distributed only within this region, hence this pattern is the only source of emissions. Visual comparison of the pattern on the cerebral cortex with the corresponding pattern on the skull, though not definitive, gives a sense of the challenge.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
 
