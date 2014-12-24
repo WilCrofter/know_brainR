@@ -86,7 +86,8 @@ relative_rate <- sum(temp[idx,2])/sum(temp[idx,3])
 Most experiments using voltage sensitive dyes, monitor a fixed band of wavelengths. (See Leslie M. Lowe [Design and Use of Organic Voltage Sensitive Dyes](http://scholar.google.com/scholar?q=Design+and+Use+of+Organic+Voltage+Sensitive+Dyes&btnG=Submit&hl=en&as_sdt=0%2C21).) Putative polarized and depolarized spectra of dyes which emit in near infrared are shown below. Suppose these spectra were realistic and that wavelengths exceeding 900 nm were monitored. The ratio of polarized to depolarized emission rates would then be 1.32.
 
 ```{r echo=FALSE, fig.show='hold', fig.align='center'}
-
+matplot(temp[,1], temp[,2:3], type='l', lwd=2, col=1:2, lty=1, xlab="Wavelength (nm)", ylab="Probability Density", main="Putative NIR/VSD Emission Spectrum")
+legend("topright", c("Polarized", "Depolarized"), lwd=2, col=1:2, lty=1)
 ```
 
 Consider a checkerboard pattern of alternating polarized and depolarized cells on the "visual cortex." Suppose the pattern is 50 mm in diameter and cells are 3 mm on a side, and that VSDs are distributed only within this region, hence this pattern is the only source of emissions. Visual comparison of the pattern on the cerebral cortex with the corresponding pattern on the skull, though not definitive, gives a sense of the challenge.
@@ -173,12 +174,13 @@ recover_checkerboard_figure <- function(diameter, cell_size, filter_spectrum, no
 recover_checkerboard_figure(50, 3, filter_spectrum)
 ```
 
-However, even very low noise levels at the scalp prevent recovery by simple deconvolution.
+However, even very low noise levels at the scalp prevent recovery by simple deconvolution. This is to be expected, since simple deconvolution is a matter of dividing by eigenvalues of the cerebral-cortex-to-scalp transfer function. Assuming measurement and other noise added at the scalp is Gaussian and i.i.d., its 2D Fourier transform should be "white", i.e., Gaussian and i.i.d with the same variance (since the Fourier transform is unitary.) Thus, dividing by the very small eigenvalues at high spatial frequencies will greatly amplify the noise at those frequencies. The effect can be seen from the graininess of reconstruction.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
 recover_checkerboard_figure(50, 3, filter_spectrum, noise=1e-10)
 ```
 
+Simple deconvolution is far from optimal. Reconstruction by linear regression would be better, since it would avoid division by small eigenvalues, but it would not recover detail at high spatial frequencies either. At best, details which were buried in noise would be recovered as mean values. 
 
 [download Rmd which includes source code for computations](discrete_methods.Rmd)
 
