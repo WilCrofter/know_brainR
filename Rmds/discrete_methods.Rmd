@@ -97,20 +97,20 @@ Consider a checkerboard pattern of alternating polarized and depolarized cells o
 checkerboard <- function(diameter, cell_size){
   radius <- diameter/2
   board <- matrix(0, 512, 512)
-  for(i in 1:50){
-    for(j in 1:50){
+  for(i in 1:diameter){
+    for(j in 1:diameter){
       if(sqrt((i-25.5)^2 + (j-25.5)^2) <= radius){
         polarized <- (floor(i/cell_size) + floor(j/cell_size))%%2
         if (polarized){
           board[i-25+256,j-25+256] <- 1.32
           } else {
             board[i-25+256,j-25+256] <- 1.0
-            }
+          }
         }
       }
     }
   return(board)
-  }
+}
 
 cc_to_scalp <- function(board, filter_spectrum){
   # 2D convolution by fft, removing imaginary part which should be zero 
