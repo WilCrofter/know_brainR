@@ -114,13 +114,13 @@ checkerboard_power <- function(diameter){
 # (amplitude) ratio, reconstruct the checkerboard by linear regression, which
 # is optimal under independence assumptions.
 recover_checkerboard <- function(board, diameter, noise_to_signal){
-  power <- checkerboard_power(diameter)
-  noise_power <- power*noise_to_signal^2
-  # form fft of scalp pattern and add noise
-  scalp_fft <- fwd_xfer_fct*fft(board)/512 + 
-    matrix(rnorm(512*512, 0,sqrt(noise_power)), 512, 512)
+  cb_power <- checkerboard_power(diameter)
+  # form fft of scalp pattern
+  scalp_fft <- fwd_xfer_fct*fft(board)/512
+  noise_power <- noise_to_signal*mean(Mod(scalp_fft)^2)
+  scalp_fft <- scalp_fft + matrix(rnorm(512*512, 0, sqrt(noise_power)), 512, 512)
   # form denominator of optimal inverse filter
-  dinv <- fwd_xfer_fct + noise_power/Mod(scalp_fft)^2/Conj(fwd_xfer_fct)
+  dinv <- fwd_xfer_fct + noise_power/cb_power/Conj(fwd_xfer_fct)
   # use it to estimate fft of original pattern
   cc_fft <- scalp_fft/dinv + (1 - fwd_xfer_fct/dinv)*checkerboard_mean(diameter)
   rm(dinv, scalp_fft)
@@ -154,10 +154,12 @@ factor_of_10 <- log(10)/coef(fit)[2]
 text(.21, 1e-05, "A factor of 1000 decrease\nper 1/10 cycles/mm", col="red")
 ```
 
-In that note no attempt at optimal recovery was made, but recovery by linear regression was mentioned. Assuming patterns of depolarization are spatially uncorrelated, (a pessimistic assumption,) recovery by linear regression is straightforward. For this method, simulations pictured below indicate that recovery of details at $n \gt 4$ mm resolution require noise-to-signal amplitude ratios at least 3 orders of magnitude smaller than that of the eigenvalue at spatial frequency $\frac{1}{n}$ cycles/mm. Recovery of details at resolutions smaller than 4 mm seem to require noise-to-signal amplitude ratios of 4 or 5 orders of magnitude smaller than that of the associated eigenvalue.
+In that note no attempt at optimal recovery was made, but recovery by linear regression was mentioned. Assuming patterns of depolarization are spatially uncorrelated, (a pessimistic assumption,) recovery by linear regression is straightforward. For this method, simulations pictured below indicate that recovery of details at $n \gt 4$ mm resolution require noise-to-signal amplitude ratios at the scalp at least 2 orders of magnitude smaller than that of the eigenvalue at spatial frequency $\frac{1}{n}$ cycles/mm.
+
+Recovery of details at resolutions smaller than 4 mm seem to require noise-to-signal amplitude ratios of 4 or 5 orders of magnitude smaller than that of the associated eigenvalue.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
-plot_recovery <- function(diameter, cell_size, resolution=cell_size, noise_to_signal=eigenv(resolution)/1000){
+plot_recovery <- function(diameter, cell_size, resolution=cell_size, noise_to_signal=eigenv(resolution)/100){
   par(mfrow=c(1,2))
   board <- checkerboard(diameter, cell_size)
   recovery <- recover_checkerboard(board, diameter, noise_to_signal)
@@ -165,6 +167,28 @@ plot_recovery <- function(diameter, cell_size, resolution=cell_size, noise_to_si
   display_centered_image(recovery, diameter=diameter, main=paste("Recovered pattern, noise-to-signal\namplitude ratio", signif(noise_to_signal, 4)))
   par(mfrow=c(1,1))
 }
-
 ```
 
+To illustrate the first point consider a checkerboard pattern 50 mm in diameter with cell 10 mm on a side. Cells are alternately polarized (white,) and depolarized (red.) There are no emissions from the area colored green. (See the [previous note](discrete_methods.html) for details.) With noise-to-signal two orders of magnitude below the eigenvalue at spatial frequency 1/10 cycles/mm, the checkerboard pattern is discernible.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+plot_recovery(50, 10)
+```
+
+If the noise-to-signal ratio is greater than two orders of magnitude above the appropriate eigenvalue, the checkerboard is not discernible.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+plot_recovery(50, 10, noise_to_signal=eigenv(10)/10)
+```
+
+This heuristic holds down to 4 mm resolution;
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+plot_recovery(50, 4)
+```
+
+But does not hold below 4 mm resolution.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+plot_recovery(50, 3)
+```
