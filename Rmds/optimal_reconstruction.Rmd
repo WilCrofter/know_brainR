@@ -163,8 +163,8 @@ plot_recovery <- function(diameter, cell_size, resolution=cell_size, noise_to_si
   par(mfrow=c(1,2))
   board <- checkerboard(diameter, cell_size)
   recovery <- recover_checkerboard(board, diameter, noise_to_signal)
-  display_centered_image(board, diameter=diameter, main= paste("Checkerboard depolarization pattern\nwith cell size ", cell_size, "(eigenvalue ", signif(eigenv(resolution), 4),")"))
-  display_centered_image(recovery, diameter=diameter, main=paste("Recovered pattern, noise-to-signal\namplitude ratio", signif(noise_to_signal, 4)))
+  display_centered_image(board, diameter=diameter, main= paste("Checkerboard depolarization pattern\nwith cell size ", cell_size, "\n(eigenvalue ", signif(eigenv(resolution), 4),")"))
+  display_centered_image(recovery, diameter=diameter, main=paste("Recovered pattern,\nnoise-to-signal\namplitude ratio", signif(noise_to_signal, 4)))
   par(mfrow=c(1,1))
 }
 ```
