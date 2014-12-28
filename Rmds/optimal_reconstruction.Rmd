@@ -5,6 +5,12 @@ date: "12/26/2014"
 output: html_document
 ---
 
+### Summary
+
+For a very simplified model of NIR emission and transport, recovery of detail is limited by the size of eigenvalues at spatial frequencies corresponding to the reciprocal of detail size. Simulations suggest that, noise-to-signal (amplitude) ratios will generally obscure spatial frequencies whose eigenvalues are one or two orders of magnitude smaller than the noise-to-signal ratio itself. Since eigenvalues decrease rapidly with spatial resolution, this would pose a fairly stringent requirement for measurement and detection.
+
+### Reconstruction by linear regression
+
 In [Discrete estimation of eigenvalues and spatial resolution](discrete_methods.html) it was shown that, for a very simplified model of NIR emission and transport, recovery of a pattern of depolarization on the cerebral cortex would be very sensitive to noise added to a pattern measured at the scalp. Moreover, it was shown that sensitivity to noise would worsen rapidly with desired spatial resolution, roughly by a factor of 1000 per 1/10 mm of resolution over about half the spatial frequency spectrum. The relevant figure is reproduced below.
 
 ```{r echo=FALSE}
@@ -117,7 +123,8 @@ recover_checkerboard <- function(board, diameter, noise_to_signal){
   cb_power <- checkerboard_power(diameter)
   # form fft of scalp pattern
   scalp_fft <- fwd_xfer_fct*fft(board)/512
-  noise_power <- noise_to_signal*mean(Mod(scalp_fft)^2)
+  # power ratio is the square of amplitude ratio
+  noise_power <- noise_to_signal^2*mean(Mod(scalp_fft)^2)
   scalp_fft <- scalp_fft + matrix(rnorm(512*512, 0, sqrt(noise_power)), 512, 512)
   # form denominator of optimal inverse filter
   dinv <- fwd_xfer_fct + noise_power/cb_power/Conj(fwd_xfer_fct)
@@ -154,41 +161,41 @@ factor_of_10 <- log(10)/coef(fit)[2]
 text(.21, 1e-05, "A factor of 1000 decrease\nper 1/10 cycles/mm", col="red")
 ```
 
-In that note no attempt at optimal recovery was made, but recovery by linear regression was mentioned. Assuming patterns of depolarization are spatially uncorrelated, (a pessimistic assumption,) recovery by linear regression is straightforward. For this method, simulations pictured below indicate that recovery of details at $n \gt 4$ mm resolution require noise-to-signal amplitude ratios at the scalp at least 2 orders of magnitude smaller than that of the eigenvalue at spatial frequency $\frac{1}{n}$ cycles/mm.
-
-Recovery of details at resolutions smaller than 4 mm seem to require noise-to-signal amplitude ratios of 4 or 5 orders of magnitude smaller than that of the associated eigenvalue.
+In that note no attempt at optimal recovery was made, but recovery by linear regression was mentioned. Assuming patterns of depolarization are spatially uncorrelated, (a pessimistic assumption,) recovery by linear regression is straightforward. For this method, simulations pictured below indicate that recovery of details at $n$ mm resolution generally require noise-to-signal amplitude ratios at the scalp no more than 1 or 2 orders of magnitude larger than that of the eigenvalue at spatial frequency $\frac{1}{n}$ cycles/mm.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
-plot_recovery <- function(diameter, cell_size, resolution=cell_size, noise_to_signal=eigenv(resolution)/100){
+plot_recovery <- function(diameter, cell_size, resolution=cell_size, noise_to_signal=eigenv(resolution)*100){
   par(mfrow=c(1,2))
   board <- checkerboard(diameter, cell_size)
   recovery <- recover_checkerboard(board, diameter, noise_to_signal)
-  display_centered_image(board, diameter=diameter, main= paste("Checkerboard depolarization pattern\nwith cell size ", cell_size, "\n(eigenvalue ", signif(eigenv(resolution), 4),")"))
+  display_centered_image(board, diameter=diameter, main= paste("Checkerboard depolarization\npattern with cell size ", cell_size, "\n(eigenvalue ", signif(eigenv(resolution), 4),")"))
   display_centered_image(recovery, diameter=diameter, main=paste("Recovered pattern,\nnoise-to-signal\namplitude ratio", signif(noise_to_signal, 4)))
   par(mfrow=c(1,1))
 }
 ```
 
-To illustrate the first point consider a checkerboard pattern 50 mm in diameter with cell 10 mm on a side. Cells are alternately polarized (white,) and depolarized (red.) There are no emissions from the area colored green. (See the [previous note](discrete_methods.html) for details.) With noise-to-signal two orders of magnitude below the eigenvalue at spatial frequency 1/10 cycles/mm, the checkerboard pattern is discernible.
+First consider a checkerboard pattern 50 mm in diameter with cell 10 mm on a side. Cells are alternately polarized (white,) and depolarized (red.) There are no emissions from the area colored green. (See the [previous note](discrete_methods.html) for details.) With a noise-to-signal amplitude ratio one order of magnitude greater than the eigenvalue at spatial frequency 1/10 cycles/mm, the checkerboard pattern is discernible.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
-plot_recovery(50, 10)
+plot_recovery(50, 10, noise_to_signal = eigenv(10)*10)
 ```
 
-If the noise-to-signal ratio is greater than two orders of magnitude above the appropriate eigenvalue, the checkerboard is not discernible.
+In this case, if the noise-to-signal ratio is two orders of magnitude above the appropriate eigenvalue, the checkerboard is not discernible.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
-plot_recovery(50, 10, noise_to_signal=eigenv(10)/10)
+plot_recovery(50, 10, noise_to_signal=eigenv(10)*100)
 ```
 
-This heuristic holds down to 4 mm resolution;
+At 4 mm resolution, two orders of magnitude can be tolerated. However, the eigenvalue itself is extremely small. The noise-to-signal ratio's reciprocal will almost surely exceed the number of photons per square mm reaching the scalp.  
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
-plot_recovery(50, 4)
+plot_recovery(50, 4, noise_to_signal=eigenv(4)*100)
 ```
 
-But does not hold below 4 mm resolution.
+At 3 mm resolution the situation is similar.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
-plot_recovery(50, 3)
+plot_recovery(50, 3, noise_to_signal=eigenv(3)*1e2)
 ```
+
+[download Rmd which includes source code for computations](optimal_reconstruction.Rmd)
