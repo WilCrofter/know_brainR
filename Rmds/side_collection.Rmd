@@ -1,0 +1,30 @@
+---
+title: 'Collection from the side'
+author: "W. Bauer"
+date: "01/03/2015"
+output: html_document
+---
+
+```{r echo = FALSE}
+f_b <- function(r, b) {
+  r1 <- sqrt(r^2+b^2)
+  b*.92^r1/(4*pi*r1^1.5)
+  }
+
+# Consider two points, a and b, a distance r_ab apart,
+# and two circles, one of radius r_a centered at point a,
+# the other of radius r_b centered at point b. Determine
+# half the angle at point b subtended by the intersection of
+# those two circles.
+b_angle <- function(r_a, r_b, r_ab){
+  # Heron's formula for triangle area
+  s <- (r_a + r_b + r_ab)/2
+  A <- sqrt(s*(s-r_a)*(s-r_b)*(s-r_ab))
+  # Taking base to be r_ab, A = r_ab*h/2
+  h <- 2*A/r_ab
+  # sin of the angle at b is h/r_b,
+  # which is half the angle subtended
+  return(asin(h/r_b))
+}
+```
+
