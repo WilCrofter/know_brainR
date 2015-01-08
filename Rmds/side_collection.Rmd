@@ -14,7 +14,7 @@ f_b <- function(r, b) {
 # Consider two points, a and b, a distance r_ab apart,
 # and two circles, one of radius r_a centered at point a,
 # the other of radius r_b centered at point b. Determine
-# half the angle at point b subtended by the intersection of
+# the angle at point b subtended by the intersection of
 # those two circles.
 b_angle <- function(r_a, r_b, r_ab){
   # Heron's formula for triangle area
@@ -23,8 +23,26 @@ b_angle <- function(r_a, r_b, r_ab){
   # Taking base to be r_ab, A = r_ab*h/2
   h <- 2*A/r_ab
   # sin of the angle at b is h/r_b,
-  # which is half the angle subtended
-  return(asin(h/r_b))
+  # This angle is half the angle subtended
+  return(2*asin(h/r_b))
 }
+```
+
+```{r echo=FALSE}
+
+net_fraction <- function(r_a, r_b, r_ab){
+  r_b*b_angle(r_a, r_b, r_ab)*f_b(r_b, 10)
+}
+
+xplor <- function(r_a, r_ab){
+  r_b <- seq(r_ab-r_a, r_ab+r_a, by=1)
+  temp <- net_fraction(r_a, r_b, r_ab)
+  x <- r_b+r_a-r_ab
+  plot(x, temp, type='l', lwd=2, xlab="distance into active area (mm)", ylab="net fraction", main=paste("distance of collector from active area =", r_ab-r_a, "mm"))
+  temp2 <- x[which.max(temp)]
+  text(temp2, mean(temp), paste("max at ", temp2, "mm"),  pos=4)
+  abline(v=temp2, lwd=2, lty=2, col=2)
+}
+
 ```
 
