@@ -1,0 +1,37 @@
+# From Figure 8. The anisotropy of scattering versus wavelength,
+# Steven L Jacques, Optical properties of biological tissues: a review.
+# 2013 Phys. Med. Biol. 58 R37
+# http://iopscience.iop.org/0031-9155/58/11/R37
+# Digitized from figure using PlotDigitizer (http://plotdigitizer.sourceforge.net/)
+tissue,wavelength_nm,anistropy,source
+skull,336.75,0.925058,Firbank 1993
+skull,439.276,0.93035,Firbank 1993
+skull,553.403,0.933794,Firbank 1993
+skull,655.924,0.93726,Firbank 1993
+skull,762.307,0.937066,Firbank 1993
+skull,868.693,0.938698,Firbank 1993
+skull,975.083,0.942157,Firbank 1993
+skin,374.526,0.481151,Ma 2005
+skin,485.364,0.767708,Ma 2005
+skin,576.456,0.85704,Ma 2005
+skin,669.359,0.886094,Ma 2005
+skin,884.133,0.922231,Ma 2005
+skin,1089.2,0.941948,Ma 2005
+skin,1325.15,0.926905,Ma 2005
+skin,503.33,0.0955265,Prahl 1988
+skin,550.144,0.287223,Prahl 1988
+skin,604.523,0.394886,Prahl 1988
+skin,653.017,0.462378,Prahl 1988
+skin,707.254,0.500635,Prahl 1988
+skin,755.659,0.524291,Prahl 1988
+skin,802.103,0.535165,Prahl 1988
+skin,492.63348,0.53938335,Samantham 2012
+brain white,493.3443,0.8864153,Samantham 2012
+brain white,493.4341,0.93025094,Samantham 2012
+brain gray,489.19153,0.74760956,Samantham 2012
+brain gray,491.3577,0.86084807,Samantham 2012
+muscle,634.22876,0.7327328,Beek 1997
+muscle,638.1458,0.75646996,Beek 1997
+muscle,632.5265,0.8459783,Beek 1997
+muscle,636.64185,0.9665192,Beek 1997
+muscle,793.277,0.9479682,Beek 1997
