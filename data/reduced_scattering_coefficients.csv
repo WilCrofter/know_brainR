@@ -1,0 +1,55 @@
+# From Table 1, Parameters specifying thereduced scattering coefficient of tissues,
+# Steven L Jacques, Optical properties of biological tissues: a review.
+# 2013 Phys. Med. Biol. 58 R37
+# http://iopscience.iop.org/0031-9155/58/11/R37
+# mu_s' = a*(lambda/500nm)^b (Rayleigh Scattering)
+#
+Tissue,Reference Tissue,a_per_cm,b
+Skin,Skin,48.9,1.548
+Skin,Skin,47.8,2.453
+Skin,Skin,37.2,1.39
+Skin,Skin,60.1,1.722
+Skin,Skin,29.7,0.705
+Skin,Dermis,45.3,1.292
+Skin,Epidermis,68.7,1.161
+Skin,Skin,30.6,1.1
+Brain,Brain,40.8,3.089
+Brain,Cortex (frontal lobe),10.9,0.334
+Brain,Cortex (temporal lobe),11.6,0.601
+Brain,Astrocytoma of optic nerve,20,1.629
+Brain,Normal optic nerve,25.9,1.156
+Brain,Cerebellar white matter,21.5,1.629
+Brain,Medulloblastoma,41.8,3.254
+Brain,Brain,21.4,1.2
+Bone,Skull,9.5,0.141
+Bone,Skull,20.9,0.537
+Bone,Bone,38.4,1.47
+Other soft tissues,Liver,9,0.617
+Other soft tissues,Muscle,13,0.926
+Other soft tissues,Fibroadenoma breast,12.2,1.448
+Other soft tissues,Mucous tissue,18.8,1.62
+Other soft tissues,SCC,28.1,1.507
+Other soft tissues,Infiltrative BCC,42.8,1.563
+Other soft tissues,Nodular BCC,31.9,1.371
+Other soft tissues,Bowel,16.5,1.24
+Other soft tissues,Heart wall,14.6,1.43
+Other soft tissues,Kidneys,35.1,1.51
+Other soft tissues,Liver&spleen,9.2,1.05
+Other soft tissues,Lung,25.4,0.53
+Other soft tissues,Muscle,9.8,2.82
+Other soft tissues,Stomach wall,19.1,0.97
+Other soft tissues,Whole blood,22,0.66
+Other soft tissues,Liver,16.5,1.64
+Other soft tissues,Lung,8.1,0.98
+Other soft tissues,Heart,8.3,1.26
+Other fibrous tissues,Tumor,33.6,1.712
+Other fibrous tissues,Prostate,30.1,1.549
+Other fibrous tissues,Glandular breast,27.2,1.768
+Other fibrous tissues,Fibrocystic breast,24.1,1.618
+Other fibrous tissues,Carcinoma breast,20.7,1.487
+Fatty tissue,Subcutaneous fat,13.7,0.385
+Fatty tissue,Adipose breast,10.6,0.52
+Fatty tissue,Subcutaneous adipose,15.4,0.68
+Fatty tissue,Subcut. fat,35.2,0.988
+Fatty tissue,Subcut. adipocytes,21.6,0.93
+Fatty tissue,Adipose,14.1,0.53
