@@ -1,0 +1,31 @@
+---
+title: "Jacques Data"
+author: "W. Bauer"
+date: "01/13/2015"
+output: html_document
+---
+
+### Reference
+Steven L Jacques, Optical properties of biological tissues: a review, 2013, [Phys. Med. Biol. 58 R37](http://iopscience.iop.org/0031-9155/58/11/R37)
+
+```{r echo=FALSE, fig.show='hold'}
+readme <- function(file)read.table(file, header=TRUE, sep=",", comment.char="#")
+mu_a <- readme("../data/absorption.csv")
+g <- readme("../data/anistropy_coefficients.csv")
+mu_s_prime <- readme("../data/reduced_scattering_coefficients.csv")
+```
+
+```{r echo=FALSE, fig.show='hold'}
+local({
+  tissues <- unique(mu_s_prime$Tissue)[-(4:5)] # Ignore other soft or fibrous tissues
+  lambda <- seq(800, 1200, by=10)
+  par(mfrow=c(1,1))
+  for(tissue in tissues){
+    temp <- mu_s_prime[mu_s_prime$Tissue == tissue,]
+    m <- t(sapply(lambda, function(x)temp[,"a_per_cm"]*(x/500)^(-temp[,"b"])))
+    matplot(lambda, m, type='l', lty=1, lwd=2, xlab=expression(lambda~~(nm)), ylab=expression({mu[s]}*minute~~(cm^{-1})), main=as.character(tissue))
+    legend('topright', as.character(temp$Reference.Tissue), lty=1, lwd=2, col=1:(nrow(temp)), bg="white")
+  }
+  par(mfrow=c(1,1))
+})
+```
