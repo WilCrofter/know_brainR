@@ -52,7 +52,7 @@ plot_mu_s <- function(df, tissues = unique(df$Tissue)){
 
 For a forward simulation, a scattering coefficient, $\mu_s$, rather than a *reduced* scattering coefficient is required. The scattering coefficient represents the expected number of scattering events per unit length. Its relationship to the reduced scattering coefficient is given by$$g = 1-\frac{\mu_s'}{\mu_s}.$$ Both $g$ and $\mu_s$ are very sparesly representated in the data. Moreover, some models of light propagation in tissue, e.g., that of [openGATE](http://www.opengatecollaboration.org/sites/opengatecollaboration.org/files/Cuplov2014.pdf) (PDF), require both forward and backward anistropy coefficients. These are not represented at all.
 
-The following plots give an idea of the variability in measurements of the reduced scattering coefficient. Broken lines indicate two sample standard deviations as computed from data. 
+For wavelengths of interest, reduced scattering spectra have the following (Rayleigh) form,$$\mu_s' = a\left(\frac{\lambda}{500nm}\right)^{-b}.$$Measurements are fit to curves and coefficients, $a$, and $b$ tabulated. The following plots give an idea of the variability in measurements. Broken lines indicate two sample standard deviations as computed from data. 
 
 ```{r echo=FALSE, fig.show='hold', fig.align='center'}
 local({
@@ -99,4 +99,4 @@ Bili | bilirubin concentration
 F | fat content (fractional volume)
 M | melanosome volume fraction
 
-Given values for these 7 parameters, the 
+Given values for these 7 parameters, the absorption coefficient of a corresponding tissue is a linear combination of chromophore coefficients,$$\mu_a(\lambda) = BS\mu_{a.oxy}(\lambda) + B(1-S)\mu_{a.deoxy}(\lambda) + F\mu_{fat}(\lambda) + M\mu_{a.melanosome}(\lambda) + 2.3Bili \cdot \varepsilon_{bili}(\lambda) + 2.3\beta C \varepsilon_{\beta C}(\lambda),$$where the $\mu_a$'s are absorption coefficients of the indicated chromophores, and the $\varepsilon$'s are extinction coefficients of bilirubin and β-carotene. 
