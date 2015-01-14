@@ -1,0 +1,102 @@
+---
+title: "Optical Properties of Tissue"
+author: "W. Bauer"
+date: "01/13/2015"
+output: html_document
+---
+
+**Reference** Steven L Jacques, Optical properties of biological tissues: a review, 2013, [Phys. Med. Biol. 58 R37](http://iopscience.iop.org/0031-9155/58/11/R37)
+
+The inverse problem subcommittee's first goal is "a computationally feasible forward model enabling accurate description of light propagation in the human brain." (Wong, Rahmim, Gjedde, R24 Grant Proposal.) Optical properties of the human brain and enclosing tissues will be required for that purpose. The reference is a recent summary of certain known optical properties of tissue. In the reference, the data is presented as a combination of tables and plots. I've converted relevant portions of the data to machine-readable csv format using cut-and-paste for tables and [a plot digitizer](http://plotdigitizer.sourceforge.net/) for graphs. The csv files are available [here](../data/absorption.csv), [here](../data/anistropy_coefficients.csv) and [here](../data/reduced_scattering_coefficients.csv).
+
+The three optical properties covered are the reduced scattering coefficient, $\mu_s'$, the anistropy coefficient, $g$, and the aborption coefficient, $\mu_a$. These quantities are wavelength and tissue dependent, and not all wavelengths and tissues of interest are covered. Moreover, there is a great deal of variability in measurements for a given tissue.
+
+### Scattering
+
+```{r echo=FALSE, fig.show='hold'}
+readme <- function(file)read.table(file, header=TRUE, sep=",", comment.char="#")
+mu_a <- readme("../data/absorption.csv")
+g <- readme("../data/anistropy_coefficients.csv")
+mu_s_prime <- readme("../data/reduced_scattering_coefficients.csv")
+
+plot_mu_s <- function(df, tissues = unique(df$Tissue)){
+  lambda <- seq(800, 1200, by=10)
+  # mu_s'
+  mu_s <- function(coefs, lambda){
+    coefs <- as.numeric(coefs)
+    coefs[1]*(lambda/500)^(-coefs[2])
+  }
+  # mean and range of mu_s' vs wavelength
+  ccs <- function(df){
+    means <- apply(df[,c("a_per_cm", "b")], 2, mean)
+    m <- matrix(0, length(lambda), 0)
+    for(i in 1:nrow(df)) m <- cbind(m, mu_s(df[i,c("a_per_cm", "b")], lambda))
+    sds <- apply(m, 1, sd)
+    m <- mu_s(means, lambda) # curve associated with mean a and b
+    cbind(m+2*sds, m, m-2*sds)
+  }
+  m <- matrix(0, length(lambda),0)
+  for(tissue in tissues){
+    m <- cbind(m, ccs(mu_s_prime[df$Tissue == tissue,]))
+  }
+  matplot(lambda, m, type='l', lty=rep(c(2,1,2),length(tissues)), 
+          lwd=rep(c(1,4,1), length(tissues)), xlab=expression(lambda~~(nm)), 
+          ylab=expression({mu[s]}*minute~~(cm^{-1})),
+          col=rep(1:length(tissues), each=3), ylim=c(0,40),
+          main="Reduced Scattering")
+  legend('topright', as.character(tissues), lty=1, lwd=4, 
+         col=1:(length(tissues)), bg="white")
+}
+```
+
+
+For a forward simulation, a scattering coefficient, $\mu_s$, rather than a *reduced* scattering coefficient is required. The scattering coefficient represents the expected number of scattering events per unit length. Its relationship to the reduced scattering coefficient is given by$$g = 1-\frac{\mu_s'}{\mu_s}.$$ Both $g$ and $\mu_s$ are very sparesly representated in the data. Moreover, some models of light propagation in tissue, e.g., that of [openGATE](http://www.opengatecollaboration.org/sites/opengatecollaboration.org/files/Cuplov2014.pdf) (PDF), require both forward and backward anistropy coefficients. These are not represented at all.
+
+The following plots give an idea of the variability in measurements of the reduced scattering coefficient. Broken lines indicate two sample standard deviations as computed from data. 
+
+```{r echo=FALSE, fig.show='hold', fig.align='center'}
+local({
+  tissues <- unique(mu_s_prime$Tissue)
+  par(mfrow=c(1,2))
+  plot_mu_s(mu_s_prime, tissues[c(1,6)])
+  plot_mu_s(mu_s_prime, tissues[c(3,5)])
+  plot_mu_s(mu_s_prime, tissues[c(2,4)])
+  par(mfrow=c(1,1))
+})
+
+```
+
+Measurements of the anistropy coefficients for various tissue and wavelengths are shown below. 
+
+```{r echo=FALSE, fig.show='hold', fig.align='center'}
+local({
+  plot(g[,2],g[,3], type='n', xlab=expression(lambda~~(nm)), ylab="g (dimensionless)", main="Anistropy Coefficients")
+  traces <- unique(g[,c(1,4)])
+  col <- 0
+  for(i in 1:nrow(traces)){
+    idx <- (g[,1] == traces[i,1]) & (g[,4] == traces[i,2])
+    temp <- g[idx,]
+    col <- col+1
+    lines(temp[,2], temp[,3], lwd=3, col=col)
+    points(temp[,2], temp[,3], col=col, pch=19)
+  }
+  legend('bottomright', paste(traces[,1],"--",traces[,2]), lwd=3, col=1:nrow(traces)) 
+  })
+```
+
+
+### Absorption
+
+The inverse, $\frac{1}{\mu_a}$ of the absorption coefficient is the expected length of flight before absorption. The absorption properties of a tissue are given parametrically in terms of concentrations and fractional volumes of various chromophores.
+
+Symbol | Description
+-------|------------
+S | HGb oxygen saturation of mixed arterio-venous vasculature
+B | average blood volume fraction
+W | water content (fractional volume)
+Bili | bilirubin concentration 
+βC | β-carotene concentration 
+F | fat content (fractional volume)
+M | melanosome volume fraction
+
+Given values for these 7 parameters, the 

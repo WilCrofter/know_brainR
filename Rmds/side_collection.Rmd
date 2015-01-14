@@ -34,9 +34,16 @@ net_fraction <- function(r_a, r_b, r_ab){
   r_b*b_angle(r_a, r_b, r_ab)*f_b(r_b, 10)
 }
 
-xplor <- function(r_a, r_ab){
+# r_ab is the distance between the center of the active area and the collector.
+# r_a is the radius of the active area
+# r_b is the radius of 1mm wide annulus centered at b (the collector). 
+# The function estimates the arrival rate of photons from the
+# intersection of this annulus with the active area. An emission
+# rate of 10000 photons per square mm per msec is assumed but can
+# be varied.
+xplor <- function(r_a, r_ab, emission_rate=10000){
   r_b <- seq(r_ab-r_a, r_ab+r_a, by=1)
-  temp <- net_fraction(r_a, r_b, r_ab)
+  temp <- net_fraction(r_a, r_b, r_ab)*emission_rate
   x <- r_b+r_a-r_ab
   plot(x, temp, type='l', lwd=2, xlab="distance into active area (mm)", ylab="net fraction", main=paste("distance of collector from active area =", r_ab-r_a, "mm"))
   temp2 <- x[which.max(temp)]
