@@ -100,3 +100,28 @@ F | fat content (fractional volume)
 M | melanosome volume fraction
 
 Given values for these 7 parameters, the absorption coefficient of a corresponding tissue is a linear combination of chromophore coefficients,$$\mu_a(\lambda) = BS\mu_{a.oxy}(\lambda) + B(1-S)\mu_{a.deoxy}(\lambda) + F\mu_{fat}(\lambda) + M\mu_{a.melanosome}(\lambda) + 2.3Bili \cdot \varepsilon_{bili}(\lambda) + 2.3\beta C \varepsilon_{\beta C}(\lambda),$$where the $\mu_a$'s are absorption coefficients of the indicated chromophores, and the $\varepsilon$'s are extinction coefficients of bilirubin and β-carotene. 
+
+Melanosome absorption fits the following power law in which $m$ is approximately 3.$$\mu_{a.melanosome} = (519 \: cm^{-1})\left(\frac{\lambda}{500 \: nm}\right)^{-m}.$$The remaining chromophore spectra are given empirically.
+
+```{r echo=FALSE, fig.show='hold', fig.align='center'}
+mu_a <- mu_a[mu_a$wavelength >= 800 & mu_a$wavelength <= 1300,]
+x <- seq(800, 1300, by=10)
+y <- 519*(x/500)^(-3)
+plot(c(mu_a$wavelength,x), c(mu_a$absorption.coefficient,y), type="n", xlab=expression(lambda~~(nm)), ylab=expression(mu[a]~~(cm^{-1})), main="Chromophore Absorption Properties", log="y")
+idx <-!is.na(mu_a$absorption.coefficient)
+studies <- unique(mu_a[idx,1:2])
+col<-0
+for(n in 1:nrow(studies)){
+  col <- col+1
+  idx <- mu_a[,1]==studies[n,1] & mu_a[,2]==studies[n,2]
+  lines(mu_a[idx,"wavelength"], mu_a[idx, "absorption.coefficient"], lwd=3, col=col)
+  points(mu_a[idx,"wavelength"], mu_a[idx, "absorption.coefficient"], col=col)
+}
+studies <- c(as.character(studies[,1]), "melanosome")
+lines(x, y, lwd=3, col=col+1)
+legend('bottomright', studies, col=1:length(studies), lwd=3, bg="white")
+```
+
+[download Rmd file (includes source code)](jacques.Rmd)
+
+download csv data files: [Reduced Scattering](../reduced_scattering_coefficients), [Anistropy](anistropy_coefficients.csv), [Absorption](../absorption.csv)
