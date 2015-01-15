@@ -1,4 +1,4 @@
-tissue,source,wavelength,aborption coefficient,extinction coefficient
+tissue,source,wavelength,absorption coefficient,extinction coefficient
 oxygenated blood,Takatani & Graham,247.63995,572.6028,
 oxygenated blood,Takatani & Graham,272.90744,749.31635,
 oxygenated blood,Takatani & Graham,289.02246,548.1989,
