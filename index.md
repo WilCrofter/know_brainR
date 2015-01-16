@@ -7,6 +7,7 @@
 
 #### Notes in reverse chronological order
 
+-   [Optical Properies of Tissue](Rmds/jacques.Rmd)
 -   [Reconstruction by Linear Regression](Rmds/optimal_reconstruction.html)
 -   [Discrete estimation of eigenvalues and spatial resolution](Rmds/discrete_methods.html)
 -   [Spatial Resolution of \~1 cm Estimated](Rmds/spatial_resolution.html)
