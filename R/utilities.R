@@ -38,3 +38,13 @@ vsd_spectrum <- function(n, lambda_peak=900, lambda_range=250){
   ans[,"F_depolarized"] <- ans[,"F_depolarized"]/sum(ans[,"F_depolarized"])
   return(ans)
 }
+
+# Generates n points uniformly distributed on the unit sphere
+# or half sphere (half=TRUE).
+# Reference: http://mathworld.wolfram.com/SpherePointPicking.html
+rusphere <- function(n, half=FALSE){
+  theta <- runif(n, 0, 2*pi)
+  u <- runif(n, half-1, 1) # half converts from logical to numerical
+  sinu <- sqrt(1-u^2)
+  cbind(x=sinu*cos(theta), y=sinu*sin(theta), z=u)
+}
