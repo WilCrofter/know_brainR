@@ -99,7 +99,7 @@ Bili | bilirubin concentration
 F | fat content (fractional volume)
 M | melanosome volume fraction
 
-Given values for these 7 parameters, the absorption coefficient of a corresponding tissue is a linear combination of chromophore coefficients,$$\mu_a(\lambda) = BS\mu_{a.oxy}(\lambda) + B(1-S)\mu_{a.deoxy}(\lambda) + F\mu_{fat}(\lambda) + M\mu_{a.melanosome}(\lambda) + 2.3Bili \cdot \varepsilon_{bili}(\lambda) + 2.3\beta C \varepsilon_{\beta C}(\lambda),$$where the $\mu_a$'s are absorption coefficients of the indicated chromophores, and the $\varepsilon$'s are extinction coefficients of bilirubin and β-carotene. 
+Given values for these 7 parameters, the absorption coefficient of a corresponding tissue is a linear combination of chromophore coefficients,$$\mu_a(\lambda) = BS\mu_{a.oxy}(\lambda) + B(1-S)\mu_{a.deoxy}(\lambda) + W\mu{a.water}(\lambda) + F\mu_{a.fat}(\lambda) + M\mu_{a.melanosome}(\lambda) + 2.3Bili \cdot \varepsilon_{bili}(\lambda) + 2.3\beta C \varepsilon_{\beta C}(\lambda),$$where the $\mu_a$'s are absorption coefficients of the indicated chromophores, and the $\varepsilon$'s are extinction coefficients of bilirubin and β-carotene. 
 
 Melanosome absorption fits the following power law in which $m$ is approximately 3.$$\mu_{a.melanosome} = (519 \: cm^{-1})\left(\frac{\lambda}{500 \: nm}\right)^{-m}.$$The remaining chromophore spectra are given empirically.
 
@@ -124,7 +124,7 @@ legend('bottomright', studies, col=1:length(studies), lwd=3, bg="white")
 
 ### Refraction
 
-According to the reference, the value of the real refraction coefficient, n, of tissue scales linearly with its water content, W,$$n = n_{dry} − (n_{dry} − n_{water}W,$$ where $n_{dry} \approx 1.514$ and $n_{water} = 1.33.$ The following values are from [T Biswas, T Luu. In vivo MR Measurement of Refractive Index, Relative Water Content and T2 Relaxation time of Various Brain lesions With Clinical Application to Discriminate Brain Lesions. The Internet Journal of Radiology. 2009 Volume 13 Number 1.](https://ispub.com/IJRA/13/1/8277#)
+According to the reference, the value of the real refraction coefficient, n, of tissue scales linearly with its water content, W,$$n = n_{dry} − (n_{dry} − n_{water})W,$$ where $n_{dry} \approx 1.514$ and $n_{water} = 1.33.$ The following values are from [T Biswas, T Luu. In vivo MR Measurement of Refractive Index, Relative Water Content and T2 Relaxation time of Various Brain lesions With Clinical Application to Discriminate Brain Lesions. The Internet Journal of Radiology. 2009 Volume 13 Number 1.](https://ispub.com/IJRA/13/1/8277#)
 
 Tissue | W
 -------|-------
