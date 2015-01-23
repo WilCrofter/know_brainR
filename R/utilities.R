@@ -49,3 +49,41 @@ rusphere <- function(n, half=FALSE){
   cbind(x=sinu*cos(theta), y=sinu*sin(theta), z=cosu)
 }
 
+# Henyey-Greenstein approximation to probability density function
+# of the cosine of a scattering angle.
+pdfHG <- function(cosu, g){
+  0.5*(1-g^2)/(1+g*(g-2*cosu))^1.5
+}
+
+# Creates cumulative distribution function for the Henyey-Greenstain PDF.
+# NOTE: the returned function retains a reference to the lexical scope in
+# which it was created, so g and the temporary function will be implicitly
+# available. e.g.  if f <- cdfHG(.9), environment(f)$g will return .9.
+cdfHG <- function(g){
+  temp <- function(cosu)pdfHG(cosu, g)
+  function(cosv)sapply(cosv, FUN=function(x)integrate(temp, -1, x)$value)
+}
+
+# Creates an inverse CDF function for the Henyey-Greenstein PDF
+# associated with anistropy coefficient g, to enable random
+# sampling from the distribution.
+icdfHG <- function(g){
+  cdf <- cdfHG(g)
+  cosu <- seq(-1, 1, by=0.01)
+  u <- cdf(cosu)
+  approxfun(u, cosu)
+}
+
+# Given a unit vector, unit_v, representing direction of travel,
+# and the cosine of a scattering angle, cosu, returns a new unit
+# vector representing direction after scattering
+scatter <- function(unit_v, cosu){
+  sinu <- sqrt(1 - cosu^2)
+  # orthonormal basis for the orthogonal complement of unit_v
+  b1 <- c(unit_v[2], -unit_v[1], 0)/sqrt(sum(unit_v[1:2]^2))
+  b2 <- c(0, -unit_v[3], unit_v[2]) + b1*b1[2]*unit_v[3]
+  b2 <- b2/sqrt(sum(b2^2))
+  # random angle
+  psi <- runif(1, 0, 2*pi)
+  cosu*unit_v + sinu*sin(psi)*b1 + sinu*cos(psi)*b2
+}
