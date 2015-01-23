@@ -99,7 +99,7 @@ Bili | bilirubin concentration
 F | fat content (fractional volume)
 M | melanosome volume fraction
 
-Given values for these 7 parameters, the absorption coefficient of a corresponding tissue is a linear combination of chromophore coefficients,$$\mu_a(\lambda) = BS\mu_{a.oxy}(\lambda) + B(1-S)\mu_{a.deoxy}(\lambda) + W\mu{a.water}(\lambda) + F\mu_{a.fat}(\lambda) + M\mu_{a.melanosome}(\lambda) + 2.3Bili \cdot \varepsilon_{bili}(\lambda) + 2.3\beta C \varepsilon_{\beta C}(\lambda),$$where the $\mu_a$'s are absorption coefficients of the indicated chromophores, and the $\varepsilon$'s are extinction coefficients of bilirubin and β-carotene. 
+Given values for these 7 parameters, the absorption coefficient of a corresponding tissue is a linear combination of chromophore coefficients,$$\mu_a(\lambda) = BS\mu_{a.oxy}(\lambda) + B(1-S)\mu_{a.deoxy}(\lambda) + W\mu_{a.water}(\lambda) + F\mu_{a.fat}(\lambda) + M\mu_{a.melanosome}(\lambda) + 2.3Bili \cdot \varepsilon_{bili}(\lambda) + 2.3\beta C \varepsilon_{\beta C}(\lambda),$$where the $\mu_a$'s are absorption coefficients of the indicated chromophores, and the $\varepsilon$'s are extinction coefficients of bilirubin and β-carotene. 
 
 Melanosome absorption fits the following power law in which $m$ is approximately 3.$$\mu_{a.melanosome} = (519 \: cm^{-1})\left(\frac{\lambda}{500 \: nm}\right)^{-m}.$$The remaining chromophore spectra are given empirically.
 
