@@ -88,10 +88,31 @@ scatter1 <- function(d, cosu){
   cosu*d + sinu*sin(psi)*b1 + sinu*cos(psi)*b2
 }
 
-# Given an nx3 matrix, D, of unit vectors representing direction,
-# and an n-long index, live, representing photons which are
-# still traveling within a medium having anisotropy coefficient
-# g, return new directions of travel after simulated scattering.
-scatter <- function(D, live, g){
-  
+# Given an nx3 matrix, D, of unit vectors representing directions
+# of photons traveling within a medium with an inverse CDF, invCDF,
+# for scattering angles, compute scattered directions.
+scatter <- function(D, invCDF){
+  # randomly sample from the scattering angle distribution
+  # and append cosines of scattering angles to D
+  D <- cbind(D, invCDF(runif(nrow(D))))
+  # apply scatter1 to each row of D and return the result
+  t(apply(D, 1, function(d){scatter1(d[1:3], d[4])}))
 }
+
+# Given a scattering coefficient (not a reduced scattering coefficient,) mu_s,
+# and an absorption coefficient, mu_a, both in units of events per mm, and
+# given nx3 arrays, P and D, representing positions and directions of travel
+# respectively, compute new positions based on randomly sampled
+# distances to new events, assuming these occur within the medium of interest.
+# Return the new positions along with a logical vector indicating which events
+# were absorptions.
+# NOTE: The rows of D must be unit vectors.
+move_tentatively <- function(P, D, mu_s, mu_a){
+  n <- nrow(P)
+  scattering_distances <- rexp(n, mu_s)
+  absorption_distances <- rexp(n, mu_a)
+  absorptions <- scattering_distances > absorption_distances
+  P <- P + pmin(scattering_distances, absorption_distances)*D
+  list(positions=P, absorptions=absorptions)
+}
+
