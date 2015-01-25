@@ -65,7 +65,7 @@ cdfHG <- function(g){
 }
 
 # Creates an inverse CDF function for the Henyey-Greenstein PDF
-# associated with anistropy coefficient g, to enable random
+# associated with anisotropy coefficient g, to enable random
 # sampling from the distribution.
 icdfHG <- function(g){
   cdf <- cdfHG(g)
@@ -74,16 +74,24 @@ icdfHG <- function(g){
   approxfun(u, cosu)
 }
 
-# Given a unit vector, unit_v, representing direction of travel,
+# Given a unit vector, d, representing direction of travel,
 # and the cosine of a scattering angle, cosu, returns a new unit
-# vector representing direction after scattering
-scatter <- function(unit_v, cosu){
+# vector representing direction after scattering.
+scatter1 <- function(d, cosu){
   sinu <- sqrt(1 - cosu^2)
-  # orthonormal basis for the orthogonal complement of unit_v
-  b1 <- c(unit_v[2], -unit_v[1], 0)/sqrt(sum(unit_v[1:2]^2))
-  b2 <- c(0, -unit_v[3], unit_v[2]) + b1*b1[2]*unit_v[3]
+  # orthonormal basis for the orthogonal complement of d
+  b1 <- c(d[2], -d[1], 0)/sqrt(sum(d[1:2]^2))
+  b2 <- c(0, -d[3], d[2]) + b1*b1[2]*d[3]
   b2 <- b2/sqrt(sum(b2^2))
   # random angle
   psi <- runif(1, 0, 2*pi)
-  cosu*unit_v + sinu*sin(psi)*b1 + sinu*cos(psi)*b2
+  cosu*d + sinu*sin(psi)*b1 + sinu*cos(psi)*b2
+}
+
+# Given an nx3 matrix, D, of unit vectors representing direction,
+# and an n-long index, live, representing photons which are
+# still traveling within a medium having anisotropy coefficient
+# g, return new directions of travel after simulated scattering.
+scatter <- function(D, live, g){
+  
 }

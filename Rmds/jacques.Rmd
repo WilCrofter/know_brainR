@@ -7,16 +7,16 @@ output: html_document
 
 **Reference** Steven L Jacques, Optical properties of biological tissues: a review, 2013, [Phys. Med. Biol. 58 R37](http://iopscience.iop.org/0031-9155/58/11/R37)
 
-The inverse problem subcommittee's first goal is "a computationally feasible forward model enabling accurate description of light propagation in the human brain." (Wong, Rahmim, Gjedde, R24 Grant Proposal.) Optical properties of the human brain and enclosing tissues will be required for that purpose. The reference is a recent summary of certain known optical properties of tissue. In the reference, the data is presented as a combination of tables and plots. I've converted relevant portions of the data to machine-readable csv format using cut-and-paste for tables and [a plot digitizer](http://plotdigitizer.sourceforge.net/) for graphs. The csv files are available [here](../data/absorption.csv), [here](../data/anistropy_coefficients.csv) and [here](../data/reduced_scattering_coefficients.csv).
+The inverse problem subcommittee's first goal is "a computationally feasible forward model enabling accurate description of light propagation in the human brain." (Wong, Rahmim, Gjedde, R24 Grant Proposal.) Optical properties of the human brain and enclosing tissues will be required for that purpose. The reference is a recent summary of certain known optical properties of tissue. In the reference, the data is presented as a combination of tables and plots. I've converted relevant portions of the data to machine-readable csv format using cut-and-paste for tables and [a plot digitizer](http://plotdigitizer.sourceforge.net/) for graphs. The csv files are available [here](../data/absorption.csv), [here](../data/anisotropy_coefficients.csv) and [here](../data/reduced_scattering_coefficients.csv).
 
-The three optical properties covered are the reduced scattering coefficient, $\mu_s'$, the anistropy coefficient, $g$, and the aborption coefficient, $\mu_a$. These quantities are wavelength and tissue dependent, and not all wavelengths and tissues of interest are covered. Moreover, there is a great deal of variability in measurements for a given tissue.
+The three optical properties covered are the reduced scattering coefficient, $\mu_s'$, the anisotropy coefficient, $g$, and the aborption coefficient, $\mu_a$. These quantities are wavelength and tissue dependent, and not all wavelengths and tissues of interest are covered. Moreover, there is a great deal of variability in measurements for a given tissue.
 
 ### Scattering
 
 ```{r echo=FALSE, fig.show='hold'}
 readme <- function(file)read.table(file, header=TRUE, sep=",", comment.char="#")
 mu_a <- readme("../data/absorption.csv")
-g <- readme("../data/anistropy_coefficients.csv")
+g <- readme("../data/anisotropy_coefficients.csv")
 mu_s_prime <- readme("../data/reduced_scattering_coefficients.csv")
 
 plot_mu_s <- function(df, tissues = unique(df$Tissue)){
@@ -50,7 +50,7 @@ plot_mu_s <- function(df, tissues = unique(df$Tissue)){
 ```
 
 
-For a forward simulation, a scattering coefficient, $\mu_s$, rather than a *reduced* scattering coefficient is required. The scattering coefficient represents the expected number of scattering events per unit length. Its relationship to the reduced scattering coefficient is given by$$g = 1-\frac{\mu_s'}{\mu_s}.$$ Both $g$ and $\mu_s$ are very sparesly representated in the data. Moreover, some models of light propagation in tissue, e.g., that of [openGATE](http://www.opengatecollaboration.org/sites/opengatecollaboration.org/files/Cuplov2014.pdf) (PDF), require both forward and backward anistropy coefficients. These are not represented at all.
+For a forward simulation, a scattering coefficient, $\mu_s$, rather than a *reduced* scattering coefficient is required. The scattering coefficient represents the expected number of scattering events per unit length. Its relationship to the reduced scattering coefficient is given by$$g = 1-\frac{\mu_s'}{\mu_s}.$$ Both $g$ and $\mu_s$ are very sparesly representated in the data. Moreover, some models of light propagation in tissue, e.g., that of [openGATE](http://www.opengatecollaboration.org/sites/opengatecollaboration.org/files/Cuplov2014.pdf) (PDF), require both forward and backward anisotropy coefficients. These are not represented at all.
 
 For wavelengths of interest, reduced scattering spectra have the following (Rayleigh) form,$$\mu_s' = a\left(\frac{\lambda}{500nm}\right)^{-b}.$$Measurements are fit to curves and coefficients, $a$, and $b$ tabulated. The following plots give an idea of the variability in measurements. Broken lines indicate two sample standard deviations as computed from data. 
 
@@ -66,7 +66,7 @@ local({
 
 ```
 
-Measurements of the anistropy coefficients for various tissue and wavelengths are shown below. 
+Measurements of the anisotropy coefficients for various tissue and wavelengths are shown below. 
 
 ```{r echo=FALSE, fig.show='hold', fig.align='center'}
 local({
@@ -134,4 +134,4 @@ White matter | 0.7
 
 [download Rmd file (includes source code)](jacques.Rmd)
 
-download csv data files: [Reduced Scattering](../reduced_scattering_coefficients), [Anistropy](anistropy_coefficients.csv), [Absorption](../absorption.csv)
+download csv data files: [Reduced Scattering](../reduced_scattering_coefficients), [Anisotropy](anisotropy_coefficients.csv), [Absorption](../absorption.csv)
