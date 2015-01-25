@@ -70,7 +70,7 @@ Measurements of the anisotropy coefficients for various tissue and wavelengths a
 
 ```{r echo=FALSE, fig.show='hold', fig.align='center'}
 local({
-  plot(g[,2],g[,3], type='n', xlab=expression(lambda~~(nm)), ylab="g (dimensionless)", main="Anistropy Coefficients")
+  plot(g[,2],g[,3], type='n', xlab=expression(lambda~~(nm)), ylab="g (dimensionless)", main="Anisotropy Coefficients")
   traces <- unique(g[,c(1,4)])
   col <- 0
   for(i in 1:nrow(traces)){
