@@ -107,12 +107,69 @@ scatter <- function(D, invCDF){
 # Return the new positions along with a logical vector indicating which events
 # were absorptions.
 # NOTE: The rows of D must be unit vectors.
-move_tentatively <- function(P, D, mu_s, mu_a){
+move_provisionally <- function(P, D, mu_s, mu_a){
   n <- nrow(P)
   scattering_distances <- rexp(n, mu_s)
   absorption_distances <- rexp(n, mu_a)
   absorptions <- scattering_distances > absorption_distances
   P <- P + pmin(scattering_distances, absorption_distances)*D
-  list(positions=P, absorptions=absorptions)
+  list(P=P, absorptions=absorptions)
 }
 
+# Given nx3 matrices of positions, P, and directions of motion, D,
+# toward those positions, create a logical vectors marking rows
+# for which the z coordinate exceeds thickness/2 in absolute
+# value indicating exit from the tissue. Adjust relevant positions to 
+# their exit points. Return top and bottom exit indicators and
+# adjusted P.
+mark_exits <- function(P, D, thickness){
+  tops <- P[,"z"] > thickness/2
+  bottoms <- P[ ,"z"] < -thickness/2
+  P[tops,] <- P[tops, ] - ((P[tops, "z"]-thickness/2)/D[tops, "z"])*D[tops,]
+  P[bottoms,] <- P[bottoms, ] - ((P[bottoms, "z"]+thickness/2)/D[bottoms, "z"])*D[bottoms,]
+  list(P=P, exits=tops | bottoms)
+}
+
+# Given:
+#   P, an nx3 matrix of internal positions of photons
+#   D, an nx3 matrix of unit vectors indicating directions of motion
+#   invCDF, the inverse CDF of the scattering angle cosine
+#   mu_s and mu_a, (nonreduced) scattering and absorption coefficients in units of events/mm
+#   thickness of the tissue layer
+# simulate scattering, absorption and exit (contact with boundary) events, returning
+# new P and D for remaining photons, and a matrix of exit positions X.
+step <- function(P, D, invCDF, mu_s, mu_a, thickness){
+  # step provisionally, ignoring boundaries
+  provisional_step <- move_provisionally(P, D, mu_s, mu_a)
+  # correct for exits
+  corrected_step <- mark_exits(provisional_step[["P"]], D, thickness)
+  # update positions
+  P <- corrected_step[["P"]]
+  # extract exit positions
+  exits <- corrected_step[["exits"]]
+  X <- matrify(P, exits)
+  # extract absorbed positions with are not exits
+  absorbed <- provisional_step[["absorptions"]] & !exits
+  A <- matrify(P, absorbed)
+  # remove exiting and absorbed photons from P and D
+  dead <- exits | absorbed
+  P <- matrify(P, !dead)
+  D <- matrify(D, !dead)
+  # scatter the remaining photons
+  D <- scatter(D, invCDF)
+  # return P, D, X, and A
+  list(P=P, D=D, X=X, A=A)
+}
+
+init_P <- function(n, thickness){
+  P <- cbind(x=rep(0,n), y=rep(0,n), z=runif(n, -thickness/2, thickness/2))
+  row.names(P) <- 1:n
+  P
+}
+
+matrify <- function(M, idx, ncol=3){
+  ans <- matrix(M[idx,], ncol=ncol)
+  colnames(ans) <- colnames(M)
+  try(rownames(ans) <- rownames(M)[idx], silent=FALSE)
+  ans
+}
