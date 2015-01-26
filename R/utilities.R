@@ -107,7 +107,7 @@ scatter <- function(D, invCDF){
 # Return the new positions along with a logical vector indicating which events
 # were absorptions.
 # NOTE: The rows of D must be unit vectors.
-move_tentatively <- function(P, D, mu_s, mu_a){
+move_provisionally <- function(P, D, mu_s, mu_a){
   n <- nrow(P)
   scattering_distances <- rexp(n, mu_s)
   absorption_distances <- rexp(n, mu_a)
@@ -116,3 +116,16 @@ move_tentatively <- function(P, D, mu_s, mu_a){
   list(positions=P, absorptions=absorptions)
 }
 
+# Given nx3 matrices of positions, P, and directions of motion, D,
+# toward those positions, create a logical vectors marking rows
+# for which the z coordinate exceeds thickness/2 in absolute
+# value indicating exit from the tissue. Adjust relevant positions to 
+# their exit points. Return top and bottom exit indicators and
+# adjusted P.
+mark_exits <- function(P, D, thickness){
+  tops <- P[,"z"] > thickness/2
+  bottoms <- P[ ,"z"] < -thickness/2
+  P[tops,] <- P[tops, ] - ((P[tops, "z"]-thickness/2)/D[tops, "z"])*D[tops,]
+  P[bottoms,] <- P[bottoms, ] - ((P[bottoms, "z"]+thickness/2)/D[bottoms, "z"])*D[bottoms,]
+  list(positions=P, tops=tops, bottoms=bottoms)
+}
