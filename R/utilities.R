@@ -173,3 +173,17 @@ matrify <- function(M, idx, ncol=3){
   try(rownames(ans) <- rownames(M)[idx], silent=FALSE)
   ans
 }
+
+sim_exits <- function(nphotons, thickness=3.0, mu_s=10, mu_a=0.0335, g=0.9, max_steps=100){
+  invCDF <- icdfHG(g)
+  state= list(P=init_P(nphotons, thickness), D=rusphere(nphotons))
+  top_exits <- data.frame(x=NULL, y=NULL)
+  for(i in 1:max_steps){
+    if(length(state$P)==0)break
+    nxt <- step(state$P, state$D, invCDF, mu_s, mu_a, thickness)
+    temp <- matrify(nxt$X, nxt$X[,"z"] > 0)
+    top_exits <- rbind(top_exits, temp[,c("x", "y")])
+    state <- nxt[c("P", "D")]
+  }
+  top_exits
+}
