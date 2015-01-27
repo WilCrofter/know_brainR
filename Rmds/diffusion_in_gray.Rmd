@@ -5,17 +5,15 @@ date: "01/22/2015"
 output: html_document
 ---
 
-Assume an infinite planar section of gray matter 3 mm thick. Assume photons at 900 nm wavelength originate in a 3mm column at the origin of the xy plane. The object is to estimate their spatial distribution as they first contact the top surface of the section, and to compare this estimate with that of a random walk. Both absorption and scattering are taken into account but neither reflection at boundaries nor re-entry from surrounding tissues is considered.
+#### Estimating optical properties of gray matter at 900 nm
 
-#### Estimating optical properties at 900 nm
-
-Referring to the previous note, [Optical Properties of Tissue](jacques.html), a rough reduced scattering coefficient estimate in gray matter is $\mu_s' \approx 10\: cm^{-1}$ and a rough anistropy coefficient estimate is $g \approx .9$. Since $g = 1-\frac{\mu_s'}{\mu_s}$ these imply a scattering coefficient of$$\mu_s = \frac{\mu_s'}{1-g} = 100\: cm^{-1}$$i.e., 100 scattering events per cm, hence an average distance of .1 mm traveled between scattering events.
+Referring to the previous note, [Optical Properties of Tissue](jacques.html), a rough reduced scattering coefficient estimate in gray matter is $\mu_s' \approx 10\: cm^{-1}$ and a rough anisotropy coefficient estimate is $g \approx .9$. Since $g = 1-\frac{\mu_s'}{\mu_s}$ these imply a scattering coefficient of$$\mu_s = \frac{\mu_s'}{1-g} = 100\: cm^{-1}$$i.e., 100 scattering events per cm, hence an average distance of .1 mm traveled between scattering events.
 
 In the previous note absorption is given by a formula involving volume fractions of various constituents such as water. Assume vasculature accounts for around 5% of gray matter volume, equally apportioned between oxygenated and deoxgenated blood, and assume a fractional volume of 80% water as per a reference given in the previous note. Assume other chromophores are negligible. At 900 nm, $\mu_{a.oxy} \approx 6.5 \: cm^{-1}$, $\mu_{a.deoxy} \approx 4.5 \: cm^{-1}$, and $\mu_{a.water} \approx 0.076  \: cm^{-1}.$ Then$$\mu_{a.gray} \approx 0.05 \left(0.5 \cdot 6.5 + 0.5 \cdot 4.5 \right) + 0.8 \cdot 0.076 = 0.336 \: cm^{-1}.$$
 
 #### Typical photon tracks
 
-Using these parameters and straightforward simulation produces tracks in the figure.
+Consider an infinite planar section of gray matter 3 mm thick, with photons at 900 nm wavelength originating in a 3mm column at the origin of the xy plane. The following figure shows typical paths. Both absorption and scattering are taken into account but neither reflection at boundaries nor re-entry from surrounding tissues is considered.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
 # Follow n photons from the origin to absorption or exit
@@ -64,7 +62,7 @@ local({
     plot_ends(nxt$A, 4, cex=1.25, pch=19)
     temp <- matrify(nxt$X, nxt$X[,"z"] > 0 ) # exits at positive z (top)
     plot_steps(state$P,temp, col, lwd=3)
-    plot_ends(temp, 1, cex=1.5, pch=19)
+    plot_ends(temp, 1, cex=1.75, pch=19)
     temp <- matrify(nxt$X, nxt$X[,"z"] < 0 ) # exits at negative z (bottom)
     plot_ends(temp, 2, cex=1.25, pch=19)
     state <- nxt[c("P", "D")]
@@ -72,4 +70,3 @@ local({
   legend("topleft", c("Exit top", "Exit bottom", "Absorbed"), pch=19, col=c(1,2,4))
 })
 ```
-
