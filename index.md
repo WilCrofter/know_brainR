@@ -6,7 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
-
+-   [Photon Diffusion in Gray Matter](Rmds/diffusion_in_gray.Rmd) (in progress)
 -   [Optical Properies of Tissue](Rmds/jacques.html)
 -   [Reconstruction by Linear Regression](Rmds/optimal_reconstruction.html)
 -   [Discrete estimation of eigenvalues and spatial resolution](Rmds/discrete_methods.html)

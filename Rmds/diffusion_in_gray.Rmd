@@ -51,7 +51,7 @@ local({
   invCDF <- icdfHG(g)
   # Initial positions, P, and directions, D, at the origin of the xy plane
   set.seed(458754)
-  state= list(P=init_P(n, 3.0), D=rusphere(n))
+  state= list(P=init_column(n, 3.0), D=rusphere(n))
   plot(c(-plotspan, plotspan), c(-plotspan, plotspan), type="n", xlab="x (mm)", ylab="y (mm)", main=paste("900 nm photon tracks\n", n, "photons,", nsteps, "steps"))
   # step and plot
   for(j in 1:nsteps){
@@ -70,3 +70,32 @@ local({
   legend("topleft", c("Exit top", "Exit bottom", "Absorbed"), pch=19, col=c(1,2,4))
 })
 ```
+
+#### Propagation with scattering and absorption in an infinite medium
+
+In planar section of finite thickness, as above, boundary effects are complicating factors. In an infinitely thick medium, scattering alone even with significant anisotropy, should amount to a random walk in three dimensions. As such, photons emitted from the same origin should diffuse in a Gaussian pattern. If the photons are emitted in random directions at their source, the Gaussian pattern should be spherical (not elliptical.) Absorption will reduce the number of photons which survive but should not alter the general pattern.
+
+Using the above optical characteristics in an infinite medium, 1000 photons were tracked for 100 steps each as a quick test. (A step constitutes an event, either absorption or scattering.) A Shapiro-Wilk normality test applied to the x, y, and z, coordinates of surviving photons fails to reject normality. The coordinates of surviving photons have Gaussian distributions as expected.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+set.seed(89457021)
+sim <- sim_infinite(1000, 100)
+data.frame(row.names=c("x", "y", "z"), 
+           Shapiro_Wilk_p_value=c(shapiro.test(sim$P[,"x"])$p.value,
+                     shapiro.test(sim$P[,"y"])$p.value,
+                     shapiro.test(sim$P[,"z"])$p.value))
+```
+
+Moreover, their distribution is spherical as the figure, showing the joint distribution of x and y coordinates, suggests. The conclusion is supported by formal tests which show insignificant correlation between x, y, and z coordinates.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+
+local({
+  mai <- par("mai")
+  par(mai=adj_margins())
+  plot(sim$P[,"x"], sim$P[,"y"], xlab="x (mm)", ylab="y (mm)", xlim=c(-10, 10), ylim=c(-10, 10),
+       main=paste("Spatial distribution of the ", nrow(sim$P), "surviving\nphotons in the xy plane."))
+  par(mai=mai)
+})
+```
+

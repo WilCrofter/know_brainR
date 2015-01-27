@@ -161,12 +161,18 @@ step <- function(P, D, invCDF, mu_s, mu_a, thickness){
   list(P=P, D=D, X=X, A=A)
 }
 
-init_P <- function(n, thickness){
+# Initialize a column of photons, uniformly distributed on the z axis
+# at the xy origin.
+init_column <- function(n, thickness){
   P <- cbind(x=rep(0,n), y=rep(0,n), z=runif(n, -thickness/2, thickness/2))
   row.names(P) <- 1:n
   P
 }
 
+# R subsetting casts a 1xm matrix to an m-long vector because, after
+# all, consistency is the hobgoblin of small minds. This small-minded
+# function subsets consistently, using the logical vector idx to
+# return a sub-MATRIX of select rows of M.
 matrify <- function(M, idx, ncol=3){
   ans <- matrix(M[idx,], ncol=ncol)
   colnames(ans) <- colnames(M)
@@ -174,6 +180,38 @@ matrify <- function(M, idx, ncol=3){
   ans
 }
 
+# Simulates scattering and absorption in a uniform material of infinite extent,
+# assuming nphotons are emitted at the origin.  
+sim_infinite <- function(nphotons, steps, mu_s=10, mu_a=0.0336, g=0.9){
+  invCDF <- icdfHG(g)
+  state = list(P = cbind(x=rep(0,nphotons), y=rep(0,nphotons), z=rep(0,nphotons)),
+               D = rusphere(nphotons))
+  for(i in 1:steps){
+    if(length(state$P)==0)break
+    nxt <- step(state$P, state$D, invCDF, mu_s, mu_a, Inf)
+    state <- nxt[c("P", "D")]
+  }
+  state$steps <- i
+  state
+}
+
+# compute margins which make plot window square
+adj_margins <- function(){
+  fin <- par("fin") # (window in inches)
+  mai <- par("mai") # (margins in inches)
+  # We want fin[1]-(mai[2]+mai[4]) == fin[2] - (mai[1]+mai[3])
+  w <- fin[1]-(mai[2]+mai[4]) # plot window width
+  h <- fin[2]-(mai[1]+mai[3]) # plot window height
+  # We'll preserve the smallest of these two dimensions
+  if(w > h){
+    delta <- (w-h)/2
+    mai[c(2,4)] <- mai[c(2,4)] + delta
+  } else {
+    delta <- (h-w)/2
+    mai[c(1,3)] <- mai[c(1,3)] + delta
+  }
+  mai
+}
 sim_exits <- function(nphotons, thickness=3.0, mu_s=10, mu_a=0.0335, g=0.9, max_steps=100){
   invCDF <- icdfHG(g)
   state= list(P=init_P(nphotons, thickness), D=rusphere(nphotons))
