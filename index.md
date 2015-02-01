@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Energy Density Estimate](Rmds/energy_density.html)
 -   [Photon Diffusion in Gray Matter](Rmds/diffusion_in_gray.html) (in progress)
 -   [Optical Properies of Tissue](Rmds/jacques.html)
 -   [Reconstruction by Linear Regression](Rmds/optimal_reconstruction.html)

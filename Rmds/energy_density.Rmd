@@ -1,0 +1,14 @@
+---
+title: "Energy density estimate"
+author: "W. Bauer"
+date: "02/01/2015"
+output: html_document
+---
+
+A 1 micromolar concentration corresponds to about $6.02 \times 10^{11}$ molecules per $mm^3$:$$\frac{1\: \mu mole}{liter} = 10^{-6} \: \frac{6.02 \times 10^{23} \: molecules}{(100\: mm)^3}\\ = 6.02 \times 10^{11} \: \frac{molecules}{mm^3}.$$A 1 micromolar concentration of VSD can, as an upper bound, emit or absorb this same number of photons in a given time period.
+
+The energy of a single photon of 900 nm wavelength is about $2.21 \times 10^{-18}\: J$:$$\frac{hc}{\lambda} = \frac{6.63 \times 10^{-34} \: J \cdot sec \times 3 \times 10^9 \: m/sec}{900 \times 10^{-9} \: m} \\ = 2.21 \times 10^{-18} \: J.$$
+
+The product of these two numbers gives an energy density of $1.33 \times 10^{-6} \: \frac{J}{mm^3}$:$$6.02\times 10^{11}\:\frac{molecules}{mm^3}\times 2.21\times 10^{-18} \: \frac{J}{molecule} \\ = 1.33\times 10^{-6} \: \frac{J}{mm^3}$$
+
+A Pascal is a Joule per cubic meter, which equates to $10^{-9} \: \frac{J}{mm^3}$. Thus, the above energy density equates to$$1330 \: Pa \approx 1\: kPa.$$For reference, diagnostic ultrasound energy densities range from $500 \: kPa$ to $5 \: MPa.$ [Acoustics for Ultrasound Imaging, Ben Cox, 2013](http://www.ucl.ac.uk/medphys/staff/people/bcox/USlecturenotes_Jan2013.pdf) (PDF.)
