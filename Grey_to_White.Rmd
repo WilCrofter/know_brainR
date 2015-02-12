@@ -1,0 +1,30 @@
+---
+title: "Grey_to_White"
+author: "gina"
+date: "02/12/2015"
+output: html_document
+---
+### Refraction
+
+According to the reference, the value of the real refraction coefficient, n, of tissue scales linearly with its water content, W,$$n = n_{dry} − (n_{dry} − n_{water})W,$$ where $n_{dry} \approx 1.514$ and $n_{water} = 1.33.$ The following values are from [T Biswas, T Luu. In vivo MR Measurement of Refractive Index, Relative Water Content and T2 Relaxation time of Various Brain lesions With Clinical Application to Discriminate Brain Lesions. The Internet Journal of Radiology. 2009 Volume 13 Number 1.](https://ispub.com/IJRA/13/1/8277#)
+
+Tissue | W
+-------|-------
+CSF | 1.0
+Gray matter | 0.8
+White matter | 0.7
+
+```{r}
+dry <- 1.14
+wet <- 1.33
+n_gray <- dry - (dry-wet)*.8
+n_white <- dry - (dry-wet)*.7
+```
+
+You can also embed plots, for example:
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
