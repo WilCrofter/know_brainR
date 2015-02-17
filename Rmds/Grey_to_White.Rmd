@@ -1,0 +1,63 @@
+---
+title: "Grey_to_White"
+author: "gina"
+date: "02/12/2015"
+output: html_document
+---
+### Refraction
+From WRB's jacques.Rmd section on refraction, we have a formula for a real refraction coefficent, n, as a function of the tissue's water content W.
+$$n = n_{dry} − (n_{dry} − n_{water})W,$$ where $n_{dry} \approx 1.514$ and $n_{water} = 1.33.$ 
+
+The following values are from [T Biswas, T Luu. In vivo MR Measurement of Refractive Index, Relative Water Content and T2 Relaxation time of Various Brain lesions With Clinical Application to Discriminate Brain Lesions. The Internet Journal of Radiology. 2009 Volume 13 Number 1.](https://ispub.com/IJRA/13/1/8277#)
+
+Tissue | W
+-------|-------
+CSF | 1.0
+Gray matter | 0.8
+White matter | 0.7
+
+ 
+We compute the indices of refraction for gray and white matter.
+```{r}
+dry <- 1.14
+wet <- 1.33
+n_gray <- dry - (dry-wet)*.8
+n_white <- dry - (dry-wet)*.7
+```
+
+Wikipedia (http://en.wikipedia.org/wiki/White_matter) says
+
+"White matter in nonelderly adults is 1.7-3.6% blood.[4]"
+
+Here Reference 4 is [K. L. LEENDERS , D. PERANI , A. A. LAMMERTSMA , J. D. HEATHER , P. BUCKINGHAM , T. JONES , M. J. R. HEALY , J. M. GIBBS , R. J. S. WISE , J. HATAZAWA , S. HEROLD , R. P. BEANEY , D. J. BROOKS , T. SPINKS , C. RHODES , R. S. J. FRACKOWIAK,"CEREBRAL BLOOD FLOW, BLOOD VOLUME AND OXYGEN UTILIZATION NORMAL VALUES AND EFFECT OF AGE"]
+(DOI: http://dx.doi.org/10.1093/brain/113.1.27 27-47 First published online: 1 February 1990)
+
+For fat and water content of the brain we used the following reference
+
+[JOHN S. O’BRIEN and E. LOIS SAMPSON,  Division of Chemical Pathology, 
+Departments of Pathology and Medicine,
+University of Southern California
+School of Medicine, Los Angeles, California, 
+"Lipid composition of the normal human brain: gray matter, white matter, and myelin”,
+Journal of Lipid Research VOLUME 6, 1965 ]
+(http://www.jlr.org/content/6/4/537.full.pdf)
+
+Table 1 from above paper gives the following numbers.
+
+Lipid content in white matter ranges from 58% (6 yrs) to 66% (9 yrs) to 64.6% (55 yrs).
+
+Water content in white matter ranges from  75.5% (6 yrs) to 77.4% (9 yrs) to 75.2% (55 yrs).
+
+Lipid content in gray matter ranges from  36% (6 yrs) to 38% (9 yrs) to 39.6% (55 yrs).
+
+Water content in gray matter ranges from  83.2% (6 yrs) to 85.8% (9 yrs) to 82.3% (55 yrs).
+
+For white matter, assume vasculature accounts for 2.65% of volume  equally divided between oxygenated and deoxygenated blood. Also assume  fat is 65% of the volume with $\mu_{a.fat} \approx .005 \: cm^{-1}$. We'll use the same numbers used in the gray matter calculations for 900 nm wavelength, $\mu_{a.oxy} \approx 6.5 \: cm^{-1}$, $\mu_{a.deoxy} \approx 4.5 \: cm^{-1}$, and $\mu_{a.water} \approx 0.076  \: cm^{-1}.$
+$$\mu_{a.white} \approx 0.0265 \left(0.5 \cdot 6.5 + 0.5 \cdot 4.5 \right) + 0.76 \cdot 0.076 + .65 \cdot .005 = 0.207 \: cm^{-1}.$$
+
+
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
