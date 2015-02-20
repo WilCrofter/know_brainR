@@ -44,13 +44,10 @@ Journal of Lipid Research VOLUME 6, 1965 ]
 
 Table 1 from above paper gives the following numbers.
 
-Lipid content in white matter ranges from 58% (6 yrs) to 66% (9 yrs) to 64.6% (55 yrs).
-
-Water content in white matter ranges from  75.5% (6 yrs) to 77.4% (9 yrs) to 75.2% (55 yrs).
-
-Lipid content in gray matter ranges from  36% (6 yrs) to 38% (9 yrs) to 39.6% (55 yrs).
-
-Water content in gray matter ranges from  83.2% (6 yrs) to 85.8% (9 yrs) to 82.3% (55 yrs).
+Lipid content in white matter ranges from 58% (6 yrs) to 66% (9 yrs) to 64.6% (55 yrs).  
+Water content in white matter ranges from  75.5% (6 yrs) to 77.4% (9 yrs) to 75.2% (55 yrs).  
+Lipid content in gray matter ranges from  36% (6 yrs) to 38% (9 yrs) to 39.6% (55 yrs).  
+Water content in gray matter ranges from  83.2% (6 yrs) to 85.8% (9 yrs) to 82.3% (55 yrs).  
 
 For white matter, assume vasculature accounts for 2.65% of volume  equally divided between oxygenated and deoxygenated blood. Also assume  fat is 65% of the volume with $\mu_{a.fat} \approx .005 \: cm^{-1}$. We'll use the same numbers used in the gray matter calculations for 900 nm wavelength, $\mu_{a.oxy} \approx 6.5 \: cm^{-1}$, $\mu_{a.deoxy} \approx 4.5 \: cm^{-1}$, and $\mu_{a.water} \approx 0.076  \: cm^{-1}.$
 $$\mu_{a.white} \approx 0.0265 \left(0.5 \cdot 6.5 + 0.5 \cdot 4.5 \right) + 0.76 \cdot 0.076 + .65 \cdot .005 = 0.207 \: cm^{-1}.$$
