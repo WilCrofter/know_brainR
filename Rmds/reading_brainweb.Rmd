@@ -1,0 +1,32 @@
+---
+title: "Reading BrainWeb"
+author: "W. Bauer"
+date: "02/17/2015"
+output: html_document
+---
+
+#### BrainWeb unsigned raw byte format
+
+This data format is actually very simple: just a long sequence of integers, with no header. The header information is not downloaded, but just displayed at the top of the download page. The header for the current file is shown below. It should be interpreted as follows. The file scans the 3D image volume such that the 'X' coordinate changes fastest, and the 'Z' changes slowest. The image sizes along the X-Y-Z axes are 362x434x362 voxels. (The voxel sizes along the X-Y-Z axes are 1x1x5 mm.) 
+
+```
+image: unsigned byte 0 to 255
+image dimensions: zspace yspace xspace
+    dimension name         length         step        start
+    --------------         ------         ----        -----
+    zspace                    362          0.5       -72.25
+    yspace                    434          0.5      -126.25
+    xspace                    362          0.5       -90.25
+
+```
+The current file represents a discrete anatomical model which consists of a class label (integer) at each voxel, representing the tissue which contributes the most to that voxel (0=Background, 1=CSF, 2=Gray Matter, 3=White Matter, 4=Fat, 5=Muscle, 6=Muscle/Skin, 7=Skull, 8=vessels, 9=around fat, 10 =dura matter, 11=bone marrow.)
+
+The BrainWeb data is produced on a "big-endian" server (most Unix machines, including Sun-s and SGI-s, are big-endian). Intel PCs are "little-endian".
+
+```{r}
+fname <- "data/subject04_crisp_v.rawb"
+temp <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
+z = 100
+image(matrix(as.integer(temp[seq(362*434*z+1, 362*434*(z+1))]), 362, 434), col=rainbow(11))
+```
+
