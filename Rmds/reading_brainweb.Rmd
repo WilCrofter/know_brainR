@@ -1,0 +1,98 @@
+---
+title: "Reading BrainWeb"
+author: "W. Bauer"
+date: "02/17/2015"
+output: html_document
+---
+
+### Acquiring data
+
+This is a brief note on using BrainWeb phantoms in R. The simpler of two phantom types, in which every voxel is labeled with its predominant tissue type, is used. The data itself is not included in this github repository, since it is large and binary. It must be downloaded and unzipped as follows.
+
+Visit [this BrainWeb page](http://brainweb.bic.mni.mcgill.ca/cgi/brainweb1?alias=subject04_crisp&download=1), select "raw byte (unsigned)" format, other fields as appropriate, download, unzip if necessary, and place `subject04_crisp_v.rawb` in subdirectory named `data`.
+
+```
+File format: 
+o MINC
+x raw byte (unsigned)
+o raw short (12 bit)
+```
+
+### BrainWeb unsigned raw byte format
+
+This data format is actually very simple: just a long sequence of bytes, with no header. The header information is not downloaded, but displayed at the top of the download page. The header for the current file is shown below. It should be interpreted as follows. The file scans the 3D image volume such that the 'X' coordinate changes fastest, and the 'Z' changes slowest. The image sizes along the X-Y-Z axes are 362x434x362 voxels. (The voxel sizes along the X-Y-Z axes are 1x1x5 mm.) 
+
+```
+image: unsigned byte 0 to 255
+image dimensions: zspace yspace xspace
+    dimension name         length         step        start
+    --------------         ------         ----        -----
+    zspace                    362          0.5       -72.25
+    yspace                    434          0.5      -126.25
+    xspace                    362          0.5       -90.25
+
+```
+The current file represents a discrete anatomical model which consists of a class label (integer) at each voxel, representing the tissue which contributes the most to that voxel (0=Background, 1=CSF, 2=Gray Matter, 3=White Matter, 4=Fat, 5=Muscle, 6=Muscle/Skin, 7=Skull, 8=Vessels, 9=Around fat, 10 =Dura mater, 11=Bone marrow.)
+
+The BrainWeb data is produced on a "big-endian" server (most Unix machines are big-endian). Intel PCs are "little-endian".
+
+### Reading the data and creating sectional images
+
+Raw bytes are read in and converted to a 3D array as follows. Note that the first dimension will be $x$, the fastest changing, the second $y$, the third $z$.
+
+```{r}
+fname <- "../data/subject04_crisp_v.rawb"
+# Read in raw bytes as a vector
+phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
+# Convert to a 3D array by setting the dim attribute
+dim(phantom) <- c(362, 434, 362)
+```
+
+Fixing the first dimension will produce a 2D section in the $y \: z$ or saggital plane. To display the section as an image it must be converted to an integer matrix. Conversion to integer flattens the matrix, since an object of type `integer` is a vector by definition in R. Hence, the converted object must be reshaped into a matrix.
+
+```{r}
+# Pick off a saggital section and display as an image
+slice <- phantom[100,,]
+# Convert to an integer matrix for display.
+# The call to matrix is necessary because as.integer flattens.
+slice <- as.integer(slice)
+dim(slice) <- c(434, 362)
+```
+
+The following simple code will create a minimal display of the saggital section with decent contrast.
+
+```{r echo=TRUE, eval=FALSE}
+mycolors <- c("#000000FF", rainbow(11))
+image(slice, col=mycolors)
+```
+
+A more informative display, with legend, takes a dozen lines which comprise function `disp_with_legend`. The function definition is suppressed for clarity by may be found in the [Rmd file associated with this page](reading_brainweb.Rmd).
+
+```{r echo=FALSE}
+disp_with_legend <- function(slice, main){
+  mycolors <- c("#000000FF", rainbow(11))
+  layout(matrix(c(1,2), 1, 2, byrow=TRUE), widths=c(.8, .2))
+  image(z=slice, col=mycolors, main=main, xaxt="n", yaxt="n", xlab="", ylab="")
+  mar <- par("mar")
+  bty <- par("bty")
+  par(mar=c(4, 0, 5, 0)+0.1, bty="n")
+  plot(0:1, 0:1, type='n', xaxt="n", yaxt="n", xlab="", ylab="")
+  lg <- c("Background", "CSF", "Gray Matter", "White Matter", "Fat", "Muscle", "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater", "Bone marrow")
+  legend('topleft', lg, cex=.9, fill=mycolors)
+  par(mar=mar, bty=bty)
+  layout(matrix(c(1), 1, 1))
+  }
+```
+
+```{r  fig.show='hold', fig.align='center'}
+disp_with_legend(slice, "Saggital Section")
+```
+
+Creating an $x \: z$ or coronal section is similar.
+```{r fig.show='hold', fig.align='center'}
+slice <- phantom[,434/2,]
+slice <- as.integer(slice)
+dim(slice) <- c(362, 362)
+disp_with_legend(slice, "Coronal Section")
+```
+
