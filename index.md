@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [NIR absorption, ballpark estimates](Rmds/absorption.html)
 -   [Reading BrainWeb Phantoms](Rmds/reading_brainweb.html)
 -   [Energy Density Estimate](Rmds/energy_density.html)
 -   [Photon Diffusion in Gray Matter](Rmds/diffusion_in_gray.html) (in progress)
