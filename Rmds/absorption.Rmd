@@ -1,0 +1,22 @@
+---
+title: "NIR absorption, ballpark estimates"
+author: "W. Bauer"
+date: "02/24/2015"
+output: html_document
+---
+
+External activation options would exploit NIR absorption properties of dyes. Two ball-park estimates of those properties are given below. They roughly agree.
+
+### First estimate
+
+Reference: Leslie M. Loew, Design and Use of Organic Voltage Sensitive Dyes, Chapter 2 in M. Canepari and D. Zecevic (eds.), *Membrane Potential Imaging in the Nervous System: Methods and Applications*, DOI 10.1007/978-1-4419-6558-5_2, © Springer Science+Business Media, LLC 2010.
+
+Quoting from the reference,
+
+> The amount of light that is absorbed by a single dye-stained membrane depends on the size of the cell, the surface density of the dye molecules on the membrane, and the extinction coefficient of the dye at the chosen wavelength. But it can be estimated that this will never exceed 1 part in $10^3$ for even the largest cell.
+
+Assuming a neural density of $\approx 10^5/mm^3$, a photon would encounter about $10^{5/3}$ neurons per mm, for an absorption rate of $10^{5/3-3} \approx 1/20$ per photon per mm. Otherwise stated, about 1 absorption per 20 photons per mm.
+
+### Second estimate
+
+Various sources quote fluorescent dye extinction coefficients exceeding $10^5$ per cm per molar at wavelengths of 660 nm or greater. This corresponds to $10^{-2}$ per mm per micromolar. Assuming a 1 micromolar concentration, and including a factor of 2.3 to convert from base 10 to Napierian, gives an absorption coefficient of$$\mu_a = 2.3 \times 10^{-2}\: mm^{-1}.$$Equivalently, about 1 absorption per 44 photons per mm.
