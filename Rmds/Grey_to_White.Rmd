@@ -19,7 +19,7 @@ White matter | 0.7
  
 We compute the indices of refraction for gray and white matter.
 ```{r}
-dry <- 1.14
+dry <- 1.514
 wet <- 1.33
 n_gray <- dry - (dry-wet)*.8
 n_white <- dry - (dry-wet)*.7

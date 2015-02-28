@@ -16,31 +16,48 @@ prob_refl <- function(theta1,n1,n2){
   prob
  # print(paste("prob ",prob))
 }
-
-dry <- 1.14
+#From ../jacques.Rmd
+dry <- 1.514
 wet <- 1.33
-
+water_gray <- .8
+water_white <- .7
+water_csf <- 1.0
 #compute probability of reflection for angles moving from
 #gray matter to white matter
 Rgraytowhite <- function(theta){
-  n_gray <- dry - (dry-wet)*rep(.8,length(theta))
-  n_white <- dry - (dry-wet)*rep(.7,length(theta) )
+  n_gray <- dry - (dry-wet)*rep(water_gray,length(theta))
+  n_white <- dry - (dry-wet)*rep(water_white,length(theta) )
   prob_refl(theta,n_gray,n_white)
 }
 #compute angles of refraction in white matter
 #given incidence angles coming in from gray matter
-refractioninwhite <- function(theta){
+refraction_in_white <- function(theta){
   reflprobs <- Rgraytowhite(theta)
   idx_refl <- reflprobs==1.0
   not_reflected <- theta[!idx_refl]
-
-  n_gray <- dry - (dry-wet)*.8
-  n_white <- dry - (dry-wet)*.7
+  n_gray <- dry - (dry-wet)*water_gray
+  n_white <- dry - (dry-wet)*water_white
   sin2 <- (n_gray/n_white) * sin(not_reflected)
   cos2 <- sqrt(1-sin2^2)
   refracted <- acos(cos2)  
   refracted
 }
-
-
 #represent tissue with 5 parameters: depth, mu_a, mu_s, g, n
+
+
+#given nx3 array of  x,y,z positions
+#return nx3 array of voxel (i,j,k) indices
+#use ceiling since R is 1-based indexing
+get_voxel <- function(P){
+  P[,3] <- P[,3]*.2
+  P <- ceiling(P)  
+  P
+}
+#given nx3 array of voxel indices
+#return n array of tissue type
+get_tissuetype <- function(V){
+  n <- nrow(V)
+  tissue <- rep(0,n)
+  for (i in 1:n) tissue[i] <- as.integer(phantom[V[i,1],V[i,2],V[i,3]])
+  tissue
+}
