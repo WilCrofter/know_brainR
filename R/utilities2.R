@@ -53,11 +53,16 @@ get_voxel <- function(P){
   P <- ceiling(P)  
   P
 }
+phantomize <- function(x){
+  return(as.integer(phantom[x[1],x[2],x[3]]))
+}
+
 #given nx3 array of voxel indices
 #return n array of tissue type
 get_tissuetype <- function(V){
   n <- nrow(V)
   tissue <- rep(0,n)
-  for (i in 1:n) tissue[i] <- as.integer(phantom[V[i,1],V[i,2],V[i,3]])
+#  for (i in 1:n) tissue[i] <- as.integer(phantom[V[i,1],V[i,2],V[i,3]])
+  tissue <- apply(V,1,phantomize)
   tissue
 }
