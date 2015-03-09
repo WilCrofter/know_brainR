@@ -42,9 +42,18 @@ refraction_in_white <- function(theta){
   refracted <- acos(cos2)  
   refracted
 }
-#represent tissue with 5 parameters: depth, mu_a, mu_s, g, n
-
-
+#compute angles of refraction  in tissue 2 or reflection
+#given incidence angles coming from tissue 1
+new_angles <- function(theta,n1,n2){
+  angles <- numeric(length(theta))
+  reflprobs <- prob_refl(theta,n1,n2)
+  idx_refl <- reflprobs==1.0
+  sin2 <- n1[!idx_refl]/n2[!idx_refl] * sin(theta[!idx_refl])
+  cos2 <- sqrt(1-sin2^2)
+  angles[idx_refl] <- theta[idx_refl] 
+  angles[!idx_refl] <- acos(cos2)
+  list(angle=angles,refl=idx_refl)
+}
 #given nx3 array of  x,y,z positions
 #return nx3 array of voxel (i,j,k) indices
 #use ceiling since R is 1-based indexing
@@ -58,6 +67,9 @@ phantomize <- function(x){
 }
 is_stained <- function(x){
   return(as.integer(phantom[x[1],x[2],x[3]])>99)
+}
+is_different <- function(x,y){
+  return(get_tissuetype(x)!=get_tissuetype(y))
 }
 #given nx3 array of voxel indices
 #return n array of tissue type
@@ -74,7 +86,114 @@ get_tissuetype <- function(V){
 get_stained <- function(V){
   n <- nrow(V)
   stained <- rep(0,n)
-  #  for (i in 1:n) tissue[i] <- as.integer(phantom[V[i,1],V[i,2],V[i,3]])
   stained <- apply(V,1,is_stained)
   stained
+}
+# Simulates scattering and absorption in a uniform material of infinite extent,
+# assuming nphotons are emitted at the origin.  
+sim_forward <- function(nphotons, max_steps=10){
+  invCDF <- icdfHG(g)
+  state = list(P = cbind(x=rep(0,nphotons), y=rep(0,nphotons), z=rep(0,nphotons)),
+               D = rusphere(nphotons))
+  for(i in 1:steps){
+    if(length(state$P)==0)break
+    nxt <- step(state$P, state$D, invCDF)
+    temp <- matrify(nxt$X, nxt$X[,"z"] > 0)
+    top_exits <- rbind(top_exits, temp[,c("x", "y")])
+    state <- nxt[c("P", "D")]
+  }
+  state$steps <- i
+  state
+}
+tissue_char <- as.data.frame(matrix(c(
+  # id & type & \mu_a & \mu_s & g & n & W\\
+  0 ,  0 , 0 , 0 , 1.0 , 0,
+  1 ,  .0076 ,0,0, 1.33 , 1.0,
+  2 ,  0.0335 , 10, .9  , 1.3688 , .8,
+  3 ,  0.0207 , 33 ,.88 , 1.3852, .7,
+  4 ,  .0005 ,0,0, 1.48,0, 
+  5 ,  1.12,53 ,0,0,0,
+  6 , .35 , 35, .8 ,0,0,
+  7 ,  .015 , 8.6, .9,0,0,
+  8 ,  .5 , 141.3, .99,0,0,
+  9 , 0,0,0,0,0,
+  10, 0,0,0,0,0,
+  11 ,0,0,0,0,0
+), 12, 6, byrow=TRUE))
+names(tissue_char) <- c("id",  "mu_a","mu_s","g","n","W") 
+# Given:
+#   P, an nx3 matrix of internal positions of photons
+#   D, an nx3 matrix of unit vectors indicating directions of motion
+#   invCDF, the inverse CDF of the scattering angle cosine
+# simulate scattering, absorption and exit (contact with boundary) events, returning
+# new P and D for remaining photons, and a matrix of exit positions X.
+step <- function(P, D, invCDF){
+  n <- nrow(P)
+  # get tissue types of current positions
+  V <- get_voxel(P)
+  tissue1 <- get_tissuetype(V)
+  mu_s <- numeric(n)
+  mu_a <- numeric(n)
+  mu_s <- tissue_char$mu_s[1+tissue1]
+  mu_a <- tissue_char$mu_a[1+tissue1]
+  # step provisionally, ignoring boundaries
+  provisional_step <- move_provisionally(P, D, mu_s, mu_a)
+  tissue2 <- get_tissuetype(get_voxel(provisional_step$P))
+  # correct for exits
+  corrected_step <- mark_exits(provisional_step[["P"]], D, thickness)
+  # update positions
+  P <- corrected_step[["P"]]
+  # extract exit positions
+  exits <- corrected_step[["exits"]]
+  X <- matrify(P, exits)
+  # extract absorbed positions with are not exits
+  absorbed <- provisional_step[["absorptions"]] & !exits
+  A <- matrify(P, absorbed)
+  # remove exiting and absorbed photons from P and D
+  dead <- exits | absorbed
+  P <- matrify(P, !dead)
+  D <- matrify(D, !dead)
+  # scatter the remaining photons
+  D <- scatter(D, invCDF)
+  # return P, D, X, and A
+  list(P=P, D=D, X=X, A=A)
+}
+# R subsetting casts a 1xm matrix to an m-long vector because, after
+# all, consistency is the hobgoblin of small minds. This small-minded
+# function subsets consistently, using the logical vector idx to
+# return a sub-MATRIX of select rows of M.
+matrify <- function(M, idx, ncol=3){
+  ans <- matrix(M[idx,], ncol=ncol)
+  colnames(ans) <- colnames(M)
+  try(rownames(ans) <- rownames(M)[idx], silent=FALSE)
+  ans
+}
+# Given a scattering coefficient (not a reduced scattering coefficient,) mu_s,
+# and an absorption coefficient, mu_a, both in units of events per mm, and
+# given nx3 arrays, P and D, representing positions and directions of travel
+# respectively, compute new positions based on randomly sampled
+# distances to new events, assuming these occur within the medium of interest.
+# Return the new positions along with a logical vector indicating which events
+# were absorptions.
+# NOTE: The rows of D must be unit vectors.
+move_provisionally <- function(P, D, mu_s, mu_a){
+  n <- nrow(P)
+  scattering_distances <- rexp(n, mu_s)
+  absorption_distances <- rexp(n, mu_a)
+  absorptions <- scattering_distances > absorption_distances
+  P <- P + pmin(scattering_distances, absorption_distances)*D
+  list(P=P, absorptions=absorptions)
+}
+# Given nx3 matrices of positions, P, and directions of motion, D,
+# toward those positions, create a logical vectors marking rows
+# for which the z coordinate exceeds thickness/2 in absolute
+# value indicating exit from the tissue. Adjust relevant positions to 
+# their exit points. Return top and bottom exit indicators and
+# adjusted P.
+mark_exits <- function(P, D, thickness){
+  tops <- P[,"z"] > thickness/2
+  bottoms <- P[ ,"z"] < -thickness/2
+  P[tops,] <- P[tops, ] - ((P[tops, "z"]-thickness/2)/D[tops, "z"])*D[tops,]
+  P[bottoms,] <- P[bottoms, ] - ((P[bottoms, "z"]+thickness/2)/D[bottoms, "z"])*D[bottoms,]
+  list(P=P, exits=tops | bottoms)
 }

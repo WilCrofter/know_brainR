@@ -52,7 +52,58 @@ Water content in gray matter ranges from  83.2% (6 yrs) to 85.8% (9 yrs) to 82.3
 For white matter, assume vasculature accounts for 2.65% of volume  equally divided between oxygenated and deoxygenated blood. Also assume  fat is 65% of the volume with $\mu_{a.fat} \approx .005 \: cm^{-1}$. We'll use the same numbers used in the gray matter calculations for 900 nm wavelength, $\mu_{a.oxy} \approx 6.5 \: cm^{-1}$, $\mu_{a.deoxy} \approx 4.5 \: cm^{-1}$, and $\mu_{a.water} \approx 0.076  \: cm^{-1}.$
 $$\mu_{a.white} \approx 0.0265 \left(0.5 \cdot 6.5 + 0.5 \cdot 4.5 \right) + 0.76 \cdot 0.076 + .65 \cdot .005 = 0.207 \: cm^{-1}.$$
 
+The phantom represents a discrete anatomical model which consists of a class label (integer) at each voxel, representing the tissue which contributes the most to that voxel (0=Background, 1=CSF, 2=Gray Matter, 3=White Matter, 4=Fat, 5=Muscle, 6=Muscle/Skin, 7=Skull, 8=Vessels, 9=Around fat, 10 =Dura mater, 11=Bone marrow.)
 
+n=dry - (dry-wet)*W, where dry=1.514, wet=1.33, and W represents water content of each tissue
+
+Journal of Biomedical Optics 3(4) , 437–445 (OCTOBER 1998)
+COMPUTATIONAL AND IN VIVO INVESTIGATION
+OF OPTICAL REFLECTANCE FROM HUMAN BRAIN TO
+ASSIST NEUROSURGERY
+Maureen Johns, Cole Giller, and Hanli Liu
+
+University of Texas Arlington/Southwestern Medical Center at Dallas, Joint Program of Biomedical
+Engineering, Arlington, Texas 76019;
+
+University of Texas Southwestern Medical Center at
+Dallas, Department of Neurological Surgery, Dallas, Texas 75235-8855
+(Paper JBO-191 received Feb. 6, 1998; revised manuscript received July 10, 1998; accepted for publication July 23, 1998.
+
+> Larger reflected signals detected from white mat-
+ter indicate stronger scattering features in white
+matter than in gray matter. The presence of a signal
+decrease at 550 nm in both gray and white matter
+measurements suggests hemoglobin is a major ab-
+sorbing species in the brain, particularly in gray
+matter. However, other absorbers may be present,
+but more advanced algorithms are needed to detect
+their presence.
+
+
+The following was used for one of the skull numbers, but the assumed g value, .01, is much different as are the assumed indices of refraction, 1, for CSF, gray and white matter, skull and scalp.
+
+Effective scattering coefficient of the cerebral spinal fluid
+in adult head models for diffuse optical imaging
+Anna Custo, William M. Wells III, Alex H. Barnett, Elizabeth M. C. Hillman, and David A. Boas
+APPLIED OPTICSVol. 45, No. 191 July 2006
+
+Pieter Van der Zee Measurement... Ph.d Thesis whose link is (https://www.ucl.ac.uk/medphys/research/borl/pub/theses/docs/pvanderzee.pdf) also had a lot of the numbers used in the chart below.
+
+$$\begin{array}{cccccc}
+id & type & \mu_a & \mu_s & g & n & W\\
+0 & Background & 0 & 0 & 0 & 1.0 & 0\\
+1 & CSF & .0076 & & & 1.33 & 1.0\\
+2 & Gray & 0.0335 & 10 & .9  & 1.3688 & .8\\
+3 & White & 0.0207 & 33 &.88 & 1.3852 & .7\\
+4 & Fat & .0005 & & & 1.48 & \\
+5 & Muscle & 1.12 & 53 & \\
+6 & Muscle/Skin &.35 & 35\ & .8 & \\
+7 & Skull & .015 & 8.6 & .9 & & \\
+8 & Vessels & .5 & 141.3 & .99\\
+9 & Around Fat  &\\
+10 & Dura Mater  &\\
+11  & Bone marrow  &
+\end{array}$$
 ```{r, echo=FALSE}
 plot(cars)
 ```
