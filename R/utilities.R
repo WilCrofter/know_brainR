@@ -225,3 +225,36 @@ sim_exits <- function(nphotons, thickness=3.0, mu_s=10, mu_a=0.0335, g=0.9, max_
   }
   top_exits
 }
+
+# Find all integral multiples of by, if any, *strictly* between two real numbers, a and b
+findIntegerCrossings <- function(a, b, by=1){
+  mn <- floor(min(a,b))
+  mx <- ceiling(max(a,b))
+  cnd <- seq(mn, mx, by=1)
+  cnd <- cnd[cnd %% by == 0]
+  cnd <- cnd[cnd >= min(a,b) & cnd <= max(a,b)]
+  cnd
+}
+
+# Given a pair of 3-vectors, find the points at which the line segment between them crosses
+# voxel coordinates. Return these points in order, from u to v.
+findVoxelCrossings <- function(u, v){
+  # For each component, i, find all border crossing involving that component.
+  # Since voxel dimensions are 1x1x5 mm, the x and y crossings will be integers
+  # and the z crossings will be integral multiples of 5
+  qs <- numeric()
+  for(i in 1:3){
+    by<-1
+    if(i==3)by<-5
+    ints <- findIntegerCrossings(u[i], v[i], by=by)
+    for(j in ints){
+      qs <- c(qs, (j-v[i])/(u[i]-v[i]))
+    }
+  }
+  # Sort the q values in descending order, since the largest
+  # q value will be closest to u.
+  qs <- sort(na.omit(qs), decreasing=TRUE)
+  if(length(qs)==0)return(NULL)
+  # Return the points in order of border crossing from u to v.
+  t(sapply(qs, function(q){q*u + (1-q)*v}))
+}
