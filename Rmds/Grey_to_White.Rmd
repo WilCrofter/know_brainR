@@ -56,18 +56,13 @@ The phantom represents a discrete anatomical model which consists of a class lab
 
 n=dry - (dry-wet)*W, where dry=1.514, wet=1.33, and W represents water content of each tissue
 
-Journal of Biomedical Optics 3(4) , 437–445 (OCTOBER 1998)
+[Journal of Biomedical Optics 3(4) , 437–445 (OCTOBER 1998)
 COMPUTATIONAL AND IN VIVO INVESTIGATION
 OF OPTICAL REFLECTANCE FROM HUMAN BRAIN TO
 ASSIST NEUROSURGERY
-Maureen Johns, Cole Giller, and Hanli Liu
+Maureen Johns, Cole Giller, and Hanli Liu]
+(http://www.uta.edu/rfmems/N_041101/Reference/30.pdf)
 
-University of Texas Arlington/Southwestern Medical Center at Dallas, Joint Program of Biomedical
-Engineering, Arlington, Texas 76019;
-
-University of Texas Southwestern Medical Center at
-Dallas, Department of Neurological Surgery, Dallas, Texas 75235-8855
-(Paper JBO-191 received Feb. 6, 1998; revised manuscript received July 10, 1998; accepted for publication July 23, 1998.
 
 > Larger reflected signals detected from white mat-
 ter indicate stronger scattering features in white
@@ -82,14 +77,21 @@ their presence.
 
 The following was used for one of the skull numbers, but the assumed g value, .01, is much different as are the assumed indices of refraction, 1, for CSF, gray and white matter, skull and scalp.
 
-Effective scattering coefficient of the cerebral spinal fluid
+[Effective scattering coefficient of the cerebral spinal fluid
 in adult head models for diffuse optical imaging
 Anna Custo, William M. Wells III, Alex H. Barnett, Elizabeth M. C. Hillman, and David A. Boas
-APPLIED OPTICSVol. 45, No. 191 July 2006
+APPLIED OPTICSVol. 45, No. 191 July 2006]
 
-Pieter Van der Zee Measurement... Ph.d Thesis whose link is (https://www.ucl.ac.uk/medphys/research/borl/pub/theses/docs/pvanderzee.pdf) also had a lot of the numbers used in the chart below.
+Another good source is Pieter Van der Zee Measurement... Ph.d Thesis whose link is (https://www.ucl.ac.uk/medphys/research/borl/pub/theses/docs/pvanderzee.pdf) also had a lot of the numbers used in the chart below.
 
-$$\begin{array}{cccccc}
+And another source for optical properties of the brain is
+[In vivo
+local determination of tissue optical
+properties: applications to human brain
+Frédderic Bevilacqua, Dominique Piguet, Pierre Marquet, Jeffrey D. Gross,
+Bruce J. Tromberg, and Christian Depeursinge]
+
+ whose link is (http://heelspurs.com/a/led/skull1999.pdf)$$\begin{array}{cccccc}
 id & type & \mu_a & \mu_s & g & n & W\\
 0 & Background & 0 & 0 & 0 & 1.0 & 0\\
 1 & CSF & .0076 & & & 1.33 & 1.0\\

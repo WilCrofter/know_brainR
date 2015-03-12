@@ -68,9 +68,6 @@ phantomize <- function(x){
 is_stained <- function(x){
   return(as.integer(phantom[x[1],x[2],x[3]])>99)
 }
-is_different <- function(x,y){
-  return(get_tissuetype(x)!=get_tissuetype(y))
-}
 #given nx3 array of voxel indices
 #return n array of tissue type
 get_tissuetype <- function(V){
@@ -89,10 +86,25 @@ get_stained <- function(V){
   stained <- apply(V,1,is_stained)
   stained
 }
+#check 2 conditions: only 1 coord differs, and diff tissue voxel is adjacent to source voxel 
+# candir is nx3 array of differences in voxel coordinates
+check_canon <- function(candir){
+  #see if any rows have more than 1 differing coordinate
+  #pick one of these at random and zeroize the rest
+  more <- rowSums(candir[1:nrow(candir),]!=0) > 1
+  pick <- sample(which(candir[more]!=0),1)
+  candir[more,-pick] <- 0
+  #see if any entries in candir have abs val > 1
+  more <- abs(candir[1:nrow(candir),])>1
+  if (candir[more]<0) candir[more] <- -1
+  else candir[more] <- 1
+  candir
+}
 # Simulates scattering and absorption in a uniform material of infinite extent,
-# assuming nphotons are emitted at the origin.  
-sim_forward <- function(nphotons, max_steps=10){
+# assuming nphotons are emitted at the skull with g=.9  
+sim_forward <- function(nphotons, g=0.9, max_steps=10){
   invCDF <- icdfHG(g)
+  steps=max_steps
   state = list(P = cbind(x=rep(0,nphotons), y=rep(0,nphotons), z=rep(0,nphotons)),
                D = rusphere(nphotons))
   for(i in 1:steps){
@@ -107,20 +119,25 @@ sim_forward <- function(nphotons, max_steps=10){
 }
 tissue_char <- as.data.frame(matrix(c(
   # id & type & \mu_a & \mu_s & g & n & W\\
-  0 ,  0 , 0 , 0 , 1.0 , 0,
-  1 ,  .0076 ,0,0, 1.33 , 1.0,
-  2 ,  0.0335 , 10, .9  , 1.3688 , .8,
-  3 ,  0.0207 , 33 ,.88 , 1.3852, .7,
-  4 ,  .0005 ,0,0, 1.48,0, 
-  5 ,  1.12,53 ,0,0,0,
-  6 , .35 , 35, .8 ,0,0,
-  7 ,  .015 , 8.6, .9,0,0,
-  8 ,  .5 , 141.3, .99,0,0,
-  9 , 0,0,0,0,0,
-  10, 0,0,0,0,0,
-  11 ,0,0,0,0,0
+  0 ,  0 , 0 , 0 , 1.0 , 0,              #Background
+  1 ,  .0076 ,0,0, 1.33 , 1.0,           #CSF
+  2 ,  0.0335 , 10, .9  , 1.3688 , .8,   #Grey
+  3 ,  0.0207 , 33 ,.88 , 1.3852, .7,    #White
+  4 ,  .0005 ,0,0, 1.48,0,               #Fat
+  5 ,  1.12,53 ,0,1.0,0,                 #Muscle
+  6 , .35 , 35, .8 ,1.0,0,               #Muscle/Skin
+  7 ,  .015 , 8.6, .9,1.0,0,             #Skull
+  8 ,  .5, 141.3, .99,1.0,0,             #Vessels
+  9 ,  0, 0, 0, 1.0, 0,                  #Around Fat
+  10,  0, 0, 0, 1.0, 0,                  #Dura Mater
+  11,  0, 0, 0, 1.0, 0                   #Bone Marrow
 ), 12, 6, byrow=TRUE))
 names(tissue_char) <- c("id",  "mu_a","mu_s","g","n","W") 
+#z bottom to top
+#y back to front
+#x left to right
+
+
 # Given:
 #   P, an nx3 matrix of internal positions of photons
 #   D, an nx3 matrix of unit vectors indicating directions of motion
@@ -134,11 +151,30 @@ step <- function(P, D, invCDF){
   tissue1 <- get_tissuetype(V)
   mu_s <- numeric(n)
   mu_a <- numeric(n)
+  n1 <- numeric(n)
+  n2 <- numeric(n)
+  #add 1 to tissue1 because tissues are labeled 0..n and lists are indexed 1..n+1
   mu_s <- tissue_char$mu_s[1+tissue1]
   mu_a <- tissue_char$mu_a[1+tissue1]
+  n1 <- tissue_char$n[1+tissue1]
   # step provisionally, ignoring boundaries
   provisional_step <- move_provisionally(P, D, mu_s, mu_a)
-  tissue2 <- get_tissuetype(get_voxel(provisional_step$P))
+  VP <- get_voxel(provisional_step$P)
+  tissue2 <- get_tissuetype(VP)
+  n2 <- tissue_char$n[1+tissue2]
+  #check for reflection and refraction if destination tissue is different from source tissue
+  diff_tiss <- tissue1 != tissue2
+  #move P of provisionally stepped photons with different tissues to appropriate boundary
+  provisional_step$P[diff_tiss] <-
+  #first get canonical direction of movement (left/right, above/below, front/behind)
+  candir <- V[diff_tiss,]-VP[diff_tiss,]
+  #check candir for 2 conditions
+  candir <- check_canonical(candir)
+
+  src_angles <- acos(candir*provisional_step$D[diff_tiss])
+  dest_angles <- new_angles(src_angles,n1[diff_tiss],n2[diff_tiss])
+
+
   # correct for exits
   corrected_step <- mark_exits(provisional_step[["P"]], D, thickness)
   # update positions
