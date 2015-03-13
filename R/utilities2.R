@@ -86,18 +86,16 @@ get_stained <- function(V){
   stained <- apply(V,1,is_stained)
   stained
 }
-#check 2 conditions: only 1 coord differs, and diff tissue voxel is adjacent to source voxel 
+#check if only 1 coord differs
 # candir is nx3 array of differences in voxel coordinates
-check_canon <- function(candir){
+check_canonical <- function(candir){
   #see if any rows have more than 1 differing coordinate
   #pick one of these at random and zeroize the rest
   more <- rowSums(candir[1:nrow(candir),]!=0) > 1
-  pick <- sample(which(candir[more]!=0),1)
-  candir[more,-pick] <- 0
-  #see if any entries in candir have abs val > 1
-  more <- abs(candir[1:nrow(candir),])>1
-  if (candir[more]<0) candir[more] <- -1
-  else candir[more] <- 1
+  if (sum(more)>0){
+    pick <- sample(which(candir[more]!=0),1)
+    candir[more,-pick] <- 0
+  }
   candir
 }
 # Simulates scattering and absorption in a uniform material of infinite extent,
@@ -136,7 +134,12 @@ names(tissue_char) <- c("id",  "mu_a","mu_s","g","n","W")
 #z bottom to top
 #y back to front
 #x left to right
-
+#given 2 nx3 arrays of source and dest points
+find_intersects <- function(P1,P2){
+  n <- nrow(P1)
+  stor <- lapply(1:n,function(x){findVoxelCrossings(P1[x,],P2[x,])})
+  stor
+}
 
 # Given:
 #   P, an nx3 matrix of internal positions of photons
@@ -146,26 +149,57 @@ names(tissue_char) <- c("id",  "mu_a","mu_s","g","n","W")
 # new P and D for remaining photons, and a matrix of exit positions X.
 step <- function(P, D, invCDF){
   n <- nrow(P)
-  # get tissue types of current positions
   V <- get_voxel(P)
+  # get tissue types of current positions
   tissue1 <- get_tissuetype(V)
   mu_s <- numeric(n)
   mu_a <- numeric(n)
   n1 <- numeric(n)
   n2 <- numeric(n)
+  junk <- numeric(n*3)
+  dim(junk) <- c(n,3)
+  idim <- numeric(n)
   #add 1 to tissue1 because tissues are labeled 0..n and lists are indexed 1..n+1
   mu_s <- tissue_char$mu_s[1+tissue1]
   mu_a <- tissue_char$mu_a[1+tissue1]
   n1 <- tissue_char$n[1+tissue1]
   # step provisionally, ignoring boundaries
   provisional_step <- move_provisionally(P, D, mu_s, mu_a)
+  #see what boundaries the provisional steps have crossed
+  xing <- find_intersects(P,provisional_step$P)
+
+  #see if crossings go into different tissues
+  for (i in 1:n)
+    if (!is.null(xing[[i]])){
+      #Pi crossed into different voxels
+      tissue2<- get_tissuetype(get_voxel(xing[[i]]))
+      print(paste("row is ",i," tissue is ",tissue2))
+      if (sum(tissue1!=tissue2) >0){
+        #photon i hits at least 1 different tissue
+        #find first voxel crossing with diff tissue
+        idx <- which(tissue1!=tissue2)[1]
+        print(paste("row is ",i," idx is ",idx))
+        #TODO replace 3 occurrences of junk with provisional_step$P[i,]
+        #TODO replace mysrc[i,idx] with P[i,idx]
+        junk[i,1:3] <- xing[[i]][idx,1:3]
+        idim[i] <- xing[[i]][idx,4]
+        if (junk[i,idim[i]]>mysrc[i,idim[i]]) junk[i,idim[i]] <- junk[i,idim[i]]+1
+      } else {
+          junk[i,1:3] <- mydest[i,1:3]
+          idim[i] <- 0
+      }
+    }    else {
+      junk[i,1:3] <- mydest[i,1:3]
+      idim[i] <- 0
+    }
+  
   VP <- get_voxel(provisional_step$P)
+
   tissue2 <- get_tissuetype(VP)
   n2 <- tissue_char$n[1+tissue2]
   #check for reflection and refraction if destination tissue is different from source tissue
   diff_tiss <- tissue1 != tissue2
-  #move P of provisionally stepped photons with different tissues to appropriate boundary
-  provisional_step$P[diff_tiss] <-
+
   #first get canonical direction of movement (left/right, above/below, front/behind)
   candir <- V[diff_tiss,]-VP[diff_tiss,]
   #check candir for 2 conditions

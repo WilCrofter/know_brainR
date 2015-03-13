@@ -243,18 +243,26 @@ findVoxelCrossings <- function(u, v){
   # Since voxel dimensions are 1x1x5 mm, the x and y crossings will be integers
   # and the z crossings will be integral multiples of 5
   qs <- numeric()
+  idim <- numeric()
   for(i in 1:3){
     by<-1
     if(i==3)by<-5
     ints <- findIntegerCrossings(u[i], v[i], by=by)
     for(j in ints){
       qs <- c(qs, (j-v[i])/(u[i]-v[i]))
+      idim <- c(idim, i)
     }
   }
   # Sort the q values in descending order, since the largest
   # q value will be closest to u.
-  qs <- sort(na.omit(qs), decreasing=TRUE)
+  idx <- is.na(qs)
+  qs <- qs[!idx]
+  idim <- idim[!idx]
+  idx <- order(qs,decreasing=TRUE)
+  qs <- qs[idx]
+  idim <- idim[idx]
   if(length(qs)==0)return(NULL)
   # Return the points in order of border crossing from u to v.
-  t(sapply(qs, function(q){q*u + (1-q)*v}))
+  nv <- t(sapply(qs, function(q){q*u + (1-q)*v}))
+  cbind(nv,idim)
 }
