@@ -91,7 +91,38 @@ properties: applications to human brain
 Frédderic Bevilacqua, Dominique Piguet, Pierre Marquet, Jeffrey D. Gross,
 Bruce J. Tromberg, and Christian Depeursinge]
 
- whose link is (http://heelspurs.com/a/led/skull1999.pdf)$$\begin{array}{cccccc}
+ whose link is (http://heelspurs.com/a/led/skull1999.pdf)
+
+For data on the dura mater
+[In vitro study of control of human dura mater optical properties
+by acting of osmotical liquids]
+Alexey N. Bashkatov , Elina A. Genina, Vyacheslav I. Kochubey,
+Yury P. Sinichkin, Andrey A. Korobov, Nina A. Lakodina, Valery V. Tuchin 
+(www.researchgate.net/...dura_mater.../02e7e5263e46de8b8b000000.pdf)
+
+CSF info
+[Near-infrared light propagation in an adult head
+model. I. Modeling of low-level scattering in the
+cerebrospinal fluid layer]
+Eiji Okada and David T. Delpy
+(http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.299.1013&rep=rep1&type=pdf)
+
+Bone marrow data is from
+[Noninvasive characterization of the healthy
+human manubrium using diffuse optical
+spectroscopies]
+Parisa Farzam 1 , Claus Lindner 1 , Udo M Weigel 1,2 ,
+Maria Suarez 3 , Alvaro Urbano-Ispizua 3,4,5
+and Turgut Durduran 1
+www.researchgate.net/...characterization...optical.../0f317539437e3abd5...
+
+Index of refraction for collagen (around fat tissue type) is from
+[Estimation of wavelength dependence of refractive index
+of collagen fibers of scleral tissue]
+Alexey N. Bashkatov, Elina A. Genina, Vyacheslav I. Kochubey, and Valery V. Tuchin
+(http://optics.sgu.ru/_media/optics/staff/bashkatov/bashkatov_spie_00_4162_265.pdf)
+
+$$\begin{array}{cccccc}
 id & type & \mu_a & \mu_s & g & n & W\\
 0 & Background & 0 & 0 & 0 & 1.0 & 0\\
 1 & CSF & .0076 & & & 1.33 & 1.0\\
