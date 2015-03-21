@@ -12,11 +12,11 @@ phantom <- c("Background", "CSF", "Gray Matter", "White Matter", "Fat", "Muscle"
 
 The [BrainWeb phantom](http://brainweb.bic.mni.mcgill.ca/cgi/brainweb1?alias=subject04_crisp&download=1) in use here labels each of pixels as one of eleven tissue types. It also includes one Background type which we take to be air at standard temperature and pressure. The categories are: Background, CSF, Gray Matter, White Matter, Fat, Muscle, Muscle/Skin, Skull, Vessels, Around fat, Dura mater, Bone marrow.
 
-Here we assign three acoustical properties to each category: a density, $\rho$; the speed of sound, $c$; and an attenuation coefficient, $\alpha$ at 1 MHz. We assume that the attenuation coefficient follows a power law of the form $\alpha = af^b$ where $a$ is constant, $f$ is frequency and $b=1$.
+Here we assign three acoustic properties to each category: a density, $\rho$; the speed of sound, $c$; and an attenuation coefficient, $\alpha$ at 1 MHz. We assume that the attenuation coefficient follows a power law of the form $\alpha = af^b$ where $a$ is constant, $f$ is frequency and $b=1$.
 
-The assigned properties will generally be ranges. Bone density, for example, may vary considerably. In other cases assigned values will be no more than guesses. When possible, values will be taken from data [provided online](http://www.kayelaby.npl.co.uk/general_physics/2_4/2_4_6.html) by the National Physical Laboratories of the UK. The NPL data are also provided in csv form [in the current repository](../data/npl_acoustic_data.csv).
+The assigned properties will generally be ranges. Bone density, for example, may vary considerably. In other cases assigned values will be no more than guesses. When possible, values will be taken from data [provided online](http://www.kayelaby.npl.co.uk/general_physics/2_4/2_4_6.html) by the National Physical Laboratories of the UK. The NPL data are also provided in csv form [in this github repository](../data/npl_acoustic_data.csv).
 
-A csv form of the following table is provided in the `data` subdirectory of the current repository. 
+A csv form of the following table is provided in the `data` subdirectory [of this github repositiory](../data/acoustic_properties_bw.csv).
 
 Medium | $\rho \: (kg/m^3)$ | $c \: (m/s)$ | $\alpha \: (dB/(m \cdot MHz))$ | Proxy
 -------|-----------------|-----------|-----------------------------|-------
