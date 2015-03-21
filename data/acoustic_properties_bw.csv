@@ -1,0 +1,19 @@
+# Acoustic properties for BrainWeb phantom voxel categories 0-11
+# See http://wilcrofter.github.io/know_brainR/Rmds/acoustic_properties.html.
+# rho = density in kg/m^3
+# c = speed of sound in m/s
+# alpha = absorption coefficient in (dB/m)/MHz
+# High and low values are given.
+Medium,bw.code,rho.low,rho.high,c.low,c.high,alpha.low,alpha.high,proxy
+Background,0,1.2,1.2,330,330,7.5,7.5,
+CSF,1,1000,1000,1480,1480,0.0022,0.0022,
+Gray Matter,2,1030,1041,1562,1562,0.5,1.66,
+White Matter,3,1030,1041,1562,1562,1.2,2.5,
+Fat,4,917,939,1412,1487,0.63,1.1,
+Muscle,5,1070,1070,1542,1626,1.3,3.3,
+Muscle/Skin,6,1090,1130,1635,1678,1.87,2.87,muscle/epidermis averages
+Skull,7,1610,1610,2190,3289,11,20,
+Vessels,8,1055,1055,1584,1584,0.15,0.3,blood
+Around fat,9,993,1004,1477,1556,0.72,1.8,muscle/fat averages
+Dura mater,10,993,1004,1477,1556,0.72,1.8,muscle/fat averages
+Bone marrow,11,1014,1021,1513,1566,0.7,1.57,muscle/fat/blood averages

@@ -14,7 +14,9 @@ The [BrainWeb phantom](http://brainweb.bic.mni.mcgill.ca/cgi/brainweb1?alias=sub
 
 Here we assign three acoustical properties to each category: a density, $\rho$; the speed of sound, $c$; and an attenuation coefficient, $\alpha$ at 1 MHz. We assume that the attenuation coefficient follows a power law of the form $\alpha = af^b$ where $a$ is constant, $f$ is frequency and $b=1$.
 
-The assigned properties will generally be ranges. Bone density, for example, may vary considerably. In other cases assigned values will be no more than guesses. When possible, values will be taken from data [provided online](http://www.kayelaby.npl.co.uk/general_physics/2_4/2_4_6.html) by the National Physical Laboratories of the UK. These are also provided in csv form [in the current repository](../data/npl_acoustic_data.csv).
+The assigned properties will generally be ranges. Bone density, for example, may vary considerably. In other cases assigned values will be no more than guesses. When possible, values will be taken from data [provided online](http://www.kayelaby.npl.co.uk/general_physics/2_4/2_4_6.html) by the National Physical Laboratories of the UK. The NPL data are also provided in csv form [in the current repository](../data/npl_acoustic_data.csv).
+
+A csv form of the following table is provided in the `data` subdirectory of the current repository. 
 
 Medium | $\rho \: (kg/m^3)$ | $c \: (m/s)$ | $\alpha \: (dB/(m \cdot MHz))$ | Proxy
 -------|-----------------|-----------|-----------------------------|-------
