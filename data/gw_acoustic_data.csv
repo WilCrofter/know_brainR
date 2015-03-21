@@ -1,0 +1,15 @@
+"# Units are kg, m, s",,,,,,,
+# Tissue type,BrainWeb code, Speed (c = 1/sqrt(rho*kappa),compressability (kappa),density (rho),sd_density,Impedance (Z = sqrt(rho/kappa) (kg/m^2/s)x10^6,
+Tissue,Code,c,kappa,rho,rho.sd,Z,Z.sd
+Background,0,330,,1.2,,0.0004,
+CSF,1,1480,,1000,,1.5,
+Gray Matter,2,,,1030,,1.6,0.08
+White Matter,3,,,1030,,1.6,0.08
+Fat,4,1450,,920,,1.35,
+Muscle,5,,,1070,,1.695,0.064
+Muscle/Skin,6,,,,,,
+Skull,7,4080,,1600,300,,
+Vessels,8,1570,,1060,,,
+Around fat,9,,,920,,,
+Dura mater,10,,,,,,
+Bone marrow,11,,,,,,
