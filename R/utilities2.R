@@ -14,14 +14,7 @@ prob_refl <- function(theta1,n1,n2){
   t2 <-  (abs((n1[idx]*cos2[idx]-n2[idx]*cos1[idx])/(n1[idx]*cos2[idx]+n2[idx]*cos1[idx])))^2  
   prob[idx] <- pmin(1, .5 * (t1+t2))
   prob
- # print(paste("prob ",prob))
 }
-#From ../jacques.Rmd
-dry <- 1.514
-wet <- 1.33
-water_gray <- .8
-water_white <- .7
-water_csf <- 1.0
 #compute probability of reflection for angles moving from
 #gray matter to white matter
 Rgraytowhite <- function(theta){
@@ -58,13 +51,14 @@ new_angles <- function(theta,n1,n2){
 #return nx3 array of voxel (i,j,k) indices
 #use ceiling since R is 1-based indexing
 get_voxel <- function(P){
-  P[,3] <- P[,3]*.2
+#  P[,3] <- P[,3]*.2  #pixels are 1x1x1 instead of 1x1x5
   P <- ceiling(P)  
   P
 }
 phantomize <- function(x){
   return(as.integer(phantom[x[1],x[2],x[3]]))
 }
+#this will be used when we consider pixels with dyes
 is_stained <- function(x){
   return(as.integer(phantom[x[1],x[2],x[3]])>99)
 }
@@ -73,7 +67,6 @@ is_stained <- function(x){
 get_tissuetype <- function(V){
   n <- nrow(V)
   tissue <- rep(0,n)
-#  for (i in 1:n) tissue[i] <- as.integer(phantom[V[i,1],V[i,2],V[i,3]])
   tissue <- apply(V,1,phantomize)
   tissue
 }
@@ -86,31 +79,34 @@ get_stained <- function(V){
   stained <- apply(V,1,is_stained)
   stained
 }
-#check if only 1 coord differs
 # candir is nx3 array of differences in voxel coordinates
+#check if only 1 coord differs
 check_canonical <- function(candir){
-  #see if any rows have more than 1 differing coordinate
+  #if any rows have more than 1 differing coordinate
   #pick one of these at random and zeroize the rest
   more <- rowSums(candir[1:nrow(candir),]!=0) > 1
-  if (sum(more)>0){
-    pick <- sample(which(candir[more]!=0),1)
-    candir[more,-pick] <- 0
-  }
+  for (i in 1:nrow(candir)) if (more[i])    candir[i,-sample(which(candir[i,]!=0),1)] <- 0
   candir
 }
-# Simulates scattering and absorption in a uniform material of infinite extent,
+# Simulates scattering and absorption in a phantom head
 # assuming nphotons are emitted at the skull with g=.9  
 sim_forward <- function(nphotons, g=0.9, max_steps=10){
-  invCDF <- icdfHG(g)
-  steps=max_steps
+  steps <- max_steps
   state = list(P = cbind(x=rep(0,nphotons), y=rep(0,nphotons), z=rep(0,nphotons)),
                D = rusphere(nphotons))
+  trax  <- list(state$P)
+  alive <- matrix(0,nphotons,max_steps)
+  dead <- numeric(0,nphotons)
+  alive[,1] <- 1
   for(i in 1:steps){
-    if(length(state$P)==0)break
-    nxt <- step(state$P, state$D, invCDF)
+    if(length(dead)==nphotons)break
+    nxt <- step(state$P, state$D)
+    
+    
     temp <- matrify(nxt$X, nxt$X[,"z"] > 0)
     top_exits <- rbind(top_exits, temp[,c("x", "y")])
     state <- nxt[c("P", "D")]
+    trax <- c(trax,state$P)
   }
   state$steps <- i
   state
@@ -121,12 +117,12 @@ tissue_char <- as.data.frame(matrix(c(
   1 ,  .0076  , 0.01 ,   0.9   , 1.33   , 1.0,   #CSF
   2 ,  0.0335 , 10   , .9      , 1.3688 , .8,    #Grey
   3 ,  0.0207 , 33   , .88     , 1.3852 ,  .7,   #White
-  4 ,  .0005  ,  0   , 0       , 1.48   ,  0,    #Fat
-  5 ,  1.12   ,  53  , 0       , 1.0    ,  0,    #Muscle
+  4 ,  .087  ,  0   , 0       , 1.48   ,  0,    #Fat
+  5 ,  1.12   ,  53  , .95       , 1.0    ,  0,    #Muscle
   6 , .35     , 35   , .8      , 1.0    , 0,     #Muscle/Skin
-  7 ,  .015   , 8.6  , .9      , 1.0    , 0,     #Skull
+  7 ,  .015   , 8.6  , .94      , 1.0    , 0,     #Skull
   8 ,  .5     , 141.3, .99     , 1.0    , 0,     #Vessels
-  9 ,  0      , 0    , 0       , 1.46    , 0,       #Around Fat (collagen)
+  9 , .087      , 0    , 0       , 1.46    , 0,       #Around Fat (collagen)
   10,  .085   , 6.5  , 0.765   , 1.0    , 0,       #Dura Mater
   11,  .015   , 9.6  , .9      , 1.0    , 0        #Bone Marrow
 ), 12, 6, byrow=TRUE))
@@ -140,49 +136,51 @@ find_intersects <- function(P1,P2){
   stor <- lapply(1:n,function(x){findVoxelCrossings(P1[x,],P2[x,])})
   stor
 }
-#Given n-long list of crossing points, length of list, 
+#Given n-long list of crossing points, 
 #n source and n provisional destination points,
 #and origin tissue type
 #see if crossings go into different tissues
-process <- function(xing,n,src,dest,tissue1){
-temp <- matrix(0,n,3)
-midpt <- matrix(0,1,3)
-idim <- numeric(n)
-ndir <- numeric(n)
-for (i in 1:n)
-  if (!is.null(xing[[i]])){
-    #compute midpoints between crossings to find voxels correctly
-    midpt[1,1:3] <- (src[i,1:3] + xing[[i]][1,1:3])/2
-    if (nrow(xing[[i]])>1){
-      for (j in 2:nrow(xing[[i]])) rbind(midpt, (xing[[i]][j-1,1:3]+xing[[i]][j,1:3])/2)
-      rbind(midpt, (xing[[i]][nrow(xing[[i]]),1:3]+dest[i,1:3])/2)
-    } else rbind(midpt, (xing[[i]][1,1:3]+dest[i,1:3])/2)
-    #Pi crossed into different voxels, so see what tissues they are
-    tissue2<- get_tissuetype(get_voxel(midpt))
-    print(paste("photon is ",i," dest tissue is ",tissue2))
-    if (sum(tissue1!=tissue2) >0){
-      #photon i hits at least 1 different tissue
-      #find first voxel crossing with diff tissue
-      idx <- which(tissue1!=tissue2)[1]
-      print(paste("photon is ",i," idx is ",idx))
-      temp[i,1:3] <- xing[[i]][idx,1:3]
-      idim[i] <- xing[[i]][idx,4]
-      if (temp[i,idim[i]] > src[i,idim[i]]) {
-        temp[i,idim[i]] <- temp[i,idim[i]]+1
-        ndir[i] <- 1
+process <- function(xing,src,dest,tissue1){
+  n <- length(src)
+  temp <- matrix(0,n,3)
+  midpt <- matrix(0,1,3)
+  idim <- numeric(n)
+  ndir <- numeric(n)
+  for (i in 1:n)
+    if (!is.null(xing[[i]])){
+      #compute midpoints between crossings to find voxels correctly
+      midpt[1,1:3] <- (src[i,1:3] + xing[[i]][1,1:3])/2
+      if (nrow(xing[[i]])>1){
+        for (j in 2:nrow(xing[[i]])) rbind(midpt, (xing[[i]][j-1,1:3]+xing[[i]][j,1:3])/2)
+        rbind(midpt, (xing[[i]][nrow(xing[[i]]),1:3]+dest[i,1:3])/2)
+      } else rbind(midpt, (xing[[i]][1,1:3]+dest[i,1:3])/2)
+      #Pi crossed into different voxels, so see what tissues they are
+      tissue2<- get_tissuetype(get_voxel(midpt))
+      print(paste("photon is ",i," dest tissue is ",tissue2))
+      if (sum(tissue1!=tissue2) >0){
+        #photon i hits at least 1 different tissue
+        #find first voxel crossing with diff tissue
+        idx <- which(tissue1!=tissue2)[1]
+        print(paste("photon is ",i," idx is ",idx))
+        temp[i,1:3] <- xing[[i]][idx,1:3]
+        idim[i] <- xing[[i]][idx,4]
+        if (temp[i,idim[i]] > src[i,idim[i]]) {
+          #aim to greater photon in correct dim
+          temp[i,idim[i]] <- temp[i,idim[i]]+1
+          ndir[i] <- 1
+        }
+        else ndir[i] <- -1 #aim back
+      } else {#all voxels of same tissue type
+        temp[i,1:3] <- dest[i,1:3]
+        idim[i] <- 0
+        ndir[i]<- 0
       }
-      else ndir[i] <- -1
-    } else {#all voxels of same tissue type
+    }    else {#no crsossing into diff voxels
       temp[i,1:3] <- dest[i,1:3]
       idim[i] <- 0
       ndir[i]<- 0
     }
-  }    else {#no crsossing into diff voxels
-    temp[i,1:3] <- dest[i,1:3]
-    idim[i] <- 0
-    ndir[i]<- 0
-  }
- list(newdest=temp,idim=idim,ndir=ndir)
+  list(P=temp,idim=idim,ndir=ndir)
 }
 ###
 # Given:
@@ -191,65 +189,77 @@ for (i in 1:n)
 #   invCDF, the inverse CDF of the scattering angle cosine
 # simulate scattering, absorption and exit (contact with boundary) events, returning
 # new P and D for remaining photons, and a matrix of exit positions X.
-step <- function(P, D, invCDF){
+step <- function(P, D){
   n <- nrow(P)
   V <- get_voxel(P)
   # get tissue types of current positions
   tissue1 <- get_tissuetype(V)
   mu_s <- numeric(n)
   mu_a <- numeric(n)
+  g <- numeric(n)
   n1 <- numeric(n)
-  n2 <- numeric(n)
+
+  #get scattering and absorption coeff and index of refraction for source tissues
   #add 1 to tissue1 because tissues are labeled 0..n and lists are indexed 1..n+1
   mu_s <- tissue_char$mu_s[1+tissue1]
   mu_a <- tissue_char$mu_a[1+tissue1]
   n1 <- tissue_char$n[1+tissue1]
-  # step provisionally, ignoring boundaries
+  g <- tissue_char$g[1+tissue1]
+  invCDF <- lapply(g,icdfHG)
+
+  # step provisionally, ignoring voxel boundaries
   provisional_step <- move_provisionally(P, D, mu_s, mu_a)
-  #see what boundaries the provisional steps have crossed
+
+  #see what boundaries the provisional steps of photons have crossed
   xing <- find_intersects(P,provisional_step$P)
+  
   #change destination points if there were crossings to diff tissues
-  newP <- process(xing,n,P,provision_step$P,tissue1)
-  VP <- get_voxel(newP$newdest)
+  newP <- process(xing,P,provisional_step$P,tissue1)
+  VP <- get_voxel(newP$P)
   tissue2 <- get_tissuetype(VP)
+  n2 <- numeric(length(newP))
   n2 <- tissue_char$n[1+tissue2]
   #check if destination tissue is different from source tissue
   diff_tiss <- tissue1 != tissue2
   #first get canonical direction of movement (left/right, above/below, front/behind)
   candir <- VP[diff_tiss,]-V[diff_tiss,]
-  #check candir for to make sure only one canonical direction
+  #TODO check candir  to see if there's more than one canonical direction
   candir <- check_canonical(candir)
   src_angles <- acos(rowSums(candir*D[diff_tiss,]))
   #compute new angles of reflection and refraction
-  new_angles <- new_angles(src_angles,n1[diff_tiss],n2[diff_tiss])
-  #compute directions for all all photons(reflected and refracted)
+  new_ang <- new_angles(src_angles,n1[diff_tiss],n2[diff_tiss])
+  #compute directions for all photons(reflected and refracted)
   #which hit different tissue types
-  D <- compute_direction(new_angles,candir,newP$idim[diff_tiss],provisional_step$D[diff_tiss])
+  D[diff_tiss] <- compute_direction(new_ang,candir,newP$idim[diff_tiss],provisional_step$D[diff_tiss])
+  #check to see if any photons have hit background voxels
+  exits <- mark_exits(newp$P,new_ang$refl)
+#   # update positions
+#   P <- corrected_step[["P"]]
+#   # extract exit positions
+#   exits <- corrected_step[["exits"]]
+   X <- matrify(P, exits)
+#   # extract absorbed positions with are not exits
+#   absorbed <- provisional_step[["absorptions"]] & !exits
+   P <- newP$P
+   absorbed <- provisional_step$absorptions & !diff_tiss & !exits
+   A <- matrify(P, absorbed)
+   # remove absorbed photons from provisional_step components
+   P <- matrify(P, !absorbed)
+   D <- matrify(D, !absorbed)
   
-  # correct for exits
-  corrected_step <- mark_exits(provisional_step[["P"]], D, thickness)
-  # update positions
-  P <- corrected_step[["P"]]
-  # extract exit positions
-  exits <- corrected_step[["exits"]]
-  X <- matrify(P, exits)
-  # extract absorbed positions with are not exits
-  absorbed <- provisional_step[["absorptions"]] & !exits
-  A <- matrify(P, absorbed)
-  # remove exiting and absorbed photons from P and D
-  dead <- exits | absorbed
-  P <- matrify(P, !dead)
-  D <- matrify(D, !dead)
   # scatter the remaining photons
-  D <- scatter(D, invCDF)
+  D[!absorbed] <- scatter(D[!absorbed], invCDF[!absorbed])
+
   # return P, D, X, and A
-  list(P=P, D=D, X=X, A=A)
+  #list(P=P, D=D, X=X, A=A)
+
+  list(P=P, D=D, A=A)
 }
 #given list of new angles (and associated boolean indicator of reflection),
 #canonical directions and dimensions and source directions compute new directions
 #new angles are either reflection or refractions indicated by new_angles$refl
 compute_direction <- function(new_angles,candir,wdim,D){
-  #form vector of directions from candir and dimension selector wdim
+  #form vector of +/- 1's from candir and dimension selector wdim
   vdir <- sapply(1:nrow(candir,function(n){candir[n,wdim[n]]}))
   #multiply angle by +1 or -1 to indicate direction and compute cosines
   newdir <- cos(new_angles$angle*vdir)
@@ -296,14 +306,11 @@ move_provisionally <- function(P, D, mu_s, mu_a){
 }
 # Given nx3 matrices of positions, P, and directions of motion, D,
 # toward those positions, create a logical vectors marking rows
-# for which the z coordinate exceeds thickness/2 in absolute
-# value indicating exit from the tissue. Adjust relevant positions to 
-# their exit points. Return top and bottom exit indicators and
-# adjusted P.
-mark_exits <- function(P, D, thickness){
-  tops <- P[,"z"] > thickness/2
-  bottoms <- P[ ,"z"] < -thickness/2
-  P[tops,] <- P[tops, ] - ((P[tops, "z"]-thickness/2)/D[tops, "z"])*D[tops,]
-  P[bottoms,] <- P[bottoms, ] - ((P[bottoms, "z"]+thickness/2)/D[bottoms, "z"])*D[bottoms,]
-  list(P=P, exits=tops | bottoms)
+# for which P is in a background voxel
+# Return  exit indicators.
+mark_exits <- function(P,refl){
+  V <- get_voxel(P)
+  tissue <- get_tissuetype(V)
+  exits <- (tissue==0)&(!refl)
+  exits
 }

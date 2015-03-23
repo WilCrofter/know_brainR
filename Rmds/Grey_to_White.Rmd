@@ -8,7 +8,7 @@ output: html_document
 From WRB's jacques.Rmd section on refraction, we have a formula for a real refraction coefficent, n, as a function of the tissue's water content W.
 $$n = n_{dry} − (n_{dry} − n_{water})W,$$ where $n_{dry} \approx 1.514$ and $n_{water} = 1.33.$ 
 
-The following values are from [T Biswas, T Luu. In vivo MR Measurement of Refractive Index, Relative Water Content and T2 Relaxation time of Various Brain lesions With Clinical Application to Discriminate Brain Lesions. The Internet Journal of Radiology. 2009 Volume 13 Number 1.](https://ispub.com/IJRA/13/1/8277#)
+The following values are from 
 
 Tissue | W
 -------|-------
@@ -17,7 +17,7 @@ Gray matter | 0.8
 White matter | 0.7
 
  
-We compute the indices of refraction for gray and white matter.
+Assuming percentage of water content of gray and white matters as .8 and .7 respectively, [T Biswas, T Luu. In vivo MR Measurement of Refractive Index, Relative Water Content and T2 Relaxation time of Various Brain lesions With Clinical Application to Discriminate Brain Lesions. The Internet Journal of Radiology. 2009 Volume 13 Number 1.](https://ispub.com/IJRA/13/1/8277#), we compute the indices of refraction for gray and white matter.
 ```{r}
 dry <- 1.514
 wet <- 1.33
