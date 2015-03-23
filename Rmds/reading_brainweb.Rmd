@@ -20,7 +20,7 @@ o raw short (12 bit)
 
 ### BrainWeb unsigned raw byte format
 
-This data format is actually very simple: just a long sequence of bytes, with no header. The header information is not downloaded, but displayed at the top of the download page. The header for the current file is shown below. It should be interpreted as follows. The file scans the 3D image volume such that the 'X' coordinate changes fastest, and the 'Z' changes slowest. The image sizes along the X-Y-Z axes are 362x434x362 voxels. (The voxel sizes along the X-Y-Z axes are 1x1x5 mm.) 
+This data format is actually very simple: just a long sequence of bytes, with no header. The header information is not downloaded, but displayed at the top of the download page. The header for the current file is shown below. It should be interpreted as follows. The file scans the 3D image volume such that the 'X' coordinate changes fastest, and the 'Z' changes slowest. The image sizes along the X-Y-Z axes are 362x434x362 voxels. The voxel sizes along the X-Y-Z axes are 1x1x1 mm.
 
 ```
 image: unsigned byte 0 to 255

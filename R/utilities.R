@@ -246,7 +246,6 @@ findVoxelCrossings <- function(u, v){
   idim <- numeric()
   for(i in 1:3){
     by<-1
-    if(i==3)by<-5
     ints <- findIntegerCrossings(u[i], v[i], by=by)
     for(j in ints){
       qs <- c(qs, (j-v[i])/(u[i]-v[i]))
@@ -265,4 +264,37 @@ findVoxelCrossings <- function(u, v){
   # Return the points in order of border crossing from u to v.
   nv <- t(sapply(qs, function(q){q*u + (1-q)*v}))
   cbind(nv,idim)
+
+}
+
+# Displays a phantom slice with proper aspect ratio and reasonable color
+# coding, with legend.
+disp_slice <- function(slice, main){
+  slice <- rbind(slice, matrix(0, round(0.3*dim(slice)[1]), dim(slice)[2]))
+  fin <- par("fin")
+  mai <- par("mai")
+  h <- par("fin")[2] - mai[1] - mai[3]
+  w <- par("fin")[1] - mai[2] - mai[4]
+  rhs <- dim(slice)[2]*w - dim(slice)[1]*h
+  nr <- dim(slice)[1]
+  nc <- dim(slice)[2]
+  if(rhs > 0){
+    dw <- rhs/nc
+    dh <- 0
+  } else if(rhs < 0){
+    dh <- -rhs/nr
+    dw <- 0
+  } else {
+    dw <- dh <- 0
+  }
+  par(mai=par("mai") + c(0, 0, dh, dw))
+  mycolors=c("blue4", "palegreen", "grey40", "grey90", "yellow", "violetred3", "lightpink2", "grey60", "red", "orange", "black", "brown")
+  image(1:nr, 1:nc, z=slice, col=mycolors, main=main, xlab="mm", ylab="mm")
+  par(mai=mai)
+  mar <- par("mar")
+  bty <- par("bty")
+  lg <- c("Background", "CSF", "Gray Matter", "White Matter", "Fat", "Muscle", "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater", "Bone marrow")
+  legend('topright', lg, cex=.8, fill=mycolors)
+  par(mar=mar, bty=bty, mai=mai)
+
 }

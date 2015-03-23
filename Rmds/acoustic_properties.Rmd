@@ -1,0 +1,34 @@
+---
+title: "Acoustic properties for BrainWeb phantom"
+author: "W. Bauer"
+date: "03/20/2015"
+output: html_document
+---
+
+```{r echo=FALSE}
+npl <- read.table("../data/npl_acoustic_data.csv", sep=",")
+phantom <- c("Background", "CSF", "Gray Matter", "White Matter", "Fat", "Muscle", "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater", "Bone marrow")
+```
+
+The [BrainWeb phantom](http://brainweb.bic.mni.mcgill.ca/cgi/brainweb1?alias=subject04_crisp&download=1) in use here labels each of pixels as one of eleven tissue types. It also includes one Background type which we take to be air at standard temperature and pressure. The categories are: Background, CSF, Gray Matter, White Matter, Fat, Muscle, Muscle/Skin, Skull, Vessels, Around fat, Dura mater, Bone marrow.
+
+Here we assign three acoustic properties to each category: a density, $\rho$; the speed of sound, $c$; and an attenuation coefficient, $\alpha$ at 1 MHz. We assume that the attenuation coefficient follows a power law of the form $\alpha = af^b$ where $a$ is constant, $f$ is frequency and $b=1$.
+
+The assigned properties will generally be ranges. Bone density, for example, may vary considerably. In other cases assigned values will be no more than guesses. When possible, values will be taken from data [provided online](http://www.kayelaby.npl.co.uk/general_physics/2_4/2_4_6.html) by the National Physical Laboratories of the UK. The NPL data are also provided in csv form [in this github repository](../data/npl_acoustic_data.csv).
+
+A csv form of the following table is provided in the `data` subdirectory [of this github repositiory](../data/acoustic_properties_bw.csv).
+
+Medium | $\rho \: (kg/m^3)$ | $c \: (m/s)$ | $\alpha \: (dB/(m \cdot MHz))$ | Proxy
+-------|-----------------|-----------|-----------------------------|-------
+Background |  1.2  |  330  | 7.5 |
+CSF | 1000 | 1480 | 0.0022 |
+Gray Matter | 1030-1041 | 1562 | 0.5-1.66 |
+White Matter | 1030-1041| 1562 | 1.2-2.5 |
+Fat | 917.0-939.0 |	1412-1487 | .63-1.1 |
+Muscle | 1070 | 1542-1626 | 1.3-3.3 |
+Muscle/Skin | 1090-1130 |	1635-1678 | 1.87-2.87| muscle/epidermis averages
+Skull | 1610 | 2190-3289 | 11-20 |
+Vessels | 1055 | 1584 | 0.15-0.3 | blood
+Around fat | 993-1004 | 1477-1556 | 0.72-1.8 | muscle/fat averages
+Dura mater | 993-1004 | 1477-1556 | 0.72-1.8 | muscle/fat averages
+Bone marrow | 1014-1021 | 1513-1566 | 0.7-1.57 | muscle/fat/blood averages

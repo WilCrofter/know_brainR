@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Acoustic properties for BrainWeb phantom](Rmds/acoustic_properties.html)
 -   [NIR absorption, ballpark estimates](Rmds/absorption.html)
 -   [Reading BrainWeb Phantoms](Rmds/reading_brainweb.html)
 -   [Energy Density Estimate](Rmds/energy_density.html)
