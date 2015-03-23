@@ -1,0 +1,38 @@
+---
+title: "Improved phantom display"
+author: "W. Bauer"
+date: "03/23/2015"
+output: html_document
+---
+
+Utility `disp_slice` displays slices of the BrainWeb discrete phantom with correct aspect ratio, improved color scheme and legend. Here's how to use it. (Note that the data file, a large git-unfriendly binary, is not included in this repository but can be downloaded at [this BrainWeb page](http://brainweb.bic.mni.mcgill.ca/cgi/brainweb1?alias=subject04_crisp&download=1).)
+
+Load the phantom by reading in raw bytes as a vector and adding a dimension attribute to allow array indexing.
+
+```{r}
+fname <- "../data/subject04_crisp_v.rawb"
+# Read in raw bytes as a vector
+phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
+# Convert to a 3D array by setting the dim attribute
+dim(phantom) <- c(362, 434, 362)
+```
+
+Create three slices. Convert each slice from raw (unsigned byte) to integer using `as.integer`. Since R integer types are vectors, not matrices, a dimension attribute must be restored after each cast.
+
+```{r}
+sagittal <- as.integer(phantom[100,,])
+dim(sagittal) <- c(434, 362)
+coronal <- as.integer(phantom[,434/2,])
+dim(coronal) <-  c(362, 362)
+axial <- as.integer(phantom[,,100])
+dim(axial) <- c(362, 434)
+```
+
+Display the slices with `disp_slice`.
+
+```{r fig.align='center', fig.show='hold'}
+source("../R/utilities.R")
+disp_slice(sagittal, "Sagittal")
+disp_slice(coronal, "Coronal")
+disp_slice(axial, "Axial")
+```

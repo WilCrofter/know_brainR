@@ -246,7 +246,6 @@ findVoxelCrossings <- function(u, v){
   idim <- numeric()
   for(i in 1:3){
     by<-1
-    if(i==3)by<-5
     ints <- findIntegerCrossings(u[i], v[i], by=by)
     for(j in ints){
       qs <- c(qs, (j-v[i])/(u[i]-v[i]))
@@ -265,6 +264,7 @@ findVoxelCrossings <- function(u, v){
   # Return the points in order of border crossing from u to v.
   nv <- t(sapply(qs, function(q){q*u + (1-q)*v}))
   cbind(nv,idim)
+  
 }
 
 # Displays a phantom slice with proper aspect ratio and reasonable color
@@ -296,4 +296,5 @@ disp_slice <- function(slice, main){
   lg <- c("Background", "CSF", "Gray Matter", "White Matter", "Fat", "Muscle", "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater", "Bone marrow")
   legend('topright', lg, cex=.8, fill=mycolors)
   par(mar=mar, bty=bty, mai=mai)
+  
 }
