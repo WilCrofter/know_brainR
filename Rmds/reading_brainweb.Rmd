@@ -20,7 +20,7 @@ o raw short (12 bit)
 
 ### BrainWeb unsigned raw byte format
 
-This data format is actually very simple: just a long sequence of bytes, with no header. The header information is not downloaded, but displayed at the top of the download page. The header for the current file is shown below. It should be interpreted as follows. The file scans the 3D image volume such that the 'X' coordinate changes fastest, and the 'Z' changes slowest. The image sizes along the X-Y-Z axes are 362x434x362 voxels. (The voxel sizes along the X-Y-Z axes are 1x1x5 mm.) 
+This data format is actually very simple: just a long sequence of bytes, with no header. The header information is not downloaded, but displayed at the top of the download page. The header for the current file is shown below. It should be interpreted as follows. The file scans the 3D image volume such that the 'X' coordinate changes fastest, and the 'Z' changes slowest. The image sizes along the X-Y-Z axes are 362x434x362 voxels. The voxel sizes along the X-Y-Z axes are 1x1x1 mm.
 
 ```
 image: unsigned byte 0 to 255
@@ -48,10 +48,10 @@ phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endia
 dim(phantom) <- c(362, 434, 362)
 ```
 
-Fixing the first dimension will produce a 2D section in the $y \: z$ or saggital plane. To display the section as an image it must be converted to an integer matrix. Conversion to integer flattens the matrix, since an object of type `integer` is a vector by definition in R. Hence, the converted object must be reshaped into a matrix.
+Fixing the first dimension will produce a 2D section in the $y \: z$ or sagittal plane. To display the section as an image it must be converted to an integer matrix. Conversion to integer flattens the matrix, since an object of type `integer` is a vector by definition in R. Hence, the converted object must be reshaped into a matrix.
 
 ```{r}
-# Pick off a saggital section and display as an image
+# Pick off a sagittal section and display as an image
 slice <- phantom[100,,]
 # Convert to an integer matrix for display.
 # The call to matrix is necessary because as.integer flattens.
@@ -59,7 +59,7 @@ slice <- as.integer(slice)
 dim(slice) <- c(434, 362)
 ```
 
-The following simple code will create a minimal display of the saggital section with decent contrast.
+The following simple code will create a minimal display of the sagittal section with decent contrast.
 
 ```{r echo=TRUE, eval=FALSE}
 mycolors <- c("#000000FF", rainbow(11))
@@ -85,7 +85,7 @@ disp_with_legend <- function(slice, main){
 ```
 
 ```{r  fig.show='hold', fig.align='center'}
-disp_with_legend(slice, "Saggital Section")
+disp_with_legend(slice, "Sagittal Section")
 ```
 
 Creating an $x \: z$ or coronal section is similar.
