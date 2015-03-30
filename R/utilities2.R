@@ -88,45 +88,61 @@ check_canonical <- function(candir){
   for (i in 1:nrow(candir)) if (more[i])    candir[i,-sample(which(candir[i,]!=0),1)] <- 0
   candir
 }
+tissue_char <- get_tissue_chars()
 # Simulates scattering and absorption in a phantom head
-# assuming nphotons are emitted at the skull with g=.9  
-sim_forward <- function(nphotons, g=0.9, max_steps=10){
+# assuming nphotons are emitted at the skull with g=.94 
+sim_forward <- function(nphotons, g=0.94, max_steps=10){
   steps <- max_steps
+  #state holds position, direction,and condition, i.e., alive, absorbed,exit of each photon
   state = list(P = cbind(x=rep(0,nphotons), y=rep(0,nphotons), z=rep(0,nphotons)),
-               D = rusphere(nphotons))
-  trax  <- list(state$P)
-  alive <- matrix(0,nphotons,max_steps)
-  dead <- numeric(0,nphotons)
-  alive[,1] <- 1
+               D = rusphere(nphotons), flg=rep("Alive",nphotons))
+  trax  <- list(state$P, state$flg)
+  dead <- 0 #number of exited or absorbed photons
+  record <- matrix("-",nphotons,max_steps)
   for(i in 1:steps){
-    if(length(dead)==nphotons)break
-    nxt <- step(state$P, state$D)
-    
-    
-    temp <- matrify(nxt$X, nxt$X[,"z"] > 0)
-    top_exits <- rbind(top_exits, temp[,c("x", "y")])
-    state <- nxt[c("P", "D")]
-    trax <- c(trax,state$P)
+    if(dead==nphotons)break
+    nxt <- step(state$P, state$D, state$flg)
+    out <- c(out,nxt$X)
+    absorbed <- c(absorbed,nxt$A)
+    dead <- length(out) + length(absorbed)
+    record[state$flg=="Alive",i] <- nxt$flg
+    state <- nxt[c("P", "D", "flg")]
+    trax <- c(trax,state$P,state$flg)
   }
-  state$steps <- i
   state
 }
-tissue_char <- as.data.frame(matrix(c(
+num_types <-12
+num_char <- 6
+get_tissue_chars <- function(){
+  means <- matrix(c(
   #id & \mu_a & \mu_s   & g &     n &     W   # type\\
   0 ,  0      , 0    ,  .00001 , 1.0    , 0,     #Background
   1 ,  .0076  , 0.01 ,   0.9   , 1.33   , 1.0,   #CSF
   2 ,  0.0335 , 10   , .9      , 1.3688 , .8,    #Grey
   3 ,  0.0207 , 33   , .88     , 1.3852 ,  .7,   #White
   4 ,  .087  ,  0   , 0       , 1.48   ,  0,    #Fat
-  5 ,  1.12   ,  53  , .95       , 1.0    ,  0,    #Muscle
-  6 , .35     , 35   , .8      , 1.0    , 0,     #Muscle/Skin
-  7 ,  .015   , 8.6  , .94      , 1.0    , 0,     #Skull
-  8 ,  .5     , 141.3, .99     , 1.0    , 0,     #Vessels
+  5 ,  1.12   ,  53  , .95       , 1.41    ,  0,    #Muscle
+  6 , .35     , 35   , .93      , 1.45    , 0,     #Muscle/Skin g=.8?
+  7 ,  .015   , 8.6  , .94      , 1.55    , 0,     #Skull
+  8 ,  .22     , 58.5, .99     , 1.4    , 0,     #Vessels
   9 , .087      , 0    , 0       , 1.46    , 0,       #Around Fat (collagen)
-  10,  .085   , 6.5  , 0.765   , 1.0    , 0,       #Dura Mater
-  11,  .015   , 9.6  , .9      , 1.0    , 0        #Bone Marrow
-), 12, 6, byrow=TRUE))
-names(tissue_char) <- c("id",  "mu_a","mu_s","g","n","W") 
+  10,  .085   , 6.5  , 0.765   , 1.4    , 0,       #Dura Mater
+  11,  .015   , 9.6  , .9      , 1.4    , 0        #Bone Marrow
+  ), num_types, num_char, byrow=TRUE)
+
+  std_dev <- matrix(0.0001,nrow=num_types,ncol=num_char)
+  std_dev[c(9,11,12),5] <- .01
+  tissue_char <- as.data.frame(gen_tissue_chars(means,std_dev) )
+  names(tissue_char) <- c("id",  "mu_a","mu_s","g","n","W") 
+  tissue_char
+}
+gen_tissue_chars <- function(means,std_dev){
+  temp <- matrix(0,num_types,num_char)
+  for (i in 1:num_types){
+    for (j in 2:num_char) temp[i,j] <- rnorm(1,means[i,j],std_dev[i,j])
+  }
+  temp
+}
 #z bottom to top
 #y back to front
 #x left to right
@@ -186,10 +202,10 @@ process <- function(xing,src,dest,tissue1){
 # Given:
 #   P, an nx3 matrix of internal positions of photons
 #   D, an nx3 matrix of unit vectors indicating directions of motion
-#   invCDF, the inverse CDF of the scattering angle cosine
+# flg, an n long character vector indicating "Alive", "Exited" or "Absorbed"
 # simulate scattering, absorption and exit (contact with boundary) events, returning
-# new P and D for remaining photons, and a matrix of exit positions X.
-step <- function(P, D){
+# new P and D for remaining photons, and  matrices of exit positions  and absorbed photons.
+step <- function(P, D, flg){
   n <- nrow(P)
   V <- get_voxel(P)
   # get tissue types of current positions
@@ -231,29 +247,30 @@ step <- function(P, D){
   #compute directions for all photons(reflected and refracted)
   #which hit different tissue types
   D[diff_tiss] <- compute_direction(new_ang,candir,newP$idim[diff_tiss],provisional_step$D[diff_tiss])
+  #   # update positions
+  P <- newP$P
   #check to see if any photons have hit background voxels
-  exits <- mark_exits(newp$P,new_ang$refl)
-#   # update positions
-#   P <- corrected_step[["P"]]
+  exits <- mark_exits(P,new_ang$refl)
+  flg[exits] <- "Exited"
 #   # extract exit positions
 #   exits <- corrected_step[["exits"]]
    X <- matrify(P, exits)
-#   # extract absorbed positions with are not exits
-#   absorbed <- provisional_step[["absorptions"]] & !exits
-   P <- newP$P
+   # extract absorbed positions with are not exits
+   # absorbed <- provisional_step[["absorptions"]] & !exits
+
    absorbed <- provisional_step$absorptions & !diff_tiss & !exits
+   flg[absorbed] <- "Absorbed"
    A <- matrify(P, absorbed)
-   # remove absorbed photons from provisional_step components
-   P <- matrify(P, !absorbed)
-   D <- matrify(D, !absorbed)
-  
-  # scatter the remaining photons
-  D[!absorbed] <- scatter(D[!absorbed], invCDF[!absorbed])
+   #mark photons that haven't exited or been absorbed
+   alive <- !(exits | absorbed)
+   flg[alive] <- "Alive"
+   # scatter the remaining photons
+   D[alive]<- scatter(D[alive], invCDF[alive])
+   P <- matrify(P,alive)
+   D <- matrify(D,alive)
+   # return P, D, X, and A
+   list(P=P, D=D, X=X, A=A, flg=flg)
 
-  # return P, D, X, and A
-  #list(P=P, D=D, X=X, A=A)
-
-  list(P=P, D=D, A=A)
 }
 #given list of new angles (and associated boolean indicator of reflection),
 #canonical directions and dimensions and source directions compute new directions

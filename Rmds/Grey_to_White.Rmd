@@ -122,6 +122,24 @@ of collagen fibers of scleral tissue]
 Alexey N. Bashkatov, Elina A. Genina, Vyacheslav I. Kochubey, and Valery V. Tuchin
 (http://optics.sgu.ru/_media/optics/staff/bashkatov/bashkatov_spie_00_4162_265.pdf)
 
+For some of the vessel and muscle numbers
+[A Review of the Optical Properties of Biological Tissues] by Cheong, Prahl and Welsh'
+from the IEEE Journal of Quantum Electronics December 1990
+(http://www.uta.edu/rfmems/N_041101/Reference/133.pdf)
+
+Interesting skull info in
+[Optical Clearing of Cranial Bone] by
+Elina A. Genina,1 Alexey N. Bashkatov,1 and Valery V. Tuchin
+(http://www.hindawi.com/journals/aot/2008/267867/)
+> Refractive index of the whole cranial bone has been estimated by Ascenzi and Fabry [33] at various stages of mineralisation to range from 1.555 to 1.564. Components of the tissue have the following refractive indices: apatite: > 1.623 [34], hydrated collagen (type I): 1.43 [35], and lipids ~1.45 [36].
+
+> The structural components of the bones consist of an inorganic matrix (largely mineralised) and an organic matrix [21, 22]. The inorganic matrix contains calcium hydroxyapatite, which is responsible for the compressive strength of bone, and osteocalcium phosphate. The main components of the organic matrix are collagen, proteins, blood cells, and lipids [23]. The amount of bone mineral matrix is 16%, the lipid content is 54%, the proteins content is 16%, and water contributes 16% [23]. It is the calcium and phosphorus component of the inorganic matrix that makes bone hard and rigid, and the arrangement of the collagen fibres in the organic matrix that makes it strong. Porosity of the bones is 5–10% [23].
+
+Indices of refraction from
+[Light scattering study of tissues] by
+V V Tuchin
+(gpumcml.googlecode.com/svn/trunk/.../5layerskin_633and337nm.pdf)
+
 $$\begin{array}{cccccc}
 id & type & \mu_a & \mu_s & g & n & W\\
 0 & Background & 0 & 0 & 0 & 1.0 & 0\\
