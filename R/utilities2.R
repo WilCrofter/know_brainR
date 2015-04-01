@@ -1,3 +1,6 @@
+myseed <- 0x1257AB
+set.seed(myseed)
+
 #computes probability of reflection
 #given angle of incidence (in radians)
 #and two indices of refraction, 
@@ -88,28 +91,58 @@ check_canonical <- function(candir){
   for (i in 1:nrow(candir)) if (more[i])    candir[i,-sample(which(candir[i,]!=0),1)] <- 0
   candir
 }
-tissue_char <- get_tissue_chars()
+# run from directory know_braimR
+read_phantom <- function(){
+fname <- "data/subject04_crisp_v.rawb"
+# Read in raw bytes as a vector
+phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
+# Convert to a 3D array by setting the dim attribute
+dim(phantom) <- c(362, 434, 362)
+phantom
+}
+
+
 # Simulates scattering and absorption in a phantom head
 # assuming nphotons are emitted at the skull with g=.94 
-sim_forward <- function(nphotons, g=0.94, max_steps=10){
+sim_forward <- function(nphotons, g=0.94, max_steps=100){
   steps <- max_steps
+  print(paste("seed is",myseed))
+
   #state holds position, direction,and condition, i.e., alive, absorbed,exit of each photon
-  state = list(P = cbind(x=rep(0,nphotons), y=rep(0,nphotons), z=rep(0,nphotons)),
-               D = rusphere(nphotons), flg=rep("Alive",nphotons))
-  trax  <- list(state$P, state$flg)
-  dead <- 0 #number of exited or absorbed photons
-  record <- matrix("-",nphotons,max_steps)
+  state = list(
+    # P = cbind(x=rep(0,nphotons), y=rep(0,nphotons), z=rep(0,nphotons)),
+    # D = rusphere(nphotons), flg=rep("Alive",nphotons))
+    P = cbind(x=rep(181,nphotons), y=rep(217,nphotons), z=rep(340,nphotons)),
+    D = cbind(x=rep(0,nphotons), y=rep(0,nphotons), z=rep(-1,nphotons)), flg=rep("Alive",nphotons))
+  trax  <- list(cbind(state$P, state$flg))
+  out <- list(cbind(x=numeric(),y=numeric(),z=numeric()))
+  absorbed <- list(cbind(x=numeric(),y=numeric(),z=numeric()))
+
+  record <- matrix("-",nphotons,max_steps+1)
+  path <- cbind(state$P, state$flg)
+
+  record[,1] <- "Alive"
   for(i in 1:steps){
-    if(dead==nphotons)break
+    if(sum(record[,i]=="Alive")==0)break
+#    print(paste("step = ",i,"num alive is ",sum(record[,i]=="Alive")))
     nxt <- step(state$P, state$D, state$flg)
-    out <- c(out,nxt$X)
-    absorbed <- c(absorbed,nxt$A)
-    dead <- length(out) + length(absorbed)
-    record[state$flg=="Alive",i] <- nxt$flg
+    out[[i+1]] <- nxt$X
+    absorbed[[i+1]] <- nxt$A
+    record[record[,i]=="Alive",i+1] <- nxt$flg
+
+    path[record[,i]=="Alive",] <- c(nxt$P[,1:3],nxt$flg[])
+    path[record[,i]!="Alive",] <- c("-","-","-","-")
+
+    nxt$P <- matrify(nxt$P,nxt$flg=="Alive")
+    nxt$D <- matrify(nxt$D,nxt$flg=="Alive")
+    nxt$flg <-nxt$flg[nxt$flg=="Alive"]    
     state <- nxt[c("P", "D", "flg")]
-    trax <- c(trax,state$P,state$flg)
+    trax[[i+1]] <- path
   }
-  state
+#  state
+#  print(record)
+  list(trax=trax,record=record)
+
 }
 num_types <-12
 num_char <- 6
@@ -143,6 +176,10 @@ gen_tissue_chars <- function(means,std_dev){
   }
   temp
 }
+
+phantom <- read_phantom()
+tissue_char <- get_tissue_chars()
+
 #z bottom to top
 #y back to front
 #x left to right
@@ -157,7 +194,7 @@ find_intersects <- function(P1,P2){
 #and origin tissue type
 #see if crossings go into different tissues
 process <- function(xing,src,dest,tissue1){
-  n <- length(src)
+  n <- nrow(src)
   temp <- matrix(0,n,3)
   midpt <- matrix(0,1,3)
   idim <- numeric(n)
@@ -172,12 +209,10 @@ process <- function(xing,src,dest,tissue1){
       } else rbind(midpt, (xing[[i]][1,1:3]+dest[i,1:3])/2)
       #Pi crossed into different voxels, so see what tissues they are
       tissue2<- get_tissuetype(get_voxel(midpt))
-      print(paste("photon is ",i," dest tissue is ",tissue2))
       if (sum(tissue1!=tissue2) >0){
         #photon i hits at least 1 different tissue
         #find first voxel crossing with diff tissue
         idx <- which(tissue1!=tissue2)[1]
-        print(paste("photon is ",i," idx is ",idx))
         temp[i,1:3] <- xing[[i]][idx,1:3]
         idim[i] <- xing[[i]][idx,4]
         if (temp[i,idim[i]] > src[i,idim[i]]) {
@@ -222,7 +257,7 @@ step <- function(P, D, flg){
   n1 <- tissue_char$n[1+tissue1]
   g <- tissue_char$g[1+tissue1]
   invCDF <- lapply(g,icdfHG)
-
+  
   # step provisionally, ignoring voxel boundaries
   provisional_step <- move_provisionally(P, D, mu_s, mu_a)
 
@@ -233,22 +268,30 @@ step <- function(P, D, flg){
   newP <- process(xing,P,provisional_step$P,tissue1)
   VP <- get_voxel(newP$P)
   tissue2 <- get_tissuetype(VP)
-  n2 <- numeric(length(newP))
+  n2 <- numeric(length(newP$idim))
   n2 <- tissue_char$n[1+tissue2]
   #check if destination tissue is different from source tissue
   diff_tiss <- tissue1 != tissue2
   #first get canonical direction of movement (left/right, above/below, front/behind)
   candir <- VP[diff_tiss,]-V[diff_tiss,]
-  #TODO check candir  to see if there's more than one canonical direction
-  candir <- check_canonical(candir)
-  src_angles <- acos(rowSums(candir*D[diff_tiss,]))
-  #compute new angles of reflection and refraction
-  new_ang <- new_angles(src_angles,n1[diff_tiss],n2[diff_tiss])
-  #compute directions for all photons(reflected and refracted)
-  #which hit different tissue types
-  D[diff_tiss] <- compute_direction(new_ang,candir,newP$idim[diff_tiss],provisional_step$D[diff_tiss])
-  #   # update positions
+  if (nrow(candir)>0){
+    #TODO check candir  to see if there's more than one canonical direction
+    candir <- check_canonical(candir)
+    src_angles[diff_tiss] <- acos(rowSums(candir*D[diff_tiss,]))
+    #compute new angles of reflection and refraction
+    new_ang[diff_tiss] <- new_angles(src_angles[diff_tiss],n1[diff_tiss],n2[diff_tiss])
+    #compute directions for all photons(reflected and refracted)
+    #which hit different tissue types
+    D[diff_tiss] <- compute_direction(new_ang,candir,newP$idim[diff_tiss],provisional_step$D[diff_tiss])
+  }
+  else{
+    new_ang <- list(angle=numeric(n),refl=logical(n))
+    
+  }
+  new_ang[!diff_tiss]$refl <- FALSE
+
   P <- newP$P
+  
   #check to see if any photons have hit background voxels
   exits <- mark_exits(P,new_ang$refl)
   flg[exits] <- "Exited"
@@ -265,9 +308,10 @@ step <- function(P, D, flg){
    alive <- !(exits | absorbed)
    flg[alive] <- "Alive"
    # scatter the remaining photons
-   D[alive]<- scatter(D[alive], invCDF[alive])
-   P <- matrify(P,alive)
-   D <- matrify(D,alive)
+   for (i in 1:n) if (flg[i]=="Alive") D[i,1:3] <-scatter1(D[i,1:3],invCDF[[i]](runif(1))) 
+
+#    P <- matrify(P,alive)
+#    D <- matrify(D,alive)
    # return P, D, X, and A
    list(P=P, D=D, X=X, A=A, flg=flg)
 

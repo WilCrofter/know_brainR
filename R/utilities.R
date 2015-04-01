@@ -79,10 +79,16 @@ icdfHG <- function(g){
 # vector representing direction after scattering.
 scatter1 <- function(d, cosu){
   sinu <- sqrt(1 - cosu^2)
-  # orthonormal basis for the orthogonal complement of d
-  b1 <- c(d[2], -d[1], 0)/sqrt(sum(d[1:2]^2))
-  b2 <- c(0, -d[3], d[2]) + b1*b1[2]*d[3]
-  b2 <- b2/sqrt(sum(b2^2))
+  if ((d[1]==0) & (d[2]==0)){
+    b1 <- c(1,0,0)
+    b2 <- c(0,1,0)
+  }
+  else{
+    # orthonormal basis for the orthogonal complement of d
+    b1 <- c(d[2], -d[1], 0)/sqrt(sum(d[1:2]^2))
+    b2 <- c(0, -d[3], d[2]) + b1*b1[2]*d[3]
+    b2 <- b2/sqrt(sum(b2^2))
+  }
   # random angle
   psi <- runif(1, 0, 2*pi)
   cosu*d + sinu*sin(psi)*b1 + sinu*cos(psi)*b2
