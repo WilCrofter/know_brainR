@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Model of acoustic loss](Rmds/acoustic_1.html)
 -   [Improved phantom display](Rmds/using_disp_slice.html)
 -   [Acoustic properties for BrainWeb phantom](Rmds/acoustic_properties.html)
 -   [NIR absorption, ballpark estimates](Rmds/absorption.html)
