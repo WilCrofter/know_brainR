@@ -79,9 +79,11 @@ icdfHG <- function(g){
 # vector representing direction after scattering.
 scatter1 <- function(d, cosu){
   sinu <- sqrt(1 - cosu^2)
-  if ((d[1]==0) & (d[2]==0)){
-    b1 <- c(1,0,0)
+  if (d[2]==0){
+#     b1 <- c(1,0,0)
     b2 <- c(0,1,0)
+    b1 <- c(-d[3],0,d[1])
+    b1 <- b1/sqrt(sum(b1^2))
   }
   else{
     # orthonormal basis for the orthogonal complement of d
