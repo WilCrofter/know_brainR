@@ -74,7 +74,7 @@ qqunif(multiscatter(g=0.8, nphotons=1000, nevents=60),
 
 If photon direction is essentially randomized after 60 scattering events, a natural question concerns the minimum number of scattering events sufficient for randomization. To estimate this we use 10,000 photons for more reliable statistics.
 
-The figure shows convergence of photon directions to random in 6 events given $g=0.5$. Since reduced scattering coefficients [average](jacques.html) around 10/cm, an anisotropy coefficent of 0.5 implies a (non-reduced) scattering coefficient of about 20 events per cm. Thus, for $g=0.5,$ a path of about 6/20 = 0.33 cm would be sufficient. It seems likely that randomization would occur in the first or second BrainWeb voxel traversed.
+The figure shows convergence of photon directions to random in 6 events given $g=0.5$. Since reduced scattering coefficients [average](jacques.html) around 10/cm, an anisotropy coefficent of 0.5 implies a (non-reduced) scattering coefficient of about 20 events per cm. Thus, for $g=0.5,$ a path of about 8/20 = 0.4 cm would be sufficient. It seems likely that randomization would occur in the first or second BrainWeb voxel traversed.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
 par(mfrow=c(1,2))
