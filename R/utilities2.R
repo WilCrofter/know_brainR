@@ -1,4 +1,7 @@
-myseed <- 0x1257AB
+#myseed <- 0x1257AB #run300
+#myseed <- 0x7141958 #lp301
+#myseed <- 0x8728672 #run500
+myseed <- 0x2487ad #run501
 set.seed(myseed)
 
 #computes probability of reflection
@@ -88,8 +91,8 @@ get_stained <- function(V){
 check_canonical <- function(candir){
   #if any rows have more than 1 differing coordinate
   #pick one of these at random and zeroize the rest
-  more <- rowSums(abs(candir)) > 1
-  for (i in 1:nrow(candir)) if (more[i])    candir[i,-sample(which(candir[i,]!=0),1)] <- 0
+  more <- rowSums(abs(candir) > 0)
+  for (i in 1:nrow(candir)) if (more[i]>1)  candir[i,-sample(which(candir[i,]!=0),1)] <- 0
   candir
 }
 # run from directory know_braimR
@@ -105,7 +108,7 @@ phantom
 
 # Simulates scattering and absorption in a phantom head
 # assuming nphotons are emitted at the skull with g=.94 
-sim_forward <- function(nphotons, g=0.94, max_steps=1000){
+sim_forward <- function(nphotons, max_steps=1000){
   steps <- max_steps
   print(paste("seed is",myseed))
 
@@ -158,27 +161,26 @@ num_char <- 6
 get_tissue_chars <- function(){
   means <- matrix(c(
   #id & \mu_a & \mu_s   & g &     n &     W   # type\\
-  0 ,  0      , 0    ,  .00001 , 1.0    , 0,     #Background
+  0 ,  0.00001, 0.00001, .00001 , 1.0    , 0,     #Background
   1 ,  .0076  , 0.01 ,   0.9   , 1.33   , 1.0,   #CSF
   2 ,  0.0335 , 10   , .9      , 1.3688 , .8,    #Grey
   3 ,  0.0207 , 33   , .88     , 1.3852 ,  .7,   #White
-  4 ,  .087  ,  0   , 0       , 1.48   ,  0,    #Fat
+  4 ,  .087  ,  11.5   , .9       , 1.48   ,  0,    #Fat
   5 ,  1.12   ,  53  , .95       , 1.41    ,  0,    #Muscle
   6 , .35     , 35   , .93      , 1.45    , 0,     #Muscle/Skin g=.8?
   7 ,  .015   , 8.6  , .94      , 1.55    , 0,     #Skull
   8 ,  .22     , 58.5, .99     , 1.4    , 0,     #Vessels
-  9 , .087      , 0    , 0       , 1.46    , 0,       #Around Fat (collagen)
+  9 , .087      ,11.5    , .9       , 1.46    , 0,       #Around Fat (collagen)
   10,  .085   , 6.5  , 0.765   , 1.4    , 0,       #Dura Mater
   11,  .015   , 9.6  , .9      , 1.4    , 0        #Bone Marrow
   ), num_types, num_char, byrow=TRUE)
 
-  std_dev <- matrix(0.0001,nrow=num_types,ncol=num_char)
+  std_dev <- matrix(0.000001,nrow=num_types,ncol=num_char)
   std_dev[c(9,11,12),5] <- .01
   tissue_char <- as.data.frame(gen_tissue_chars(means,std_dev) )
   names(tissue_char) <- c("id",  "mu_a","mu_s","g","n","W") 
- 
   tissue_char
-}
+}#end of get_tissue_chars
 gen_tissue_chars <- function(means,std_dev){
   temp <- matrix(0,num_types,num_char)
   for (i in 1:num_types){
@@ -206,12 +208,12 @@ find_intersects <- function(P1,P2){
 process <- function(xing,src,dest,tissue1){
   n <- nrow(src)
   temp <- matrix(0,n,3)
-  midpt <- matrix(0,1,3)
   idim <- numeric(n)
   ndir <- numeric(n)
   for (i in 1:n)
     if (!is.null(xing[[i]])){
       #compute midpoints between crossings to find voxels correctly
+      midpt <- matrix(0,1,3)
       midpt[1,1:3] <- (src[i,1:3] + xing[[i]][1,1:3])/2
       if (nrow(xing[[i]])>1){
         for (j in 2:nrow(xing[[i]])) rbind(midpt, (xing[[i]][j-1,1:3]+xing[[i]][j,1:3])/2)
@@ -275,8 +277,9 @@ steps <- function(P, D, flg){
   provisional_step <- move_provisionally(P, D, mu_s, mu_a)
 
   #see what boundaries the provisional steps of photons have crossed
+
   xing <- find_intersects(P,provisional_step$P)
-  
+
  
   #change destination points if there were crossings to diff tissues
   newP <- process(xing,P,provisional_step$P,tissue1)
@@ -292,7 +295,7 @@ steps <- function(P, D, flg){
      dim(candir) <- c(1,3)
    }
   if ((nrow(candir)>0)){
-    #TODO check candir  to see if there's more than one canonical direction
+    #check candir  to see if there's more than one canonical direction in any row
     candir <- check_canonical(candir)
     src_angles[diff_tiss] <- acos(rowSums(candir*D[diff_tiss,]))
     #compute new angles of reflection and refraction
@@ -304,25 +307,24 @@ steps <- function(P, D, flg){
     new_ang <- list(angle=numeric(n),refl=logical(n))
     new_ang$angle[diff_tiss]<-temp$angle
     new_ang$refl[diff_tiss] <- temp$refl
+ 
   }
   else{
     new_ang <- list(angle=numeric(n),refl=logical(n))
-    
   }
   new_ang$refl[!diff_tiss] <- FALSE
 
+  #if reflected (hence different  tissues), put photon back in direction of source voxel
+  #note that dimension that's being changed is an integer, i.e., voxel boundary
+  newP$P[new_ang$refl,newP$idim[diff_tiss]] <- newP$P[new_ang$refl,newP$idim[diff_tiss]]-newP$ndir[diff_tiss]
   P <- newP$P
   
-
-  #check to see if any photons have hit background voxels
+  #check to see if any photons have hit background voxels and aren't reflected back
   exits <- mark_exits(P,new_ang$refl)
   flg[exits] <- "Exited"
-#   # extract exit positions
-#   exits <- corrected_step[["exits"]]
+   # extract exit positions
    X <- matrify(P, exits)
-   # extract absorbed positions with are not exits
-   # absorbed <- provisional_step[["absorptions"]] & !exits
-
+   # extract absorbed positions with are not exits and not different tissues
    absorbed <- provisional_step$absorptions & !diff_tiss & !exits
    flg[absorbed] <- "Absorbed"
    A <- matrify(P, absorbed)
@@ -333,9 +335,7 @@ steps <- function(P, D, flg){
    # scatter the remaining photons
    for (i in 1:n) if (flg[i]=="Alive") D[i,1:3] <-scatter1(D[i,1:3],invCDF[[i]](runif(1))) 
 
-#    P <- matrify(P,alive)
-#    D <- matrify(D,alive)
-   # return P, D, X, and A
+   # return P, D, X, A, and indicator flag
    list(P=P, D=D, X=X, A=A, flg=flg)
 
 }
@@ -349,6 +349,7 @@ compute_direction <- function(new_angles,candir,wdim,D){
   }
   #form vector of +/- 1's from candir and dimension selector wdim
   vdir <- sapply(1:nrow(candir),function(n){candir[n,wdim[n]]})
+
   #multiply angle by +1 or -1 to indicate direction and compute cosines
   newdir <- cos(new_angles$angle*vdir)
   beta <- sqrt(1-newdir^2)
@@ -360,7 +361,7 @@ compute_direction <- function(new_angles,candir,wdim,D){
   denom <- sqrt(rowSums(D^2))[refraction]
   D[refraction,] <- D[refraction,]*beta/denom
   #insert canonical direction
-  for (i in 1:nrow(D)) if (refraction[i]) D[i,wdim[i]] <- newdir
+  for (i in 1:nrow(D)) if (refraction[i]) D[i,wdim[i]] <- newdir[i]
   #for reflected angles negate sign of canonical direction
   for (i in 1:nrow(D)) if (!refraction[i]) D[i,wdim[i]] <- -D[i,wdim[i]]
   D
@@ -402,35 +403,6 @@ mark_exits <- function(P,refl){
   tissue <- get_tissuetype(V)
   exits <- (tissue==0)&(!refl)
   exits
-}
-disp_slice <- function(slice, main){
-  slice <- rbind(slice, matrix(0, round(0.3*dim(slice)[1]), dim(slice)[2]))
-  fin <- par("fin") #width and height in inches
-  mai <- par("mai") #margins in inches: bottom, left, top, right
-  h <- par("fin")[2] - mai[1] - mai[3] #how tall can image be
-  w <- par("fin")[1] - mai[2] - mai[4] #how wide can image be
-  rhs <- dim(slice)[2]*w - dim(slice)[1]*h
-  nr <- dim(slice)[1]
-  nc <- dim(slice)[2]
-  if(rhs > 0){
-    dw <- rhs/nc
-    dh <- 0
-  } else if(rhs < 0){
-    dh <- -rhs/nr
-    dw <- 0
-  } else {
-    dw <- dh <- 0
-  }
-  par(mai=par("mai") + c(0, 0, dh, dw))
-  mycolors=c("blue4", "palegreen", "grey40", "grey90", "yellow", "violetred3", "lightpink2", "grey60", "red", "orange", "black", "brown")
-  image(1:nr, 1:nc, z=slice, col=mycolors, main=main, xlab="mm", ylab="mm")
-  par(mai=mai)
-  mar <- par("mar")
-  bty <- par("bty")
-#   lg <- c("Background", "CSF", "Gray Matter", "White Matter", "Fat", "Muscle", "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater", "Bone marrow")
-#   legend('topright', lg, cex=.8, fill=mycolors)
-  par(mar=mar, bty=bty, mai=mai)
-  
 }
 #Given mxn array  records (m=number of photons, n=number of steps+1)
 #and n-long list where each entry in list is mx4 array
@@ -490,6 +462,6 @@ distance_asfunc <- function(last,P0){
   ilast[,1:3] <- as.numeric(last[,1:3])
   dist[,1] <- sqrt((ilast[,1]-P0[1])^2 + (ilast[,2]-P0[2])^2)
   dist[,2] <- abs(ilast[,3]-P0[3])
-  dist[,3] <- as.integer(last[,5])
+  #dist[,3] <- as.integer(last[,5])
   dist
 }

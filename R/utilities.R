@@ -271,6 +271,7 @@ findVoxelCrossings <- function(u, v){
   if(length(qs)==0)return(NULL)
   # Return the points in order of border crossing from u to v.
   nv <- t(sapply(qs, function(q){q*u + (1-q)*v}))
+  for(i in 1:length(idim)) nv[i,idim[i]] <- round(nv[i,idim[i]])
   cbind(nv,idim)
 
 }
