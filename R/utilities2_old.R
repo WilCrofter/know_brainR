@@ -2,7 +2,7 @@
 #myseed <- 0x7141958 #lp301
 #myseed <- 0x8728672 #run500
 #myseed <- 0x2487ad #run501
-
+set.seed(myseed)
 
 #computes probability of reflection
 #given angle of incidence (in radians)
@@ -21,7 +21,26 @@ prob_refl <- function(theta1,n1,n2){
   prob[idx] <- pmin(1, .5 * (t1+t2))
   prob
 }
-
+#compute probability of reflection for angles moving from
+#gray matter to white matter
+Rgraytowhite <- function(theta){
+  n_gray <- dry - (dry-wet)*rep(water_gray,length(theta))
+  n_white <- dry - (dry-wet)*rep(water_white,length(theta) )
+  prob_refl(theta,n_gray,n_white)
+}
+#compute angles of refraction in white matter
+#given incidence angles coming in from gray matter
+refraction_in_white <- function(theta){
+  reflprobs <- Rgraytowhite(theta)
+  idx_refl <- reflprobs==1.0
+  not_reflected <- theta[!idx_refl]
+  n_gray <- dry - (dry-wet)*water_gray
+  n_white <- dry - (dry-wet)*water_white
+  sin2 <- (n_gray/n_white) * sin(not_reflected)
+  cos2 <- sqrt(1-sin2^2)
+  refracted <- acos(cos2)  
+  refracted
+}
 #compute angles of refraction  in tissue 2 or reflection
 #given incidence angles coming from tissue 1
 new_angles <- function(theta,n1,n2){
@@ -89,15 +108,13 @@ phantom
 
 # Simulates scattering and absorption in a phantom head
 # assuming nphotons are emitted at the skull with g=.94 
-sim_forward <- function(nphotons, myseed=0x1234567, max_steps=1000){
+sim_forward <- function(nphotons, max_steps=1000){
   steps <- max_steps
   print(paste("seed is",myseed))
-  set.seed(myseed)
-  
+
   #state holds position, direction,and condition, i.e., alive, absorbed,exit of each photon
   state = list(
-#   P = cbind(x=rep(109.5,nphotons), y=rep(216.5,nphotons), z=rep(327.5,nphotons)),
-    P = cbind(x=rep(110,nphotons), y=rep(217,nphotons), z=rep(328.9,nphotons)),
+    P = cbind(x=rep(109.5,nphotons), y=rep(216.5,nphotons), z=rep(327.5,nphotons)),
     D = cbind(x=rep(-4/45.177,nphotons), y=rep(0,nphotons), z=rep(-45/45.177,nphotons)), 
     flg=rep("Alive",nphotons))
 #    P = cbind(x=rep(181,nphotons), y=rep(217,nphotons), z=rep(340,nphotons)),
@@ -109,10 +126,8 @@ sim_forward <- function(nphotons, myseed=0x1234567, max_steps=1000){
 
   record <- matrix("-",nphotons,max_steps+1)
   path <- cbind(state$P, state$flg)
-  V <- get_voxel(state$P)
-  tissue1 <- get_tissuetype(V)
-  record[tissue1!=0,1] <- "Alive"
-  record[tissue1==0,1] <- "Exited"
+
+  record[,1] <- "Alive"
   for(i in 1:steps){
     if(sum(record[,i]=="Alive")==0)break
 #    print(paste("step = ",i,"num alive is ",sum(record[,i]=="Alive")))
@@ -242,7 +257,7 @@ steps <- function(P, D, flg){
   V <- get_voxel(P)
   # get tissue types of current positions
   tissue1 <- get_tissuetype(V)
-
+    
   mu_s <- numeric(n)
   mu_a <- numeric(n)
   g <- numeric(n)
@@ -301,11 +316,7 @@ steps <- function(P, D, flg){
 
   #if reflected (hence different  tissues), put photon back in direction of source voxel
   #note that dimension that's being changed is an integer, i.e., voxel boundary
-#   if  ((nrow(candir)>0)&(sum(new_ang$refl)>0))
-#   {
-#     print(n)
-#   }
-  for (i in 1:n) if (new_ang$refl[i]) newP$P[i,newP$idim[i]] <- newP$P[i,newP$idim[i]]-newP$ndir[i]
+  newP$P[new_ang$refl,newP$idim[diff_tiss]] <- newP$P[new_ang$refl,newP$idim[diff_tiss]]-newP$ndir[diff_tiss]
   P <- newP$P
   
   #check to see if any photons have hit background voxels and aren't reflected back
@@ -348,7 +359,7 @@ compute_direction <- function(new_angles,candir,wdim,D){
   for(i in 1:nrow(D)) if (refraction[i]) D[i,wdim[i]] <- 0
   #compute normalizing factor sqrt of sums of sqrs of noncanonical directions
   denom <- sqrt(rowSums(D^2))[refraction]
-  D[refraction,] <- D[refraction,]*beta[refraction]/denom
+  D[refraction,] <- D[refraction,]*beta/denom
   #insert canonical direction
   for (i in 1:nrow(D)) if (refraction[i]) D[i,wdim[i]] <- newdir[i]
   #for reflected angles negate sign of canonical direction
