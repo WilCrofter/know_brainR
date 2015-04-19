@@ -85,8 +85,11 @@ phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endia
 dim(phantom) <- c(362, 434, 362)
 phantom
 }
-
-
+read_tissuetable <- function(){
+  means <- read.table("data/tissue_properties.csv", sep=",",comment.char="#")
+  means <- as.matrix(means,num_types, num_char, byrow=TRUE)
+  means
+}
 # Simulates scattering and absorption in a phantom head
 # assuming nphotons are emitted at the skull with g=.94 
 sim_forward <- function(nphotons, myseed=0x1234567, max_steps=1000){
@@ -127,9 +130,7 @@ sim_forward <- function(nphotons, myseed=0x1234567, max_steps=1000){
 
     nxt$P <- matrify(nxt$P,nxt$flg=="Alive")
     nxt$D <- matrify(nxt$D,nxt$flg=="Alive")
-    
- 
-    
+
     nxt$flg <-nxt$flg[nxt$flg=="Alive"]    
     state <- nxt[c("P", "D", "flg")]
     trax[[i+1]] <- path
@@ -144,22 +145,7 @@ list(trax=trax,record=record,tchar=tissue_char,seed=myseed)
 num_types <-12
 num_char <- 6
 get_tissue_chars <- function(){
-  means <- matrix(c(
-  #id & \mu_a & \mu_s   & g &     n &     W   # type\\
-  0 ,  0.00001, 0.00001, .00001 , 1.0    , 0,     #Background
-  1 ,  .0076  , 0.01 ,   0.9   , 1.33   , 1.0,   #CSF
-  2 ,  0.0335 , 10   , .9      , 1.3688 , .8,    #Grey
-  3 ,  0.0207 , 33   , .88     , 1.3852 ,  .7,   #White
-  4 ,  .087  ,  11.5   , .9       , 1.48   ,  0,    #Fat
-  5 ,  1.12   ,  53  , .95       , 1.41    ,  0,    #Muscle
-  6 , .35     , 35   , .93      , 1.45    , 0,     #Muscle/Skin g=.8?
-  7 ,  .015   , 8.6  , .94      , 1.55    , 0,     #Skull
-  8 ,  .22     , 58.5, .99     , 1.4    , 0,     #Vessels
-  9 , .087      ,11.5    , .9       , 1.46    , 0,       #Around Fat (collagen)
-  10,  .085   , 6.5  , 0.765   , 1.4    , 0,       #Dura Mater
-  11,  .015   , 9.6  , .9      , 1.4    , 0        #Bone Marrow
-  ), num_types, num_char, byrow=TRUE)
-
+  means <- read_tissuetable()
   std_dev <- matrix(0.000001,nrow=num_types,ncol=num_char)
   std_dev[c(9,11,12),5] <- .01
   tissue_char <- as.data.frame(gen_tissue_chars(means,std_dev) )
