@@ -1,0 +1,107 @@
+---
+title: "Does optical scattering obscure direction?"
+author: "W. Bauer"
+date: "04/09/2015"
+output: html_document
+---
+
+```{r echo=FALSE}
+source("../R/utilities.R")
+qqunif <- function(x, main="QQ plot against uniform", cex=1.5){
+  # generate length(x) uniformly distributed samples between -1 and 1
+  v <- runif(length(x), -1, 1)
+  # create a quantile-quantile plot with x
+  qqplot(x, v, main=main, xlab="data", ylab="uniform variates")
+  abline(0, 1, lwd=5, col="green")
+  ks <-ks.test(x, function(q)punif(q, -1, 1))
+  if(ks$p.value < 1e-16){
+    text(-1, 0.75, paste("Kolmogorov-Smirnov:\np <", 1e-16), cex=cex, pos=4)
+  } else {
+    pval <- signif(ks$p.value, digits=4)
+    text(-1, 0.5, paste("Kolmogorov-Smirnov:\np =",pval), cex=cex, pos=4)
+  } 
+}
+set.seed(214646) # for reproducability. Changing it won't alter results very much.
+```
+
+At wavelengths of interest, scattering coefficients of tissue [probably range](jacques.html) from about 20 events/cm to around 100 events/cm. Thus a photon will scatter at least 60 times, and as many as 1000 times, between gray matter and scalp. Will it retain any information at all about its initial direction or the direction of its origin?
+
+If a pair of directions, in the form of unit vectors, are selected at random, the cosines of the angles between them, (i.e., their inner products,) will be uniformly distributed on the interval $[-1, 1].$ We can demonstrate this by selecting 1000 pairs at random, forming their inner products and examining the result. (For the `rusphere` source code see [utilities.R](../R/utilities.R))
+
+The figure shows a quantile-quantile plot of the distribution of cosines between pairs of random unit vectors against a uniform distribution on $[-1, 1].$ If the cosines were distributed uniformly, the plot would be a line of unit slope through the origin, as shown in green. The actual quantiles, shown in black, deviate from the line very little. Also shown is the result of a Kolmogorov-Smirnov test with a uniform distribution as its null hypothesis. As can be seen from the p-value, the cosines are consistent with a uniform distribution. 
+
+```{r fig.align='center', fig.show='hold'}
+cosines <- rowSums(rusphere(1000)*rusphere(1000))
+qqunif(cosines, main="Cosines of angles between pairs of \nrandom directions are uniformly distributed.")
+```
+
+The distribution of scattering angles is parameterized by the anisotropy coefficient, $g.$ At a wavelength of 800 nm, the smallest anisotropy coefficient readily available is for skin [Prahl 1988](jacques.html). Using this value, we examine the inner product of a photon's initial direction with its direction after the minimum number, 60, of scattering events.
+
+The following function will simulate the process and return the resulting cosines. For details of the functions called internally, see [utilities.R](../R/utilities.R).
+
+```{r fig.align='center', fig.show='hold'}
+multiscatter <- function(g, nphotons, nevents){
+  # define an initial direction, the same for all photons
+  u <- c(1,1,1)/sqrt(3)
+  # create an nphotons by 3 matrix, all of whose rows are u.
+  D <- matrix(u, nphotons, 3, byrow=TRUE)
+  # create an inverse cumulative distribution function of scattering
+  # angles to enable generation of scattering angles with the
+  # the proper distribution
+  invCDF <- icdfHG(g)
+  # subject all photons to nevents scattering events
+  for(i in 1:nevents)D <- scatter(D, invCDF)
+  # return the inner products of the final directions with the initial
+  D %*% u
+}
+```
+
+The figure shows the result of scattering 1000 photons 60 times each with $g=0.5.$ Information about the initial direction is essentially wiped out. The Kolmogorov-Smirnov test is consistent with a uniform distribution of cosines of angles between initial and final directions. The quantile-quantile plot falls close to the green line, hence supports the same result.
+
+```{r fig.align='center', fig.show='hold'}
+qqunif(multiscatter(g=0.5, nphotons=1000, nevents=60),
+       main="60 scattering events, g=0.5, 1000 photons.")
+```
+
+The next figure shows the result of scattering 1000 photons 60 times each with $g=0.8,$ a more typical value for the anisotropy coefficient. Again, results are consistent with complete randomization of final directions with respect to initial.
+
+```{r fig.align='center', fig.show='hold'}
+qqunif(multiscatter(g=0.8, nphotons=1000, nevents=60),
+       main="60 scattering events, g=0.8, 1000 photons.")
+```
+
+### How fast does directional randomization occur?
+
+If photon direction is essentially randomized after 60 scattering events, a natural question concerns the minimum number of scattering events sufficient for randomization. To estimate this we use 10,000 photons for more reliable statistics.
+
+The figure shows convergence of photon directions to random in 6 events given $g=0.5$. Since reduced scattering coefficients [average](jacques.html) around 10/cm, an anisotropy coefficent of 0.5 implies a (non-reduced) scattering coefficient of about 20 events per cm. Thus, for $g=0.5,$ a path of about 8/20 = 0.4 cm would be sufficient. It seems likely that randomization would occur in the first or second BrainWeb voxel traversed.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+par(mfrow=c(1,2))
+qqunif(multiscatter(g=0.5, nphotons=10000, nevents=1),
+       main="1 scattering event, g=0.5.", cex=1)
+qqunif(multiscatter(g=0.5, nphotons=10000, nevents=3),
+       main="3 scattering events, g=0.5.", cex=1)
+qqunif(multiscatter(g=0.5, nphotons=10000, nevents=5),
+       main="5 scattering events, g=0.5.", cex=1)
+qqunif(multiscatter(g=0.5, nphotons=10000, nevents=8),
+       main="8 scattering events, g=0.5.", cex=1)
+par(mfrow=c(1,1))
+```
+
+The second figure shows convergence to random in 18 events for $g=0.8$. A (non-reduced) scattering coefficient for this value of $g$ would be about 50 events per cm, and a corresponding path length of 18/50, or 0.36 cm, about the same as for $g=0.5.$
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+par(mfrow=c(1,2))
+qqunif(multiscatter(g=0.8, nphotons=10000, nevents=1),
+       main="1 scattering event, g=0.8.", cex=1)
+qqunif(multiscatter(g=0.8, nphotons=10000, nevents=5),
+       main="5 scattering events, g=0.8.", cex=1)
+qqunif(multiscatter(g=0.8, nphotons=10000, nevents=10),
+       main="10 scattering events, g=0.8.", cex=1)
+qqunif(multiscatter(g=0.8, nphotons=10000, nevents=18),
+       main="18 scattering events, g=0.8.", cex=1)
+par(mfrow=c(1,1))
+```
+
+These estimates are consistent with the proposition that transport of NIR photons in tissue is essentially diffusive. It is worth noting that acoustic scattering in tissue is about one thousand fold less severe than optical scattering. (See [Xiang et. al.](http://www.nature.com/srep/2013/130123/srep01113/full/srep01113.html?message-global=remove&WT.ec_id=SREP-20130129) "4-D Photoacoustic Tomography," *Nature Scientific Reports* 3, Article number: 1113 doi:10.1038/srep01113, January 2013.) Hence, acoustical imaging promises much better spatial resolution than optical.

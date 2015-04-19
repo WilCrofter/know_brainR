@@ -48,10 +48,10 @@ phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endia
 dim(phantom) <- c(362, 434, 362)
 ```
 
-Fixing the first dimension will produce a 2D section in the $y \: z$ or saggital plane. To display the section as an image it must be converted to an integer matrix. Conversion to integer flattens the matrix, since an object of type `integer` is a vector by definition in R. Hence, the converted object must be reshaped into a matrix.
+Fixing the first dimension will produce a 2D section in the $y \: z$ or sagittal plane. To display the section as an image it must be converted to an integer matrix. Conversion to integer flattens the matrix, since an object of type `integer` is a vector by definition in R. Hence, the converted object must be reshaped into a matrix.
 
 ```{r}
-# Pick off a saggital section and display as an image
+# Pick off a sagittal section and display as an image
 slice <- phantom[100,,]
 # Convert to an integer matrix for display.
 # The call to matrix is necessary because as.integer flattens.
@@ -59,7 +59,7 @@ slice <- as.integer(slice)
 dim(slice) <- c(434, 362)
 ```
 
-The following simple code will create a minimal display of the saggital section with decent contrast.
+The following simple code will create a minimal display of the sagittal section with decent contrast.
 
 ```{r echo=TRUE, eval=FALSE}
 mycolors <- c("#000000FF", rainbow(11))
@@ -86,7 +86,7 @@ disp_with_legend <- function(slice, main){
 ```
 
 ```{r  fig.show='hold', fig.align='center'}
-disp_with_legend(slice, "Saggital Section")
+disp_with_legend(slice, "Sagittal Section")
 ```
 
 Creating an $x \: z$ or coronal section is similar.

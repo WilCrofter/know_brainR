@@ -6,6 +6,9 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Does optical scattering obscure direction?](Rmds/scattering_and_direction.html)
+-   [Model of acoustic loss](Rmds/acoustic_1.html)
+-   [Improved phantom display](Rmds/using_disp_slice.html)
 -   [Acoustic properties for BrainWeb phantom](Rmds/acoustic_properties.html)
 -   [NIR absorption, ballpark estimates](Rmds/absorption.html)
 -   [Reading BrainWeb Phantoms](Rmds/reading_brainweb.html)
