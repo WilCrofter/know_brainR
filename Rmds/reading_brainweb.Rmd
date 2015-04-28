@@ -70,15 +70,16 @@ A more informative display, with legend, takes a dozen lines which comprise func
 
 ```{r echo=FALSE}
 disp_with_legend <- function(slice, main){
-  mycolors <- c("#000000FF", rainbow(11))
+  n <- length(table(slice))
+  mycolors <- c("#000000FF", rainbow(n-1))
   layout(matrix(c(1,2), 1, 2, byrow=TRUE), widths=c(.8, .2))
-  image(z=slice, col=mycolors, main=main, xaxt="n", yaxt="n", xlab="", ylab="")
+  image(x=1:dim(slice)[1],y=1:dim(slice)[2],z=slice, col=mycolors, main=main, xaxt="n", yaxt="n", xlab="", ylab="")
   mar <- par("mar")
   bty <- par("bty")
   par(mar=c(4, 0, 5, 0)+0.1, bty="n")
   plot(0:1, 0:1, type='n', xaxt="n", yaxt="n", xlab="", ylab="")
-  lg <- c("Background", "CSF", "Gray Matter", "White Matter", "Fat", "Muscle", "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater", "Bone marrow")
-  legend('topleft', lg, cex=.9, fill=mycolors)
+  lg <- c("Background", "CSF", "Gray Matter", "White Matter", "Fat", "Muscle", "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater", "Bone marrow","Special")
+  legend('topleft', lg, cex=.5, fill=mycolors)
   par(mar=mar, bty=bty)
   layout(matrix(c(1), 1, 1))
   }

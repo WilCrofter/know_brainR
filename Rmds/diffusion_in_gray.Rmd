@@ -35,10 +35,10 @@ plot_ends <- function(M, col, ...){
 }
 
 local({
-  n <- 25
+  n <- 100
   col <- terrain.colors(n, alpha=1)
   names(col) <- 1:n
-  nsteps <- 100
+  nsteps <- 250
   plotspan <- 3
   # tissue thickness
   thickness = 3.0 # mm
@@ -79,7 +79,7 @@ Using the above optical characteristics in an infinite medium, 1000 photons were
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold'}
 set.seed(89457021)
-sim <- sim_infinite(1000, 100)
+sim <- sim_infinite(1000, 250)
 data.frame(row.names=c("x", "y", "z"), 
            Shapiro_Wilk_p_value=c(shapiro.test(sim$P[,"x"])$p.value,
                      shapiro.test(sim$P[,"y"])$p.value,

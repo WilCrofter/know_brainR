@@ -79,10 +79,18 @@ icdfHG <- function(g){
 # vector representing direction after scattering.
 scatter1 <- function(d, cosu){
   sinu <- sqrt(1 - cosu^2)
-  # orthonormal basis for the orthogonal complement of d
-  b1 <- c(d[2], -d[1], 0)/sqrt(sum(d[1:2]^2))
-  b2 <- c(0, -d[3], d[2]) + b1*b1[2]*d[3]
-  b2 <- b2/sqrt(sum(b2^2))
+  if (d[2]==0){
+#     b1 <- c(1,0,0)
+    b2 <- c(0,1,0)
+    b1 <- c(-d[3],0,d[1])
+    b1 <- b1/sqrt(sum(b1^2))
+  }
+  else{
+    # orthonormal basis for the orthogonal complement of d
+    b1 <- c(d[2], -d[1], 0)/sqrt(sum(d[1:2]^2))
+    b2 <- c(0, -d[3], d[2]) + b1*b1[2]*d[3]
+    b2 <- b2/sqrt(sum(b2^2))
+  }
   # random angle
   psi <- runif(1, 0, 2*pi)
   cosu*d + sinu*sin(psi)*b1 + sinu*cos(psi)*b2
@@ -263,8 +271,9 @@ findVoxelCrossings <- function(u, v){
   if(length(qs)==0)return(NULL)
   # Return the points in order of border crossing from u to v.
   nv <- t(sapply(qs, function(q){q*u + (1-q)*v}))
+  for(i in 1:length(idim)) nv[i,idim[i]] <- round(nv[i,idim[i]])
   cbind(nv,idim)
-  
+
 }
 
 # Displays a phantom slice with proper aspect ratio and reasonable color
@@ -296,5 +305,5 @@ disp_slice <- function(slice, main){
   lg <- c("Background", "CSF", "Gray Matter", "White Matter", "Fat", "Muscle", "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater", "Bone marrow")
   legend('topright', lg, cex=.8, fill=mycolors)
   par(mar=mar, bty=bty, mai=mai)
-  
+
 }

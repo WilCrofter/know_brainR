@@ -1,0 +1,162 @@
+---
+title: "Grey_to_White"
+author: "gina"
+date: "02/12/2015"
+output: html_document
+---
+### Refraction
+From WRB's jacques.Rmd section on refraction, we have a formula for a real refraction coefficent, n, as a function of the tissue's water content W.
+$$n = n_{dry} − (n_{dry} − n_{water})W,$$ where $n_{dry} \approx 1.514$ and $n_{water} = 1.33.$ 
+
+The following values are from 
+
+Tissue | W
+-------|-------
+CSF | 1.0
+Gray matter | 0.8
+White matter | 0.7
+
+ 
+Assuming percentage of water content of gray and white matters as .8 and .7 respectively, [T Biswas, T Luu. In vivo MR Measurement of Refractive Index, Relative Water Content and T2 Relaxation time of Various Brain lesions With Clinical Application to Discriminate Brain Lesions. The Internet Journal of Radiology. 2009 Volume 13 Number 1.](https://ispub.com/IJRA/13/1/8277#), we compute the indices of refraction for gray and white matter.
+```{r}
+dry <- 1.514
+wet <- 1.33
+n_gray <- dry - (dry-wet)*.8
+n_white <- dry - (dry-wet)*.7
+```
+
+Wikipedia (http://en.wikipedia.org/wiki/White_matter) says
+
+"White matter in nonelderly adults is 1.7-3.6% blood.[4]"
+
+Here Reference 4 is [K. L. LEENDERS , D. PERANI , A. A. LAMMERTSMA , J. D. HEATHER , P. BUCKINGHAM , T. JONES , M. J. R. HEALY , J. M. GIBBS , R. J. S. WISE , J. HATAZAWA , S. HEROLD , R. P. BEANEY , D. J. BROOKS , T. SPINKS , C. RHODES , R. S. J. FRACKOWIAK,"CEREBRAL BLOOD FLOW, BLOOD VOLUME AND OXYGEN UTILIZATION NORMAL VALUES AND EFFECT OF AGE"]
+(DOI: http://dx.doi.org/10.1093/brain/113.1.27 27-47 First published online: 1 February 1990)
+
+For fat and water content of the brain we used the following reference
+
+[JOHN S. O’BRIEN and E. LOIS SAMPSON,  Division of Chemical Pathology, 
+Departments of Pathology and Medicine,
+University of Southern California
+School of Medicine, Los Angeles, California, 
+"Lipid composition of the normal human brain: gray matter, white matter, and myelin”,
+Journal of Lipid Research VOLUME 6, 1965 ]
+(http://www.jlr.org/content/6/4/537.full.pdf)
+
+Table 1 from above paper gives the following numbers.
+
+Lipid content in white matter ranges from 58% (6 yrs) to 66% (9 yrs) to 64.6% (55 yrs).  
+Water content in white matter ranges from  75.5% (6 yrs) to 77.4% (9 yrs) to 75.2% (55 yrs).  
+Lipid content in gray matter ranges from  36% (6 yrs) to 38% (9 yrs) to 39.6% (55 yrs).  
+Water content in gray matter ranges from  83.2% (6 yrs) to 85.8% (9 yrs) to 82.3% (55 yrs).  
+
+For white matter, assume vasculature accounts for 2.65% of volume  equally divided between oxygenated and deoxygenated blood. Also assume  fat is 65% of the volume with $\mu_{a.fat} \approx .005 \: cm^{-1}$. We'll use the same numbers used in the gray matter calculations for 900 nm wavelength, $\mu_{a.oxy} \approx 6.5 \: cm^{-1}$, $\mu_{a.deoxy} \approx 4.5 \: cm^{-1}$, and $\mu_{a.water} \approx 0.076  \: cm^{-1}.$
+$$\mu_{a.white} \approx 0.0265 \left(0.5 \cdot 6.5 + 0.5 \cdot 4.5 \right) + 0.76 \cdot 0.076 + .65 \cdot .005 = 0.207 \: cm^{-1}.$$
+
+The phantom represents a discrete anatomical model which consists of a class label (integer) at each voxel, representing the tissue which contributes the most to that voxel (0=Background, 1=CSF, 2=Gray Matter, 3=White Matter, 4=Fat, 5=Muscle, 6=Muscle/Skin, 7=Skull, 8=Vessels, 9=Around fat, 10 =Dura mater, 11=Bone marrow.)
+
+n=dry - (dry-wet)*W, where dry=1.514, wet=1.33, and W represents water content of each tissue
+
+[Journal of Biomedical Optics 3(4) , 437–445 (OCTOBER 1998)
+COMPUTATIONAL AND IN VIVO INVESTIGATION
+OF OPTICAL REFLECTANCE FROM HUMAN BRAIN TO
+ASSIST NEUROSURGERY
+Maureen Johns, Cole Giller, and Hanli Liu]
+(http://www.uta.edu/rfmems/N_041101/Reference/30.pdf)
+
+
+> Larger reflected signals detected from white mat-
+ter indicate stronger scattering features in white
+matter than in gray matter. The presence of a signal
+decrease at 550 nm in both gray and white matter
+measurements suggests hemoglobin is a major ab-
+sorbing species in the brain, particularly in gray
+matter. However, other absorbers may be present,
+but more advanced algorithms are needed to detect
+their presence.
+
+
+The following was used for one of the skull numbers, but the assumed g value, .01, is much different as are the assumed indices of refraction, 1, for CSF, gray and white matter, skull and scalp.
+
+[Effective scattering coefficient of the cerebral spinal fluid
+in adult head models for diffuse optical imaging
+Anna Custo, William M. Wells III, Alex H. Barnett, Elizabeth M. C. Hillman, and David A. Boas
+APPLIED OPTICSVol. 45, No. 191 July 2006]
+
+Another good source is Pieter Van der Zee Measurement... Ph.d Thesis whose link is (https://www.ucl.ac.uk/medphys/research/borl/pub/theses/docs/pvanderzee.pdf) also had a lot of the numbers used in the chart below.
+
+And another source for optical properties of the brain is
+[In vivo
+local determination of tissue optical
+properties: applications to human brain
+Frédderic Bevilacqua, Dominique Piguet, Pierre Marquet, Jeffrey D. Gross,
+Bruce J. Tromberg, and Christian Depeursinge]
+
+ whose link is (http://heelspurs.com/a/led/skull1999.pdf)
+
+For data on the dura mater
+[In vitro study of control of human dura mater optical properties
+by acting of osmotical liquids]
+Alexey N. Bashkatov , Elina A. Genina, Vyacheslav I. Kochubey,
+Yury P. Sinichkin, Andrey A. Korobov, Nina A. Lakodina, Valery V. Tuchin 
+(www.researchgate.net/...dura_mater.../02e7e5263e46de8b8b000000.pdf)
+
+CSF info
+[Near-infrared light propagation in an adult head
+model. I. Modeling of low-level scattering in the
+cerebrospinal fluid layer]
+Eiji Okada and David T. Delpy
+(http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.299.1013&rep=rep1&type=pdf)
+
+Bone marrow data is from
+[Noninvasive characterization of the healthy
+human manubrium using diffuse optical
+spectroscopies]
+Parisa Farzam 1 , Claus Lindner 1 , Udo M Weigel 1,2 ,
+Maria Suarez 3 , Alvaro Urbano-Ispizua 3,4,5
+and Turgut Durduran 1
+www.researchgate.net/...characterization...optical.../0f317539437e3abd5...
+
+Index of refraction for collagen (around fat tissue type) is from
+[Estimation of wavelength dependence of refractive index
+of collagen fibers of scleral tissue]
+Alexey N. Bashkatov, Elina A. Genina, Vyacheslav I. Kochubey, and Valery V. Tuchin
+(http://optics.sgu.ru/_media/optics/staff/bashkatov/bashkatov_spie_00_4162_265.pdf)
+
+For some of the vessel and muscle numbers
+[A Review of the Optical Properties of Biological Tissues] by Cheong, Prahl and Welsh'
+from the IEEE Journal of Quantum Electronics December 1990
+(http://www.uta.edu/rfmems/N_041101/Reference/133.pdf)
+
+Interesting skull info in
+[Optical Clearing of Cranial Bone] by
+Elina A. Genina,1 Alexey N. Bashkatov,1 and Valery V. Tuchin
+(http://www.hindawi.com/journals/aot/2008/267867/)
+> Refractive index of the whole cranial bone has been estimated by Ascenzi and Fabry [33] at various stages of mineralisation to range from 1.555 to 1.564. Components of the tissue have the following refractive indices: apatite: > 1.623 [34], hydrated collagen (type I): 1.43 [35], and lipids ~1.45 [36].
+
+> The structural components of the bones consist of an inorganic matrix (largely mineralised) and an organic matrix [21, 22]. The inorganic matrix contains calcium hydroxyapatite, which is responsible for the compressive strength of bone, and osteocalcium phosphate. The main components of the organic matrix are collagen, proteins, blood cells, and lipids [23]. The amount of bone mineral matrix is 16%, the lipid content is 54%, the proteins content is 16%, and water contributes 16% [23]. It is the calcium and phosphorus component of the inorganic matrix that makes bone hard and rigid, and the arrangement of the collagen fibres in the organic matrix that makes it strong. Porosity of the bones is 5–10% [23].
+
+Indices of refraction from
+[Light scattering study of tissues] by
+V V Tuchin
+(gpumcml.googlecode.com/svn/trunk/.../5layerskin_633and337nm.pdf)
+
+$$\begin{array}{cccccc}
+id & type & \mu_a & \mu_s & g & n & W\\
+0 & Background & 0 & 0 & 0 & 1.0 & 0\\
+1 & CSF & .0076 & & & 1.33 & 1.0\\
+2 & Gray & 0.0335 & 10 & .9  & 1.3688 & .8\\
+3 & White & 0.0207 & 33 &.88 & 1.3852 & .7\\
+4 & Fat & .0005 & & & 1.48 & \\
+5 & Muscle & 1.12 & 53 & \\
+6 & Muscle/Skin &.35 & 35\ & .8 & \\
+7 & Skull & .015 & 8.6 & .9 & & \\
+8 & Vessels & .5 & 141.3 & .99\\
+9 & Around Fat  &\\
+10 & Dura Mater  &\\
+11  & Bone marrow  &
+\end{array}$$
+```{r, echo=FALSE}
+plot(cars)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
