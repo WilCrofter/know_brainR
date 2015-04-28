@@ -1,0 +1,109 @@
+---
+title: "Acoustic time of flight vs distance"
+author: "W. Bauer"
+date: "04/27/2015"
+output: html_document
+---
+
+This is a preliminary look at distance versus acoustic time of flight between BrainWeb phantom gray matter and skull using a reasonably representative area of gray matter on a gyrus. The general area is shown circled in light blue in the figure. 
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+source("../R/utilities.R")
+fname <- "../data/subject04_crisp_v.rawb"
+# Read in raw bytes as a vector
+phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
+# Convert to a 3D array by setting the dim attribute
+dim(phantom) <- c(362, 434, 362)
+# Extract sagittal section
+sagittal <- as.integer(phantom[100,,])
+dim(sagittal) <- c(434, 362)
+disp_slice(sagittal, "Sagittal")
+points(100, 235, pch=19, col="cyan")
+theta <- 2*pi*(0:50)/50
+polygon(100+25*cos(theta), 235+25*sin(theta), lwd=3, border="cyan")
+```
+
+Measuring time of flight between optical excitation and acoustic detection is at least theoretically possible in a photoacoustic setup. Sufficient correlation between time of flight and distance should allow a source to be located via triangulation. Correlation will not be perfect, of course, because different paths will generally intersect tissue types in different proportions.
+
+I'll generate random paths in a 45° cone with axis defined by the gray matter voxel `phantom[100, 100, 235]` and the background voxel `phantom[100, 50, 276]`. This line is roughly perpendicular to the scalp's surface. For each such path I'll identify the tissue types of voxels crossed and calculate the lengths of path segments in each. Given speed of sound estimates for each tissue type, times of flight can then be calculated.
+
+I'll first write a function to generate a random path to the scalp within the cone. Note that since R has 1-origin indexing, the coordinates of voxel `phantom[i, j, k]`, range from `(i-1, j-1, k-1)` to `(i, j, k)`. 
+
+```{r}
+gray <- c(99.5, 99.5, 234.5) # midpoint of the gray matter voxel
+bgrd <- c(99.5, 49.5, 275.5) # midpoint of the background voxel.
+axs <- bgrd - gray
+
+# Form orthogonal basis for the plane perpendicular to axs.
+# The base of a 45 degree cone will have radius equal to
+# the length of its axis, hence basis elements are given
+# the same length as the axis.
+base1 <- c(axs[2], -axs[1], 0)
+base1 <- sqrt(sum(axs^2))*base1/sqrt(sum(base1^2))
+base2 <- c(axs[1]*axs[3], axs[3], -axs[2])
+base2 <- sqrt(sum(axs^2))*base2/sqrt(sum(base2^2))
+
+# Generate a random point in the unit circle by accept/reject
+randomUC <- function(){
+  while(TRUE){
+    ans <- runif(2, -1 , 1)
+    if(sum(ans^2) <= 1)return(ans)
+    }
+  }
+
+# Generate a random point on the base of the cone.
+randomBasePoint <- function(){
+  uc <- randomUC()
+  bgrd + uc[1]*base1 + uc[2]*base2
+  }
+
+# Generate a random ray labeled with tissue types and lengths.
+randomLabeledRay <- function(){
+  crossings <- findVoxelCrossings(gray, randomBasePoint())
+  # generate voxel coordinates:
+  voxels <- ceiling(.5*(crossings[-1, 1:3]+crossings[-nrow(crossings), 1:3]))
+  # generate associated tissue types
+  tissues <- sapply(1:nrow(voxels), function(n)as.integer(phantom[voxels[n,1], voxels[n,2], voxels[n,3]]))
+  # generate lengths of segments in each voxel
+  lengths <- sqrt(rowSums((crossings[-1, 1:3]-crossings[-nrow(crossings), 1:3])^2))
+  # trim background (air) voxels
+  idx <- tissues != 0
+  list(tissues=tissues[idx], lengths=lengths[idx])
+}
+
+```
+
+Next, I'll assign each tissue type a value for speed of sound. For some tissue types, a range of values have appeared in the literature. I'll therefore assign a random value within the given range.
+
+```{r}
+bw <- read.table("../data/acoustic_properties_bw.csv", sep=",", header=TRUE)
+speeds <- runif(12, bw[,"c.low"], bw[,"c.high"])
+```
+
+Now I'll generate a random series of paths and create lengths and times of flight for them.
+
+```{r}
+set.seed(1430184794) # System time when this line was written
+distance <- numeric()
+tof <- numeric()
+for(n in 1:100){
+  ray <- randomLabeledRay()
+  distance <- c(distance, sum(ray$lengths))
+  sp <- speeds[1+ray$tissues]
+  tof <- c(tof, sum(ray$lengths/sp))
+}
+```
+
+A scatter plot and regression indicate a strong linear relationship.
+
+```{r fig.align='center', fig.show='hold'}
+plot(distance ~ tof, xlab="Time of Flight (msec)", ylab="Distance (mm)", main="Linear relationship between\ntime of flight and distance traveled.")
+mdl <- lm(distance ~ 0 + tof)
+abline(mdl, col="red", lwd=2)
+```
+
+```{r}
+summary(mdl)
+```
+
+

@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Acoustic time of flight vs distance](Rmds/tof_vs_distance.html)
 -   [Does optical scattering obscure direction?](Rmds/scattering_and_direction.html)
 -   [Model of acoustic loss](Rmds/acoustic_1.html)
 -   [Improved phantom display](Rmds/using_disp_slice.html)
