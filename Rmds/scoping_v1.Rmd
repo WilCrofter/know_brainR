@@ -1,9 +1,11 @@
 ---
-title: "Scoping simulation of neuronal activity in the primary visual cortex"
+title: "Scoping simulation of neuronal activity in the visual cortex"
 author: "W. Bauer"
 date: "05/06/2015"
 output: html_document
 ---
+
+### Anatomical considerations
 
 *In what follows, I have attempted to be anatomically accurate but, being no expert in the subject, may well have gone astray. Corrections are welcome.* 
 
@@ -31,7 +33,7 @@ arrows(125, 185, 100, 162, lwd=10, col="black")
 arrows(125, 185, 100, 162, lwd=7, col="cyan")
 ```
 
-The primary visual area, henceforth called V1, is retinotopic, meaning each region of V1 corresponds to a specific retinal region. In V1 the correspondence is continuous: adjacent areas of the retina correspond to adjacent areas of V1. The figure (source [Scholarpedia](http://www.scholarpedia.org/article/Visual_map)) indicates the correspondence. The area nearest the skull (lower left arrow in the phantom) corresponds to the the fovea (area of best visual acuity of the retina) and the deepest regions (upper right arrow) correspond to the periphery of vision.
+The primary visual area, henceforth called V1, is retinotopic, meaning each region of V1 corresponds to a specific retinal region. In V1 the correspondence is continuous: adjacent areas of the retina correspond to adjacent areas of V1. The figure (source [Scholarpedia](http://www.scholarpedia.org/article/Visual_map)) indicates the correspondence. The area nearest the skull (lower left arrow in the phantom) corresponds to the the fovea (area of best visual acuity in the retina) and the deepest regions (upper right arrow) correspond to the periphery of vision.
 
 <center>![Retinotopy of V1][retinotopy]</center>
 
@@ -39,9 +41,34 @@ Per Roland's images of neuronal activity in ferrets have spatial resolutions whi
 
 <center>![Neural dynamics][dynamics]</center>
 
-In humans, higher visual areas are arranged in an annular pattern around V1, and communicate with V1 and with one another in feedforward and feedback sequences. Like V1 they extend deep into the brain. Unlike in V1, retinotopy in higher areas is not entirely continuous and becomes progressively more complex in higher areas. Though this would complicate simulating coordinated neuronal activity between areas, the areas may be sufficiently separated to make it worth trying. It would be nice if image recovery could resolve the areas.  
+In humans, higher visual areas are arranged in an annular pattern around V1. Like V1 they extend deeply into the brain. Unlike in V1, retinotopy in higher areas is not entirely continuous and becomes progressively more complex in higher areas. Though this would complicate simulating coordinated neuronal activity between areas, the areas may be sufficiently separated to make it worth trying. In both humans and ferrets, visual areas communicate with one another in both feedforward and feedback sequences. It would be nice if image recovery could resolve both the areas and the sequences.  
 
+Per Roland has recorded aggregate depolarization and firing patterns for the ferret visual areas. See, e.g., Figure 4, *ibid*. Simulating similar temporal patterns in selected volumes of the BrainWeb phantom should be straightforward.
 
+### Optical and acoustic considerations
+
+The effects of depolarization patterns on optical and acoustical properties of stained tissue also must be simulated. I'll ignore the case of dyes excited by co-injected luciferase, since that case is fairly straightforward theoretically, amounting to frequency modulation of the dye's emission spectrum by neuronal activity.  
+
+If dyes are externally excited, in our case by a NIR source, some assumptions must be made about their absorption and emission spectra, their quantum yields (the ratio of photons emitted to photons absorbed,) and modulation by neuronal firing patterns. I'll use Leslie Lowe's review, [Design and Use of Organic Voltage Sensitive Dyes](http://www.newbooks-services.de/MediaFiles/Texts/8/9781441965578_Excerpt_001.pdf) (ungated pdf) as a guide. Quoting from that review,
+
+> Once the molecule is promoted to an excited electronic state, it immediately relaxes to the lowest energy through vibrational relaxation processes. But it stays in this vibrationally relaxed, electronically excited, state for some time, usually a few nanoseconds, before losing its energy
+either by emitting a photon (fluorescence) or through heat to regenerate the ground state.
+
+The review lists absorption and emission peaks for a number of styryl dye chromophores. Voltage sensitive dyes relevant to our project are likely to be bound within bilipid membranes and to operate by reorientation (Jan 29 talk by Leslie Lowe at project kick-off.) The longest peak absorption wavelength listed for lipid-bound dye is $678 \pm 7$, slightly below NIR, with an associated emission spectrum of $770 \pm 60.$ Since photon energy is inversely proportional to wavelength, each absorbed and re-emitted photon will lose roughly $1-678/770 = 0.12,$ or 12% of its energy through vibrational relaxation. Not every absorbed photon will be re-emitted, although quantum yields can be upwards of 90%. As round numbers, either an 85% to 15% or a 90% to 10% energy split in optical vs vibrational relaxation seems to be in the ball park depending on quantum yield and heat losses.
+
+Based on Leslie Lowe's review (*ibid*.) absorption coefficients between 0.023/mm and 0.05/mm [were estimated](http://brain-initiative.github.io/know_brainR/Rmds/absorption.html) for a micromolar concentration of dye. These are comperable to absorption coefficients in tissue as shown below.
+
+```{r echo=FALSE}
+data.frame(tissue=c("CSF", "Gray matter", "White matter", "Fat", "Muscle", 
+                           "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater",
+                           "Bone Marrow"),
+                  absorption_rate_per_mm = 
+                    read.table("../data/tissue_properties.csv", sep=",", header=FALSE)[2:12,2])
+```
+
+The difference between absorption by natural chromophores and by dye would presumably be relatively rapid variation of the latter with neuronal activity. Absorption by natural chromophores would change more slowly, primarily with changes in blood flow I would guess. Hopefully, this is correct and interference by natural chromophores would pose at most a dynamic range problem. 
+
+Strictly speaking, it is not necessary to simulate optical, vibrational, and thermal effects, merely to simulate depolarization patterns. However, these effects will bear on image recovery strategies, hence I felt they should be mentioned.  
 
 [csulc]:http://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Calcarine_sulcus_animation_small.gif/120px-Calcarine_sulcus_animation_small.gif "Calcarine sulcus"
 
