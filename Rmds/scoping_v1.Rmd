@@ -5,11 +5,9 @@ date: "05/06/2015"
 output: html_document
 ---
 
-### Anatomy
-
 *In what follows, I have attempted to be anatomically accurate but, being no expert in the subject, may well have gone astray. Corrections are welcome.* 
 
-With the eventual aim of approximate replication, *in silico* using intact human phantoms, of Per Roland's studies on craniotomized ferrets, the question of simulating neuronal activity has been raised several times. Per Roland's studies involve Area 17, the primary visual cortex, among others. A ferret's primary visual cortex is on the smooth occipital lobe surface near the skull, but the corresponding area in humans projects from the surface about 10 cm deep into the calcarine sulcus.
+With the eventual aim of approximate replication, *in silico* using intact human phantoms, of Per Roland's studies on craniotomized ferrets, the question of simulating neuronal activity has been raised several times. Per Roland's studies involve the primary visual cortex and higher areas. A ferret's primary visual cortex is on the animal's smooth occipital lobe surface near the skull, but the corresponding area in humans extends into the calcarine sulcus to a depth of about 10 cm.
 
 The calcarine sulcus is shown in red in the animation (source [Wikipedia](http://en.wikipedia.org/wiki/Calcarine_sulcus),) and indicated by light blue arrows and jagged line in the BrainWeb phantom. The section shown in the phantom is roughly the same as that shown in the animation.
 
@@ -33,17 +31,16 @@ arrows(125, 185, 100, 162, lwd=10, col="black")
 arrows(125, 185, 100, 162, lwd=7, col="cyan")
 ```
 
-The primary visual area, henceforth called V1, is retinotopic, meaning each region of V1 corresponds to a specific retinal region, and the correspondence is continuous: adjacent areas of the retina correspond to adjacent areas of V1. The figure (source [Scholarpedia](http://www.scholarpedia.org/article/Visual_map)) indicates the correspondence. The area nearest the skull (lower left arrow in the phantom) corresponds to the the fovea (area of best visual acuity of the retina) and the deepest regions (upper right arrow) correspond to the periphery of vision. The foveal region obviously poses the least difficult inverse problem.
+The primary visual area, henceforth called V1, is retinotopic, meaning each region of V1 corresponds to a specific retinal region. In V1 the correspondence is continuous: adjacent areas of the retina correspond to adjacent areas of V1. The figure (source [Scholarpedia](http://www.scholarpedia.org/article/Visual_map)) indicates the correspondence. The area nearest the skull (lower left arrow in the phantom) corresponds to the the fovea (area of best visual acuity of the retina) and the deepest regions (upper right arrow) correspond to the periphery of vision.
 
 <center>![Retinotopy of V1][retinotopy]</center>
 
-### Spatial resolution
-
-Per Roland's images of neuronal activity in ferrets have spatial resolutions which I estimate to be at or better than 0.02 mm. Each frame of the image below, which appears in Roland, [Six principles of visual cortical dynamics](http://journal.frontiersin.org/article/10.3389/fnsys.2010.00028/abstract), is between 2.5 mm and 5 mm in diameter, and consists of perhaps 128x128 pixels. We expect no better than 3 mm spatial resolution, which corresponds roughly to the diameter of Per Roland's frames, so there seems no point to simulating activity at scales finer than that.
+Per Roland's images of neuronal activity in ferrets have spatial resolutions which I estimate to be 0.02 mm or better. Each frame of the image below, which appears in Roland, [Six principles of visual cortical dynamics](http://journal.frontiersin.org/article/10.3389/fnsys.2010.00028/abstract), is between 2.5 mm and 5 mm in diameter, and consists of perhaps 128x128 pixels. We expect no better than 3 mm spatial resolution, which corresponds roughly to the entire diameter of Per Roland's frames, so there seems no point to our simulating activity at scales finer than that.
 
 <center>![Neural dynamics][dynamics]</center>
 
-The foveal region of human V1 is perhaps 2 cm by 1 cm in surface area. 
+In humans, higher visual areas are arranged in an annular pattern around V1, and communicate with V1 and with one another in feedforward and feedback sequences. Like V1 they extend deep into the brain. Unlike in V1, retinotopy in higher areas is not entirely continuous and becomes progressively more complex in higher areas. Though this would complicate simulating coordinated neuronal activity between areas, the areas may be sufficiently separated to make it worth trying. It would be nice if image recovery could resolve the areas.  
+
 
 
 [csulc]:http://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Calcarine_sulcus_animation_small.gif/120px-Calcarine_sulcus_animation_small.gif "Calcarine sulcus"
