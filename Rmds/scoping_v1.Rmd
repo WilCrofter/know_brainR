@@ -7,11 +7,15 @@ output: html_document
 
 ### Anatomical considerations
 
-*In what follows, I have attempted to be anatomically accurate but, being no expert in the subject, may well have gone astray. Corrections are welcome.* 
+*In what follows, I have attempted to be anatomically accurate but, being no expert in the subject, may well have gone astray. Corrections are welcome.*
 
-With the eventual aim of approximate replication, *in silico* using intact human phantoms, of Per Roland's studies on craniotomized ferrets, the question of simulating neuronal activity has been raised several times. Per Roland's studies involve the primary visual cortex and higher areas. A ferret's primary visual cortex is on the animal's smooth occipital lobe surface near the skull, but the corresponding area in humans extends into the calcarine sulcus to a depth of about 10 cm.
+With the eventual aim of approximate replication, *in silico* using intact human phantoms, of Per Roland's studies on craniotomized ferrets, the question of simulating neuronal activity has been raised several times. Per Roland's studies involve the primary visual cortex and higher areas. A ferret's primary visual cortex is on the animal's smooth occipital lobe surface near the skull. 
+<table width=80%><tr>
+<td width=50%>![Ferret Occiptal Lobe][ferret_occipital]</td>
+<td>*Left hemisphere of the ferret brain, showing visual areas 17,18,19,21 (a.k.a. V1,V2,V3,V5) along with temporal and parietal areas. Source, [Harvey and Roland](http://journal.frontiersin.org/article/10.3389/fnsys.2010.00028/abstract)*</td>
+</tr></table><br/>
 
-The calcarine sulcus is shown in red in the animation (source [Wikipedia](http://en.wikipedia.org/wiki/Calcarine_sulcus),) and indicated by light blue arrows and jagged line in the BrainWeb phantom. The section shown in the phantom is roughly the same as that shown in the animation.
+In humans, the primary visual cortex, Area 17 or V1, extends into the calcarine sulcus to a depth of about 10 cm. In the animation, the calcarine sulcus is shown in red (source [Wikipedia](http://en.wikipedia.org/wiki/Calcarine_sulcus).) It is indicated by light blue arrows and jagged line in the BrainWeb phantom. The section shown in the phantom is roughly the same as that shown in the animation.
 
 ![Calcarine sulcus][csulc]
 
@@ -35,11 +39,11 @@ arrows(125, 185, 100, 162, lwd=7, col="cyan")
 
 The primary visual area, henceforth called V1, is retinotopic, meaning each region of V1 corresponds to a specific retinal region. In V1 the correspondence is continuous: adjacent areas of the retina correspond to adjacent areas of V1. The figure (source [Scholarpedia](http://www.scholarpedia.org/article/Visual_map)) indicates the correspondence. The area nearest the skull (lower left arrow in the phantom) corresponds to the the fovea (area of best visual acuity in the retina) and the deepest regions (upper right arrow) correspond to the periphery of vision.
 
-<center>![Retinotopy of V1][retinotopy]</center>
+<center>![Retinotopy of V1][retinotopy]</center></br>
 
 Per Roland's images of neuronal activity in ferrets have spatial resolutions which I estimate to be 0.02 mm or better. Each frame of the image below, which appears in Roland, [Six principles of visual cortical dynamics](http://journal.frontiersin.org/article/10.3389/fnsys.2010.00028/abstract), is between 2.5 mm and 5 mm in diameter, and consists of perhaps 128x128 pixels. We expect no better than 3 mm spatial resolution, which corresponds roughly to the entire diameter of Per Roland's frames, so there seems no point to our simulating activity at scales finer than that.
 
-<center>![Neural dynamics][dynamics]</center>
+<center>![Neural dynamics][dynamics]</center></br>
 
 In humans, higher visual areas are arranged in an annular pattern around V1. Like V1 they extend deeply into the brain. Unlike in V1, retinotopy in higher areas is not entirely continuous and becomes progressively more complex in higher areas. Though this would complicate simulating coordinated neuronal activity between areas, the areas may be sufficiently separated to make it worth trying. In both humans and ferrets, visual areas communicate with one another in both feedforward and feedback sequences. It would be nice if image recovery could resolve both the areas and the sequences.  
 
@@ -62,13 +66,13 @@ Based on Leslie Lowe's review (*ibid*.) absorption coefficients between 0.023/mm
 data.frame(tissue=c("CSF", "Gray matter", "White matter", "Fat", "Muscle", 
                            "Muscle/Skin", "Skull", "Vessels", "Around fat", "Dura mater",
                            "Bone Marrow"),
-                  absorption_rate_per_mm = 
+                  Absorption_per_mm = 
                     read.table("../data/tissue_properties.csv", sep=",", header=FALSE)[2:12,2])
 ```
 
 The difference between absorption by natural chromophores and by dye would presumably be relatively rapid variation of the latter with neuronal activity. Absorption by natural chromophores would change more slowly, primarily with changes in blood flow I would guess. Hopefully, this is correct and interference by natural chromophores would pose at most a dynamic range problem. 
 
-Strictly speaking, it is not necessary to simulate optical, vibrational, and thermal effects, merely to simulate depolarization patterns. However, these effects will bear on image recovery strategies, hence I felt they should be mentioned.  
+[ferret_occipital]:../images/ferret_visual_areas.png
 
 [csulc]:http://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Calcarine_sulcus_animation_small.gif/120px-Calcarine_sulcus_animation_small.gif "Calcarine sulcus"
 
