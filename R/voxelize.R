@@ -1,9 +1,3 @@
-#myseed <- 0x1257AB #run300
-#myseed <- 0x7141958 #lp301
-#myseed <- 0x8728672 #run500
-#myseed <- 0x2487ad #run501
-
-
 #computes probability of reflection
 #given angle of incidence (in radians)
 #and two indices of refraction, 
@@ -77,69 +71,130 @@ check_canonical <- function(candir){
   candir
 }
 # run from directory know_braimR
-read_phantom <- function(){
-fname <- "data/subject04_crisp_v.rawb"
-# Read in raw bytes as a vector
-phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
-# Convert to a 3D array by setting the dim attribute
-dim(phantom) <- c(362, 434, 362)
-phantom
-}
+# read_phantom <- function(){
+# fname <- "data/subject04_crisp_v.rawb"
+# # Read in raw bytes as a vector
+# phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
+# # Convert to a 3D array by setting the dim attribute
+# dim(phantom) <- c(362, 434, 362)
+# phantom
+# }
 read_tissuetable <- function(){
   means <- read.table("data/tissue_properties.csv", sep=",",comment.char="#")
   means <- as.matrix(means,num_types, num_char, byrow=TRUE)
   means
 }
+create_phantom <- function(ty1,ty2){
+  phantom <- numeric(27)
+  dim(phantom) <- c(3,3,3)
+  phantom[1:3,1:3,1:3] <- ty2
+  phantom[2,2,2] <- ty1
+  phantom  
+}
+
+
 # Simulates scattering and absorption in a phantom head
 # assuming nphotons are emitted at the skull with g=.94 
-sim_forward <- function(nphotons, myseed=0x1234567, max_steps=1000){
-  steps <- max_steps
-  print(paste("seed is",myseed))
+get_pairchars <- function(ty1,ty2,phantom,nphotons=10000, myseed=0x1234567){
+
   set.seed(myseed)
   
-  #state holds position, direction,and condition, i.e., alive, absorbed,exit of each photon
-  state = list(
-#   P = cbind(x=rep(109.5,nphotons), y=rep(216.5,nphotons), z=rep(327.5,nphotons)),
-    P = cbind(x=rep(110,nphotons), y=rep(217,nphotons), z=rep(328.9,nphotons)),
-    D = cbind(x=rep(-4/45.177,nphotons), y=rep(0,nphotons), z=rep(-45/45.177,nphotons)), 
-    flg=rep("Alive",nphotons))
-#    P = cbind(x=rep(181,nphotons), y=rep(217,nphotons), z=rep(340,nphotons)),
-#     P = cbind(x=rep(180.5,nphotons), y=rep(216.5,nphotons), z=rep(339.5,nphotons)),
-#     D = cbind(x=rep(0,nphotons), y=rep(0,nphotons), z=rep(-1,nphotons)), flg=rep("Alive",nphotons))
-  trax  <- list(cbind(state$P, state$flg))
-  out <- list(cbind(x=numeric(),y=numeric(),z=numeric()))
-  absorbed <- list(cbind(x=numeric(),y=numeric(),z=numeric()))
+  ty1 <- as.integer(ty1)
+  ty2 <- as.integer(ty2)
+  
 
-  record <- matrix("-",nphotons,max_steps+1)
-  path <- cbind(state$P, state$flg)
+  #state holds position, direction,and condition, i.e., alive, absorbed,exit of each photon
+  state = list(P = cbind(x=runif(nphotons,1,2), y=runif(nphotons,1,2), z=runif(nphotons,1,2)),
+               D = rusphere(nphotons),
+               flg = rep("Alive",nphotons))
+ 
+  mu_s <- numeric(nphotons)
+  mu_a <- numeric(nphotons)
+  g <- numeric(nphotons)
+  n1 <- numeric(nphotons)
+  src_angles <- numeric()
+  new_ang <- list()
+  
+  #get scattering and absorption coeff and index of refraction for source tissues
+  #add 1 to tissue1 because tissues are labeled 0..n and lists are indexed 1..n+1
   V <- get_voxel(state$P)
   tissue1 <- get_tissuetype(V)
-  record[tissue1!=0,1] <- "Alive"
-  record[tissue1==0,1] <- "Exited"
-  for(i in 1:steps){
-    if(sum(record[,i]=="Alive")==0)break
-#    print(paste("step = ",i,"num alive is ",sum(record[,i]=="Alive")))
-    nxt <- steps(state$P, state$D, state$flg)
-    
-    out[[i+1]] <- nxt$X
-    absorbed[[i+1]] <- nxt$A
-    record[record[,i]=="Alive",i+1] <- nxt$flg
+  mu_s <- tissue_char$mu_s[1+tissue1]
+  mu_a <- tissue_char$mu_a[1+tissue1]
+  n1 <- tissue_char$n[1+tissue1]
+  g <- tissue_char$g[1+tissue1]
+  invCDF <- lapply(g,icdfHG)
+
+  # step provisionally, ignoring voxel boundaries
+  provisional_step <- move_provisionally(state$P, state$D, mu_s, mu_a)
   
-    path[record[,i]=="Alive",] <- c(nxt$P[,1:3],nxt$flg[])
-    path[record[,i]!="Alive",] <- c("-","-","-","-")
+  #see what boundaries the provisional steps of photons have crossed
+  xing <- find_intersects(state$P,provisional_step$P)
+  
+  #change destination points if there were crossings to diff tissues
+  newP <- process(xing,state$P,provisional_step$P,tissue1)
+  VP <- get_voxel(newP$P)
+  tissue2 <- get_tissuetype(VP)
+  n2 <- numeric(length(newP$idim))
+  n2 <- tissue_char$n[1+tissue2]
 
-    nxt$P <- matrify(nxt$P,nxt$flg=="Alive")
-    nxt$D <- matrify(nxt$D,nxt$flg=="Alive")
-
-    nxt$flg <-nxt$flg[nxt$flg=="Alive"]    
-    state <- nxt[c("P", "D", "flg")]
-    trax[[i+1]] <- path
+ 
+  #check if destination tissue is different from source tissue
+  diff_tiss <- tissue1 != tissue2
+  #first get canonical direction of movement (left/right, above/below, front/behind)
+  candir <- VP[diff_tiss,]-V[diff_tiss,]
+  if (sum(diff_tiss)==1){
+    dim(candir) <- c(1,3)
   }
-#  state
-#  print(record)
-
-list(trax=trax,record=record,tchar=tissue_char,seed=myseed)
-
+  if ((nrow(candir)>0)){
+    #check candir  to see if there's more than one canonical direction in any row
+    candir <- check_canonical(candir)
+    src_angles[diff_tiss] <- acos(rowSums(candir*state$D[diff_tiss,]))
+    #compute new angles of reflection and refraction
+    temp <- new_angles(src_angles[diff_tiss],n1[diff_tiss],n2[diff_tiss])
+    
+    #compute directions for all photons(reflected and refracted)
+    #which hit different tissue types
+    state$D[diff_tiss,] <- compute_direction(temp,candir,newP$idim[diff_tiss],state$D[diff_tiss,1:3])
+    new_ang <- list(angle=numeric(nphotons),refl=logical(nphotons))
+    new_ang$angle[diff_tiss]<-temp$angle
+    new_ang$refl[diff_tiss] <- temp$refl
+    
+  }
+  else{
+    new_ang <- list(angle=numeric(nphotons),refl=logical(nphotons))
+  }
+  new_ang$refl[!diff_tiss] <- FALSE
+  
+  #if reflected (hence different  tissues), put photon back in direction of source voxel
+  #note that dimension that's being changed is an integer, i.e., voxel boundary
+  #   if  ((nrow(candir)>0)&(sum(new_ang$refl)>0))
+  #   {
+  #     print(n)
+  #   }
+  for (i in 1:nphotons) if (new_ang$refl[i]) newP$P[i,newP$idim[i]] <- newP$P[i,newP$idim[i]]-newP$ndir[i]
+  state$P <- newP$P
+  
+  #check to see if any photons have hit background voxels and aren't reflected back
+  exits <- mark_exits(state$P,new_ang$refl)
+  state$flg[exits] <- "Exited"
+  # extract exit positions
+  X <- matrify(state$P, exits)
+  # extract absorbed positions with are not exits and not different tissues
+  absorbed <- provisional_step$absorptions & !diff_tiss & !exits
+  state$flg[absorbed] <- "Absorbed"
+  A <- matrify(state$P, absorbed)
+  #mark photons that haven't exited or been absorbed
+  alive <- !(exits | absorbed)
+  state$flg[alive] <- "Alive"
+  V <- get_voxel(state$P)
+  Vf <- rowSums(V[,1:3]!=2)>0
+  # scatter the remaining photons
+  #for (i in 1:nphotons) if (state$flg[i]=="Alive") state$D[i,1:3] <-scatter1(state$D[i,1:3],invCDF[[i]](runif(1))) 
+#   print(paste("Number leaving source is ",sum(Vf)))
+#   print(paste("Number absorbed is ",sum(absorbed)))
+  # return P, D, X, A, and indicator flag
+  list(P=state$P, D=state$D, V=Vf, X=X, A=A, absorbed=absorbed,flg=state$flg,seed=myseed,tchar=tissue_char)
 
 }
 num_types <-12
@@ -161,7 +216,6 @@ gen_tissue_chars <- function(means,std_dev){
   temp
 }
 
-phantom <- read_phantom()
 tissue_char <- get_tissue_chars()
 
 #z bottom to top
@@ -173,6 +227,7 @@ find_intersects <- function(P1,P2){
   stor <- lapply(1:n,function(x){findVoxelCrossings(P1[x,],P2[x,])})
   stor
 }
+
 #Given n-long list of crossing points, 
 #n source and n provisional destination points,
 #and origin tissue type
@@ -217,104 +272,7 @@ process <- function(xing,src,dest,tissue1){
     }
   list(P=temp,idim=idim,ndir=ndir)
 }
-###
-# Given:
-#   P, an nx3 matrix of internal positions of photons
-#   D, an nx3 matrix of unit vectors indicating directions of motion
-# flg, an n long character vector indicating "Alive", "Exited" or "Absorbed"
-# simulate scattering, absorption and exit (contact with boundary) events, returning
-# new P and D for remaining photons, and  matrices of exit positions  and absorbed photons.
-steps <- function(P, D, flg){
-  n <- nrow(P)
-  V <- get_voxel(P)
-  # get tissue types of current positions
-  tissue1 <- get_tissuetype(V)
 
-  mu_s <- numeric(n)
-  mu_a <- numeric(n)
-  g <- numeric(n)
-  n1 <- numeric(n)
-  src_angles <- numeric()
-  new_ang <- list()
-
-  #get scattering and absorption coeff and index of refraction for source tissues
-  #add 1 to tissue1 because tissues are labeled 0..n and lists are indexed 1..n+1
-  mu_s <- tissue_char$mu_s[1+tissue1]
-  mu_a <- tissue_char$mu_a[1+tissue1]
-  n1 <- tissue_char$n[1+tissue1]
-  g <- tissue_char$g[1+tissue1]
-  invCDF <- lapply(g,icdfHG)
-  
-  # step provisionally, ignoring voxel boundaries
-  provisional_step <- move_provisionally(P, D, mu_s, mu_a)
-
-  #see what boundaries the provisional steps of photons have crossed
-
-  xing <- find_intersects(P,provisional_step$P)
-
- 
-  #change destination points if there were crossings to diff tissues
-  newP <- process(xing,P,provisional_step$P,tissue1)
-  VP <- get_voxel(newP$P)
-  tissue2 <- get_tissuetype(VP)
-  n2 <- numeric(length(newP$idim))
-  n2 <- tissue_char$n[1+tissue2]
-  #check if destination tissue is different from source tissue
-  diff_tiss <- tissue1 != tissue2
-  #first get canonical direction of movement (left/right, above/below, front/behind)
-  candir <- VP[diff_tiss,]-V[diff_tiss,]
-  if (sum(diff_tiss)==1){
-     dim(candir) <- c(1,3)
-   }
-  if ((nrow(candir)>0)){
-    #check candir  to see if there's more than one canonical direction in any row
-    candir <- check_canonical(candir)
-    src_angles[diff_tiss] <- acos(rowSums(candir*D[diff_tiss,]))
-    #compute new angles of reflection and refraction
-    temp <- new_angles(src_angles[diff_tiss],n1[diff_tiss],n2[diff_tiss])
-
-    #compute directions for all photons(reflected and refracted)
-    #which hit different tissue types
-    D[diff_tiss,] <- compute_direction(temp,candir,newP$idim[diff_tiss],D[diff_tiss,1:3])
-    new_ang <- list(angle=numeric(n),refl=logical(n))
-    new_ang$angle[diff_tiss]<-temp$angle
-    new_ang$refl[diff_tiss] <- temp$refl
- 
-  }
-  else{
-    new_ang <- list(angle=numeric(n),refl=logical(n))
-  }
-  new_ang$refl[!diff_tiss] <- FALSE
-
-  #if reflected (hence different  tissues), put photon back in direction of source voxel
-  #note that dimension that's being changed is an integer, i.e., voxel boundary
-#   if  ((nrow(candir)>0)&(sum(new_ang$refl)>0))
-#   {
-#     print(n)
-#   }
-  for (i in 1:n) if (new_ang$refl[i]) newP$P[i,newP$idim[i]] <- newP$P[i,newP$idim[i]]-newP$ndir[i]
-  P <- newP$P
-  
-  #check to see if any photons have hit background voxels and aren't reflected back
-  exits <- mark_exits(P,new_ang$refl)
-  flg[exits] <- "Exited"
-   # extract exit positions
-   X <- matrify(P, exits)
-   # extract absorbed positions with are not exits and not different tissues
-   absorbed <- provisional_step$absorptions & !diff_tiss & !exits
-   flg[absorbed] <- "Absorbed"
-   A <- matrify(P, absorbed)
-   #mark photons that haven't exited or been absorbed
-   alive <- !(exits | absorbed)
-   flg[alive] <- "Alive"
-
-   # scatter the remaining photons
-   for (i in 1:n) if (flg[i]=="Alive") D[i,1:3] <-scatter1(D[i,1:3],invCDF[[i]](runif(1))) 
-
-   # return P, D, X, A, and indicator flag
-   list(P=P, D=D, X=X, A=A, flg=flg)
-
-}
 #given list of new angles (and associated boolean indicator of reflection),
 #canonical directions and dimensions and source directions compute new directions
 #new angles are either reflection or refractions indicated by new_angles$refl
@@ -380,64 +338,10 @@ mark_exits <- function(P,refl){
   exits <- (tissue==0)&(!refl)
   exits
 }
-#Given mxn array  records (m=number of photons, n=number of steps+1)
-#and n-long list where each entry in list is mx4 array
-#return an mx5 array of last positions before photon died (absorbed or exited skull)
-#first 3 columns indicate position, 4th cause of death if any, 5th time of death
-last_position <- function(record,lpos){
-  nsteps <- length(lpos)
-  nphotons <- nrow(record)
 
-  book <- matrix(0,nphotons,5)
-  alive <- which(record[,nsteps]=="Alive")
-  book[alive,1:3] <- lpos[[nsteps]][alive,1:3]
-  book[alive,4] <- "Alive"
-  book[alive,5] <- nsteps 
-  for (i in 1:nsteps-1) {
-     idx <- which(record[,nsteps-i]!="Alive" & record[,nsteps-i]!="-")
-     book[idx,1:4] <- lpos[[nsteps-i]][idx,1:4]
-     book[idx,5] <- nsteps-i
-  }
-  
-  book
-}
-#Given n-long list where each entry in list is mx4 array of photon positions and cause
-# of death calculate length of each photon's path
-path_length <- function(lpos){
-  nsteps  <- length(lpos)
-  nphotons <- nrow(lpos[[1]])
-  plens <- matrix(0,nphotons,nsteps)
-  temp <- rep(0,nphotons)
-  pos1 <- matrix(as.numeric(lpos[[1]][,1:3]),nphotons,3)
-  pos2 <- matrix(0,nphotons,3)
-  for (i in 2:nsteps){
-    idx <- lpos[[i]][,1]!="-"  #photons still alive at step i
-    len <- sum(idx)
-    pos2[idx,1:3] <- matrix(as.numeric(lpos[[i]][idx,1:3]),len,3)
-    pos2[!idx,1:3] <- 0
-    temp <- rep(0,nphotons)
-    temp[idx] <- (pos2[idx,1]-pos1[idx,1])^2 +
-      (pos2[idx,2]-pos1[idx,2])^2 +
-      (pos2[idx,3]-pos1[idx,3])^2
-    plens[idx,i] <- plens[idx,i-1] + sqrt(temp[idx])
-    plens[!idx,i] <- plens[!idx,i-1]
-    pos1 <- pos2
 
-  }
-plens
-}
-#Given nx5 array (output of last_position) where n=number of photons, 
-#cols 1-3 are last position of photon, col 4= cause of death, col 5=time of death
-#and P0=starting position of photons, return xy distance from starting position, z distance
-#or depth, and time
-distance_asfunc <- function(last,P0){
-  n <- nrow(last)
-  ilast <- matrix(0,n,3)
-#  dist <- matrix(0,n,3)
-  dist <- cbind(dst=rep(0,n),depth=rep(0,n),step=rep(0,n))
-  ilast[,1:3] <- as.numeric(last[,1:3])
-  dist[,1] <- sqrt((ilast[,1]-P0[1])^2 + (ilast[,2]-P0[2])^2)
-  dist[,2] <- abs(ilast[,3]-P0[3])
-  #dist[,3] <- as.integer(last[,5])
-  dist
-}
+# ty1 <- readline("Enter first tissue type (integer>0) ")
+# ty2 <- readline("Enter secnd tissue type (integer>0) ")
+phantom <- create_phantom(ty1,ty2)
+# get_pairchars(ty1,ty2,phantom,5,0x47616)
+
