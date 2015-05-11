@@ -1,0 +1,12 @@
+"tissue","id","percent.absorption"
+"CSF",1,0.544166666666667
+"Gray Matter",2,0.544166666666667
+"White Matter",3,0.545
+"Fat",4,0.544166666666667
+"Muscle",5,0.543333333333333
+"Muscle/Skin",6,0.543333333333333
+"Skull",7,0.543333333333333
+"Vessels",8,0.54
+"Around fat",9,0.535
+"Dura mater",10,0.528333333333333
+"Bone marrow",11,0.518333333333333
