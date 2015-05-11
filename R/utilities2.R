@@ -155,6 +155,7 @@ get_tissue_chars <- function(){
 gen_tissue_chars <- function(means,std_dev){
   temp <- matrix(0,num_types,num_char)
   for (i in 1:num_types){
+    temp[i,1] <- means[i,1]
     for (j in 2:num_char) temp[i,j] <- rnorm(1,means[i,j],std_dev[i,j])
   }
   temp

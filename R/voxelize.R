@@ -71,14 +71,14 @@ check_canonical <- function(candir){
   candir
 }
 # run from directory know_braimR
-read_phantom <- function(){
-fname <- "data/subject04_crisp_v.rawb"
-# Read in raw bytes as a vector
-phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
-# Convert to a 3D array by setting the dim attribute
-dim(phantom) <- c(362, 434, 362)
-phantom
-}
+# read_phantom <- function(){
+# fname <- "data/subject04_crisp_v.rawb"
+# # Read in raw bytes as a vector
+# phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
+# # Convert to a 3D array by setting the dim attribute
+# dim(phantom) <- c(362, 434, 362)
+# phantom
+# }
 read_tissuetable <- function(){
   means <- read.table("data/tissue_properties.csv", sep=",",comment.char="#")
   means <- as.matrix(means,num_types, num_char, byrow=TRUE)
@@ -97,7 +97,6 @@ create_phantom <- function(ty1,ty2){
 # assuming nphotons are emitted at the skull with g=.94 
 get_pairchars <- function(ty1,ty2,phantom,nphotons=10000, myseed=0x1234567){
 
-  print(paste("seed is",myseed))
   set.seed(myseed)
   
   ty1 <- as.integer(ty1)
@@ -133,7 +132,7 @@ get_pairchars <- function(ty1,ty2,phantom,nphotons=10000, myseed=0x1234567){
   xing <- find_intersects(state$P,provisional_step$P)
   
   #change destination points if there were crossings to diff tissues
-  newP <- process(xing,state$P,provisional_step$P,ty1)
+  newP <- process(xing,state$P,provisional_step$P,tissue1)
   VP <- get_voxel(newP$P)
   tissue2 <- get_tissuetype(VP)
   n2 <- numeric(length(newP$idim))
@@ -188,12 +187,14 @@ get_pairchars <- function(ty1,ty2,phantom,nphotons=10000, myseed=0x1234567){
   #mark photons that haven't exited or been absorbed
   alive <- !(exits | absorbed)
   state$flg[alive] <- "Alive"
-  
+  V <- get_voxel(state$P)
+  Vf <- rowSums(V[,1:3]!=2)>0
   # scatter the remaining photons
-  for (i in 1:nphotons) if (state$flg[i]=="Alive") state$D[i,1:3] <-scatter1(state$D[i,1:3],invCDF[[i]](runif(1))) 
-  
+  #for (i in 1:nphotons) if (state$flg[i]=="Alive") state$D[i,1:3] <-scatter1(state$D[i,1:3],invCDF[[i]](runif(1))) 
+#   print(paste("Number leaving source is ",sum(Vf)))
+#   print(paste("Number absorbed is ",sum(absorbed)))
   # return P, D, X, A, and indicator flag
-  list(P=state$P, D=state$D, X=X, A=A, flg=state$flg)
+  list(P=state$P, D=state$D, V=Vf, X=X, A=A, absorbed=absorbed,flg=state$flg,seed=myseed,tchar=tissue_char)
 
 }
 num_types <-12
@@ -209,6 +210,7 @@ get_tissue_chars <- function(){
 gen_tissue_chars <- function(means,std_dev){
   temp <- matrix(0,num_types,num_char)
   for (i in 1:num_types){
+    temp[i,1] <- means[i,1]
     for (j in 2:num_char) temp[i,j] <- rnorm(1,means[i,j],std_dev[i,j])
   }
   temp
@@ -338,69 +340,8 @@ mark_exits <- function(P,refl){
 }
 
 
-ty1 <- readline("Enter first tissue type (integer>0) ")
-ty2 <- readline("Enter secnd tissue type (integer>0) ")
+# ty1 <- readline("Enter first tissue type (integer>0) ")
+# ty2 <- readline("Enter secnd tissue type (integer>0) ")
 phantom <- create_phantom(ty1,ty2)
 # get_pairchars(ty1,ty2,phantom,5,0x47616)
 
-#Given mxn array  records (m=number of photons, n=number of steps+1)
-#and n-long list where each entry in list is mx4 array
-#return an mx5 array of last positions before photon died (absorbed or exited skull)
-#first 3 columns indicate position, 4th cause of death if any, 5th time of death
-last_position <- function(record,lpos){
-  nsteps <- length(lpos)
-  nphotons <- nrow(record)
-
-  book <- matrix(0,nphotons,5)
-  alive <- which(record[,nsteps]=="Alive")
-  book[alive,1:3] <- lpos[[nsteps]][alive,1:3]
-  book[alive,4] <- "Alive"
-  book[alive,5] <- nsteps 
-  for (i in 1:nsteps-1) {
-     idx <- which(record[,nsteps-i]!="Alive" & record[,nsteps-i]!="-")
-     book[idx,1:4] <- lpos[[nsteps-i]][idx,1:4]
-     book[idx,5] <- nsteps-i
-  }
-  
-  book
-}
-#Given n-long list where each entry in list is mx4 array of photon positions and cause
-# of death calculate length of each photon's path
-path_length <- function(lpos){
-  nsteps  <- length(lpos)
-  nphotons <- nrow(lpos[[1]])
-  plens <- matrix(0,nphotons,nsteps)
-  temp <- rep(0,nphotons)
-  pos1 <- matrix(as.numeric(lpos[[1]][,1:3]),nphotons,3)
-  pos2 <- matrix(0,nphotons,3)
-  for (i in 2:nsteps){
-    idx <- lpos[[i]][,1]!="-"  #photons still alive at step i
-    len <- sum(idx)
-    pos2[idx,1:3] <- matrix(as.numeric(lpos[[i]][idx,1:3]),len,3)
-    pos2[!idx,1:3] <- 0
-    temp <- rep(0,nphotons)
-    temp[idx] <- (pos2[idx,1]-pos1[idx,1])^2 +
-      (pos2[idx,2]-pos1[idx,2])^2 +
-      (pos2[idx,3]-pos1[idx,3])^2
-    plens[idx,i] <- plens[idx,i-1] + sqrt(temp[idx])
-    plens[!idx,i] <- plens[!idx,i-1]
-    pos1 <- pos2
-
-  }
-plens
-}
-#Given nx5 array (output of last_position) where n=number of photons, 
-#cols 1-3 are last position of photon, col 4= cause of death, col 5=time of death
-#and P0=starting position of photons, return xy distance from starting position, z distance
-#or depth, and time
-distance_asfunc <- function(last,P0){
-  n <- nrow(last)
-  ilast <- matrix(0,n,3)
-#  dist <- matrix(0,n,3)
-  dist <- cbind(dst=rep(0,n),depth=rep(0,n),step=rep(0,n))
-  ilast[,1:3] <- as.numeric(last[,1:3])
-  dist[,1] <- sqrt((ilast[,1]-P0[1])^2 + (ilast[,2]-P0[2])^2)
-  dist[,2] <- abs(ilast[,3]-P0[3])
-  #dist[,3] <- as.integer(last[,5])
-  dist
-}
