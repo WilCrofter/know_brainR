@@ -9,7 +9,7 @@ Since heterogeneity of tissue properties is essential to image recovery, anatomi
 
 For the BrainWeb phantom's eleven tissue types, scattering is significantly more probable than either of the other two mutually exclusive possibilities, absorption or hitting a boundary. This has complicated previous attempts to estimate the probabilities, since relatively few absorption events or boundary encounters occur. Here we remedy the problem by first getting reliable probabilities for scattering, then getting probabilities for the other two events *conditional* on not scattering.
 
-The general strategy is to generate three distances in each random trial: distance to a scattering event, distance to an absorption event, and distance to a boundary in the direction of travel. Scattering and absorption distances are distributed exponentially with parameters, $\mu_s$ and $\mu_a$, respectively, so generating these at random is standard. Generating distance to a boundary at random required first to generate a random position in a cube, the to generate a random direction (i.e., a random point on the unit sphere,) and finally to calculate the distance in that direction to the first boundary encountered. The smallest of the three distances randomly generated determines the type of event which actually occurred. The relevant source code is in [alpha.R](../R/alpha.R) and [utilities.R](../R/utilities.R).
+The general strategy is to generate three distances in each random trial: distance to a scattering event, distance to an absorption event, and distance to a boundary in the direction of travel. Scattering and absorption distances are distributed exponentially with parameters, $\mu_s$ and $\mu_a$, respectively, so generating these at random is standard fare. Generating distance to a boundary at random requires, first, to generate a random position in a cube, next, to generate a random direction (i.e., a random point on the unit sphere,) and finally, to calculate the distance in that direction to the first boundary encountered. The smallest of the three distances determines the which event occurs. The relevant source code is in [alpha.R](../R/alpha.R) and [utilities.R](../R/utilities.R).
 
 ```{r}
 source("../R/alpha.R")
@@ -31,9 +31,16 @@ for(i in 1:11){
   scatter[i, "p_scatter"] <- temp$prscatt
   scatter[i, "std_err_scatter"] <- temp$se_scatt
 }
+
+scatter
 ```
 
-Given reliable estimates of probabilities of (not) scattering, we can now compute probabilities of absorption and hitting boundaries, conditional on not scattering.
+```{r echo=FALSE}
+scatter <- read.table("../data/pscatter.csv", sep=",", header=TRUE)
+scatter
+```
+
+With reliable estimates of probabilities of (not) scattering in hand, we can compute probabilities of absorption and hitting boundaries, conditional on not scattering.
 
 ```{r eval=FALSE} 
 ranseed <- 1431635764
@@ -47,13 +54,26 @@ for(i in 1:11){
   other[i, "cp_bound"] <- temp$cpbound
   other[i,"std_err"] <- temp$se
 }
+
+other
 ```
 
-To get unconditional probabilities from the conditional probabilities just estimated, we must multiply by the probability of not scattering. Making a table of final results:
+```{r echo=FALSE}
+other <- read.table("../data/conditional_pabs_pbdry.csv", sep=",", header=TRUE)
+other
+```
+
+To get unconditional probabilities from the conditional probabilities just estimated, we must multiply each by the probability of not scattering. Making a table of final results:
 
 ```{r eval=FALSE}
 vox_probs <- scatter[,1:5]
 vox_probs[,"p_absorb"] <- (1-vox_probs[,"p_scatter"])*other[,"cp_absorb"]
 vox_probs[,"p_boundary"] <- (1-vox_probs[,"p_scatter"])*other[,"cp_bound"]
+vox_probs
+```
+
+```{r echo=FALSE}
+vox_probs <- read.table("../data/vox_probs.csv", sep=",", header=TRUE)
+vox_probs
 ```
 
