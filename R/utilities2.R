@@ -14,7 +14,7 @@ prob_refl <- function(theta1,n1,n2){
   sin1 <- sin(theta1)
   cos1 <- sqrt(1-sin1*sin1)
   sin2 <- (n1/n2) * sin1
-  idx <- sin2<=1
+  idx <- abs(sin2) <= 1
   cos2[idx] <- sqrt(1-sin2[idx]^2)
   t1 <-  (abs((n1[idx]*cos1[idx]-n2[idx]*cos2[idx])/(n1[idx]*cos1[idx]+n2[idx]*cos2[idx])))^2
   t2 <-  (abs((n1[idx]*cos2[idx]-n2[idx]*cos1[idx])/(n1[idx]*cos2[idx]+n2[idx]*cos1[idx])))^2  

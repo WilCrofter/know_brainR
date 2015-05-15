@@ -16,6 +16,8 @@ source("../R/alpha.R")
 source("../R/utilities.R")
 ```
 
+### Scatter
+
 We first estimate scattering probabilties for the 11 tissue types. Since the scattering, as opposed to being absorbed or hitting a boundary, is a Bernoulli trial, it is relatively easy to estimate standard errors. Based on standard errors, we use $10^6$ trials.
 
 ```{r eval=FALSE}
@@ -39,6 +41,8 @@ scatter
 scatter <- read.table("../data/pscatter.csv", sep=",", header=TRUE)
 scatter
 ```
+
+### Absorption and boundary encounters
 
 With reliable estimates of probabilities of (not) scattering in hand, we can compute probabilities of absorption and hitting boundaries, conditional on not scattering.
 
@@ -77,3 +81,44 @@ vox_probs <- read.table("../data/vox_probs.csv", sep=",", header=TRUE)
 vox_probs
 ```
 
+### Crossing boundaries
+
+To simulate diffusion of photons across voxel boundaries we need, in addition to the probabilities of hitting one of the 6 voxel boundaries, the probabilities of crossing a boundary once it is encountered. This depends on the indices of refraction on either side of the particular (1 of 6 at random) voxel boundary encountered. Function `prob_refl` in [utilities2.R](../R/utilities2.R) calculates the probability of reflection based on the angle of incidence and the two indices. Since in our case angles of incidence are regarded as random, we integrate over all angles of incidence (0 to $\pi/2$) regarding each as equally likely, hence dividing the integral by $\pi/2$. Since we are interested in the probability of *not* reflecting, we subtract the result from 1.
+
+```{r eval=FALSE}
+# A wrapper for prob_refl to make it friendly to R's integrate function
+prefl <- function(theta, n1, n2){
+  n1 <- rep(n1, length(theta))
+  n2 <- rep(n2, length(theta))
+  prob_refl(theta, n1, n2)
+}
+
+# Create a data frame to hold answers
+bdry_probs <- data.frame(matrix(0,11,13))
+names(bdry_probs) <- c("source_tissue", lg)
+bdry_probs[,1] <- lg[2:12]
+# Compute probabilities for each source/target tissue pair
+for(i in 1:11){
+  for(j in 1:12){
+    n1 <- tissue_properties[i+1,"n"]
+    n2 <- tissue_properties[j, "n"]
+    bdry_probs[i, j+1] <- 1-(2/pi)*integrate(prefl, 0, pi/2, n1, n2)$value
+  }
+}
+bdry_probs[,1:5]
+bdry_probs[,c(1,6:9)]
+bdry_probs[,c(1,10:12)]
+```
+
+```{r echo=FALSE}
+bdry_probs <- read.table("../data/boundary_crossing_probs.csv", sep=",", header=TRUE)
+bdry_probs[,1:5]
+bdry_probs[,c(1,6:9)]
+bdry_probs[,c(1,10:12)]
+```
+
+### Conclusion
+
+We now have estimates for the proportion of a voxel's photons which will be absorbed per "step", the proportion which will encounter a boundary (1 of 6,) and the proportion of those encountering a boundary which will cross it. A diffusive model based on such proportions will a) obey conservation of energy and b) model effects of tissue heterogeneity.
+
+A "step" refers to a distance between successive events on a photon's path, an "event" being scattering, absorption, or a boundary encounter. Based on average speed of light in tissue, there are roughly 500 steps per nanosecond.
