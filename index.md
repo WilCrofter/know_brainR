@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Voxel Level Statistics](Rmds/voxel_level_stats.html)
 -   [Scoping simulation of neuronal activity in the visual cortex](Rmds/scoping_v1.html)
 -   [Summary, May 1 2015](Rmds/summary_5_15.html)
 -   [Acoustic time of flight vs distance](Rmds/tof_vs_distance.html)
