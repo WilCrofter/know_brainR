@@ -1,3 +1,34 @@
+#' A second proposed outline for a voxel-level simulator
+#' 
+#' First, prepare a state array for the phantom region of interest:
+#'    4D array: i,j,k to id voxel and 4-long state: 
+#'    tissue, #photons, #incoming, cumulative absorption
+#'
+vox_sim <- function(n, state_array, vox_probs, bdry_probs){
+  # First pass:
+  #   Calculate absorption, subtract from #photons, add to cumulative absorption
+  #   Calculate flow to each neighbor, subtract from self, add to neighbor's incoming
+  # Second pass:
+  #   Add #incoming to #photons and reset #incoming to 0.
+}
+
+# Fake phantom
+phantom <- rep(0, 4^4)
+phantom[seq(1, 4^4, by=4)] <- sample(1:11, 4^3, replace=TRUE)
+dim(phantom) <- c(4,4,4,4)
+row.names(phantom) <- c("tissue", "n", "nin", "abs")
+phantom
+# [,1] [,2] [,3] [,4]
+# tissue    5   11    8    2
+# n         0    0    0    0
+# nin       0    0    0    0
+# abs       0    0    0    0
+# ...
+# Thus phantom[, i, j, k] is the state of voxel i, j, k
+phantom[,3, 2, 4]
+# tissue      n    nin    abs 
+#      2      0      0      0
+
 #' A proposed outline for a voxel-level simulator. Needs sanity checks.
 #' 
 #' @param n number of steps to take
