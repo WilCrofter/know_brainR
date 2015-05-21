@@ -248,8 +248,7 @@ findIntegerCrossings <- function(a, b, by=1){
 # voxel coordinates. Return these points in order, from u to v.
 findVoxelCrossings <- function(u, v){
   # For each component, i, find all border crossing involving that component.
-  # Since voxel dimensions are 1x1x5 mm, the x and y crossings will be integers
-  # and the z crossings will be integral multiples of 5
+  # Since voxel dimensions are 1x1x1 mm, crossings will be integers.
   qs <- numeric()
   idim <- numeric()
   for(i in 1:3){
