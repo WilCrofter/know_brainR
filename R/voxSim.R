@@ -39,6 +39,14 @@ flow_fractions <- function(M1, M2, bdry_probs){
   ans
 }
 
+# An "optimized" form of flow_fractions
+# NOTE: lightly tested, but seems to get the same answers as flow_fractions
+flow_fractions_opt <- function(M1, M2, bdry_probs){
+  ans <- mapply(function(i,j)bdry_probs[i,j+2], as.vector(M1), as.vector(M2))
+  dim(ans) <- dim(M1)
+  ans
+}
+
 #' The following allegedly does 1 step. It surely needs improvement. For instance, we
 #' wouldn't make state_array an explicit parameter because it's big and would be copied.
 #' We might want more than 1 step. The absorbed and boundaries arrays are big, so we
