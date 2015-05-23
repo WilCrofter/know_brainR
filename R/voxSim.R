@@ -42,9 +42,22 @@ flow_fractions <- function(M1, M2, bdry_probs){
 # An "optimized" form of flow_fractions
 # NOTE: lightly tested, but seems to get the same answers as flow_fractions
 flow_fractions_opt <- function(M1, M2, bdry_probs){
+  if(!isTRUE(all.equal(dim(M1), dim(M2))))stop("M1 and M2 are not the same shape.")
   ans <- mapply(function(i,j)bdry_probs[i,j+2], as.vector(M1), as.vector(M2))
   dim(ans) <- dim(M1)
   ans
+}
+
+#' Subset a 3D array without making unnecessary copies. By default
+#' the 3D array is named "phantom" and is in the global environment.
+#' Example:
+#'   temp <- getVoxels(160, 210:220, 150:160)
+getVoxels <- function(i, j, k, pname="phantom", envir=globalenv()){
+  expr <- parse(text=paste0(pname,"[",
+                            deparse(substitute(i)),",",
+                            deparse(substitute(j)),",",
+                            deparse(substitute(k)),"]"))
+  eval(expr, envir=globalenv())
 }
 
 #' The following allegedly does 1 step. It surely needs improvement. For instance, we
