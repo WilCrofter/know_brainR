@@ -1,0 +1,35 @@
+---
+title: "Pulse train spectrum"
+author: "W. Bauer"
+date: "05/25/2015"
+output: html_document
+---
+
+Photoacoustic excitation might consist of a periodic sequence of NIR pulses. The purpose of this note is to estimate the proportion of a pulse train's power spectrum which might be accessible to off-the-shelf ultrasound transducers, say the portion between 1 and 10 MHz.
+
+```{r fig.show='hold', fig.align='center', echo=FALSE}
+local({
+  y <- rep(c(rep(0,45), rep(1,11), rep(0,45)), 11)
+  x <- seq(-length(y)/2, length(y)/2, length.out=length(y))/100
+  plot(x,y, type='l', lwd=3, xlab="time (msec)", ylab="amplitude", 
+       sub="1 kHz pulse train with 0.1 msec pulse duration", ylim=c(0,1.5),
+       main="Figure 1. A pulse train.")
+  segments(c(-.05, .05, 2, 3), rep(1.05, 4), c(-.05, .05, 2, 3), rep(1.25, 4), col="red")
+  text(0, 1.25, "T = 0.1 msec", pos=3, col="red")
+  text(2.5, 1.25, expression(paste(over(1,nu), " = 1.0 msec")), pos=3, col="red")
+})
+```
+
+A stylized pulse train of unit amplitude with a repetition rate of $\nu$ and a pulse duration of $T$ has the Fourier series,$$2 \nu T\sum_{k=0}^{\infty}\frac{sin(k\pi\nu T)}{k\pi\nu T}cos(2k\pi\nu t).$$(See below for details.)
+
+Since millisecond time resolution is desired, pulse repetition rates should be at lease 1 kHz, but probably no more than 1 MHz considering the 1-10 MHz frequency range of interest. Corresponding periods will thus be in the microsecond to millisecond range. Pulse durations and VSD relaxation times will be much shorter (nanoseconds.)  
+
+Thus, short stylized pulses of unit amplitude are a rough model of acoustic response to pulsed excitation. The energy produced in one period of such a pulse train is the area under a pulse, namely $T$. The proportion of that energy in one period of the $k^{th}$ Fourier component is$$\frac{1}{T}(2\nu T)^2 \left[\frac{sin(k\pi\nu T)}{k\pi\nu T}\right]^2\int_0^{1/\nu}cos^2(2k\pi\nu t)dt \\ = 2\nu T \left[\frac{sin(k\pi\nu T)}{k\pi\nu T}\right]^2$$since$$\int_0^{1/\nu}cos^2(2k\pi\nu t)dt = \frac{1}{2\nu}.$$
+
+For a pulse duration of approximately 10 nanoseconds and $k\nu$ less than 10 MHz, the squared Fourier coefficents are approximately 1. E.g., if $k\nu = 10^7$ (10 MHz), then$$\left[\frac{sin(k\pi\nu T)}{k\pi\nu T}\right]^2 = \left[\frac{sin(\pi\times 10^7 \times 10^{-8})}{\pi\times 10^7 \times 10^{-8}}\right]^2 \\ = 0.97.$$Hence the fraction of response power within a frequency interval, $[f_1,\:f_2],$ is essentially proportional to the number of Fourier components in that interval, i.e.,$$2\nu T\frac{f_2-f_1}{\nu} = 2 T (f_2-f_1).$$
+
+For $T \approx 10\:nsec$ this amounts to only 2% of the response power per megahertz of bandwidth. 
+
+### Fourier coefficients of a pulse train
+
+A pulse train as pictured in Figure 1 has a Fourier series in which the sine terms are all zero, as is the case for any function for which $f(-t) = f(t).$ The $k^{th}$ Fourier coefficient is, by definition,$$a_k = 2\nu\int_{-T/2}^{T/2}cos(2\pi k \nu t)dt \\= 2\nu \frac{sin(2\pi k \nu t)}{2 \pi k \nu}|_{-T/2}^{\:T/2} \\= 2 \nu T \frac{sin(\pi k \nu T)}{\pi k \nu T}.$$
