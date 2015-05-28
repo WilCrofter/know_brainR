@@ -1,0 +1,52 @@
+---
+title: "Foveal area of BrainWeb phantom's primary visual cortex"
+author: "W. Bauer"
+date: "May 28, 2015"
+output: html_document
+---
+
+The point of this note is to identify the foveal area of the BrainWeb phantom's left primary visual cortex and to extract a small volume around it for later study. The figure below is of a coronal section near the back of the phantom's skull (y=80.) The broken line shows that the hemispheres divide at x=185. The left primary visual cortex will thus involve volumes for which x < 185.  
+
+```{r fig.show='hold', fig.align='center', echo=FALSE}
+source("../R/utilities.R")
+fname <- "../data/subject04_crisp_v.rawb"
+phantom <- readBin(fname, what="raw", n=362*434*362, size=1, signed=FALSE, endian="big")
+dim(phantom) <- c(362, 434, 362)
+local({
+  v1b <- as.integer(phantom[,80,]);dim(v1b)<-c(362,362);disp_slice(v1b, main="Coronal section, y=80")
+  abline(v=185, col="cyan", lty=2, lwd=5)
+  text(185, 325, "x = 185", pos=4, cex=2, col="cyan")
+  arrows(c(350, 350), c(25, 25), c(400, 350), c(25, 75), lwd=5, col="cyan")
+  text(350, 75, "z", cex=2, pos=3, col="cyan")
+  text(400, 25, "x", cex=2, pos=4, col="cyan")
+})
+```
+
+The next figure shows as sagittal section at x=175 which is far enough into the left hemisphere to show gray matter in some anatomical detail. What I believe to be the foveal area of the primary visual cortex is circled (generously; the area is probably smaller.)
+
+```{r fig.show='hold', fig.align='center', echo=FALSE}
+local({
+  v1a <- as.integer(phantom[175,,]);dim(v1a)<- c(434,362);disp_slice(v1a, main="Sagittal section, x=175\n(left hemisphere)")
+  theta <- seq(0, 2*pi, length.out = 50)
+  polygon(60+20*cos(theta), 125+20*sin(theta), border ="cyan", lwd=5)
+  arrows(c(475, 475), c(25, 25), c(475, 525), c(75, 25), lwd=5, col="cyan")
+  text(475, 75, "z", cex=2, pos=3, col="cyan")
+  text(525, 25, "y", cex=2, pos=4, col="cyan")
+  })
+```
+
+The pictured circle is centered at y=60 mm, z=125 mm, has a 20 mm radius. A column with $x = 165 \pm 19$, $z=125\pm 19$, and extending in the y direction from the skull to y=80 should include the area of interest. As it turns out, y=11 to 80 will include all the tissue.
+
+```{r}
+v1 <- phantom[(165-19):(165+19), 11:80, (125-19):(125+19)]
+```
+
+A series of sagittal sections of this volume are shown below.
+
+```{r}
+for(x in seq(39,1, by=-6)){
+  v1a <- as.integer(v1[x,,]);dim(v1a)<-c(70,39);disp_slice(v1a, main=paste("x = ", x+165-19))
+}
+
+```
+

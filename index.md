@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Foveal area of BrainWeb phantom's primary visual cortex](Rmds/foveal_17.html)
 -   [Analysis of photoacoustic response to pulsed excitation](Rmds/acoustic_2.html)
 -   [Voxel Level Statistics](Rmds/voxel_level_stats.html)
 -   [Scoping simulation of neuronal activity in the visual cortex](Rmds/scoping_v1.html)

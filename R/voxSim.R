@@ -39,7 +39,7 @@ flow_fractions <- function(M1, M2, bdry_probs){
   ans
 }
 
-# An "optimized" form of flow_fractions
+# An "optimized" form of flow_fractions. Timing shows there's no great difference.
 # NOTE: lightly tested, but seems to get the same answers as flow_fractions
 flow_fractions_opt <- function(M1, M2, bdry_probs){
   if(!isTRUE(all.equal(dim(M1), dim(M2))))stop("M1 and M2 are not the same shape.")
@@ -91,7 +91,7 @@ vox_sim <- function(state_array, vox_probs, bdry_probs){
   # +x direction. Recall we don't want energy flowing from voxels at the edge of the region
   # e.g., from voxels having x=1 or x=xdim. So, e.g., flow in the +x direction would be
   # from voxel 2,j,k  to voxel 3,j,k ... voxel dimx-1, j, k to voxel dimx
-  flow <- boundaries[2:(xdim-1),,] * flow_fractions(state_array[1, 2:(xdim-1),,], 
+  flow <- boundaries[2:(xdim-1),,] * flow_fractions_opt(state_array[1, 2:(xdim-1),,], 
                                                      state_array[1, 3:xdim,,], bdry_probs) 
   #      subtract from sources
   state_array[2, 2:(xdim-1),,] <- state_array[2, 2:(xdim-1),,] - flow
@@ -100,7 +100,7 @@ vox_sim <- function(state_array, vox_probs, bdry_probs){
   #
   # -x direction: sources are now 2,j,k ... (xdim-1), j, k
   #               sinks   are     1,j,k ... (xdim-2), j, k
-  flow <- boundaries[2:(xdim-1),,] * flow_fractions(state_array[1, 2:(xdim-1),,], 
+  flow <- boundaries[2:(xdim-1),,] * flow_fractions_opt(state_array[1, 2:(xdim-1),,], 
                                                      state_array[1, 1:(xdim-2),,], bdry_probs) 
 
   #      subtract from sources
@@ -109,14 +109,14 @@ vox_sim <- function(state_array, vox_probs, bdry_probs){
   state_array[2, 1:(xdim-2),,]     <- state_array[2,1:(xdim-2),,] + flow   
   #
   # + y direction
-  flow <- boundaries[,2:(ydim-1),] * flow_fractions(state_array[1,,2:(ydim-1),], 
+  flow <- boundaries[,2:(ydim-1),] * flow_fractions_opt(state_array[1,,2:(ydim-1),], 
                                                      state_array[1,,3:ydim,], bdry_probs) 
   #      subtract from sources
   state_array[2,,2:(ydim-1),] <- state_array[2,,2:(ydim-1),] - flow
   #      add to +y neighbors, conserving energy
   state_array[2,,3:ydim,]     <- state_array[2,,3:ydim,]      + flow
   # -y direction
-  flow <- boundaries[,2:(ydim-1),] * flow_fractions(state_array[1,,2:(ydim-1),], 
+  flow <- boundaries[,2:(ydim-1),] * flow_fractions_opt(state_array[1,,2:(ydim-1),], 
                                                     state_array[1,,1:(ydim-2),], bdry_probs) 
   #      subtract from sources
   state_array[2,,2:(ydim-1),] <- state_array[2,,2:(ydim-1),]    - flow
@@ -124,14 +124,14 @@ vox_sim <- function(state_array, vox_probs, bdry_probs){
   state_array[2,,1:(ydim-2),]     <- state_array[2,,1:(ydim-2),] + flow
   #
   # +z direction
-  flow <- boundaries[,,2:(zdim-1)] * flow_fractions(state_array[1,,,2:(zdim-1)], 
+  flow <- boundaries[,,2:(zdim-1)] * flow_fractions_opt(state_array[1,,,2:(zdim-1)], 
                                                     state_array[1,,,3:zdim], bdry_probs) 
   #      subtract from sources
   state_array[2,,,2:(zdim-1)] <- state_array[2,,,2:(zdim-1)] - flow
   #      add to +y neighbors, conserving energy
   state_array[2,,,3:zdim]     <- state_array[2,,,3:zdim]      + flow
   # -z direction
-  flow <- boundaries[,,2:(zdim-1)] * flow_fractions(state_array[1,,,2:(zdim-1)], 
+  flow <- boundaries[,,2:(zdim-1)] * flow_fractions_opt(state_array[1,,,2:(zdim-1)], 
                                                     state_array[1,,,1:(zdim-2)], bdry_probs) 
   #      subtract from sources
   state_array[2,,,2:(zdim-1)] <- state_array[2,,,2:(zdim-1)]    - flow
