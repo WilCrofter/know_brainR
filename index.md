@@ -18,6 +18,7 @@
 -   [Acoustic properties for BrainWeb phantom](Rmds/acoustic_properties.html)
 -   [NIR absorption, ballpark estimates](Rmds/absorption.html)
 -   [Reading BrainWeb Phantoms](Rmds/reading_brainweb.html)
+-   [Optical Indices of Refraction](Rmds/Grey_to_White.html)
 -   [Energy Density Estimate](Rmds/energy_density.html)
 -   [Photon Diffusion in Gray Matter](Rmds/diffusion_in_gray.html) (in progress)
 -   [Optical Properies of Tissue](Rmds/jacques.html)
