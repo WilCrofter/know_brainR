@@ -12,16 +12,20 @@ Source: [Payne Y. Chang](http://www.paynesnotebook.net/Research/Interests/index.
 
 There is a slight skew in the example, as would be expected if the frequency spectrum, i.e., flourescence as a function of frequency rather than a function of wavelength, were Gaussian. A Gaussian frequency spectrum is what I'll assume for both emission and absorption.
 
-The example's red curve can be approximated by using a Gaussian mean corresponding to the peak wavelength of 675 nm, i.e., a frequency of $\frac{300}{675}\:PHz$, and supposing that an edge of the spectrum, roughly 525 nm, corresponds to 3 standard deviations in frequency, i.e.,$$sd = \frac{1}{3}\left(\frac{300}{525}-\frac{300}{675}\right).$$ 
+The example's red curve can be approximated by using a Gaussian mean corresponding to the peak wavelength of 675 nm, i.e., a frequency of $\frac{300}{675}\:PHz$, and supposing that an edge of the spectrum, roughly 525 nm, corresponds to 3 standard deviations in frequency, i.e.,$$sd = \frac{1}{3}\left(\frac{300}{525}-\frac{300}{675}\right).$$(The curve is given as a probability density function.)
 
 ```{r fig.align='center', fig.show='hold', fig.width=5}
 fmean <- 300/675
 fsd <- (300/525 - fmean)/3
-freq <- seq(300/500, 300/900, length.out = 100)
-spec <- dnorm(freq, fmean, fsd)
-plot(300/freq, spec, type='l', col="red", lwd=3, xlab="wavelength (nm)", ylab="", main = "Stylized VSD emission spectrum")
+# Changing the variable from frequency to wavelength introduces the factor of 300/lambda^2
+spec <- function(lambda)dnorm(300/lambda, fmean, fsd)*300/lambda^2
+lambda <- seq(500, 900, length.out = 100)
+plot(lambda, spec(lambda), type='l', col="red", lwd=3, xlab="wavelength (nm)", ylab="", main = "Stylized VSD emission spectrum")
 ```
 
-Peak frequencies 
+Peak emission and absorption wavelengths for various lipid-bound chromophores are given in Leslie Loew's review, [Design and Use of Organic Voltage Sensitive Dyes](http://www.newbooks-services.de/MediaFiles/Texts/8/9781441965578_Excerpt_001.pdf) (ungated pdf). Spectrum widths are not indicated in the review but widths of several hundred nanometers seem typical elsewhere in the literature.
+
+As indicated in the example, spectral shifts due to changes in membrane potential must also be modeled. 
+
 
 [chang]: ../images/vsd_spectrum.png
