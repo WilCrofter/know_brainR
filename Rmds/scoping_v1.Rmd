@@ -60,7 +60,7 @@ either by emitting a photon (fluorescence) or through heat to regenerate the gro
 
 The review lists absorption and emission peaks for a number of styryl dye chromophores. Voltage sensitive dyes relevant to our project are likely to be bound within bilipid membranes and to operate by reorientation (Jan 29 talk by Leslie Lowe at project kick-off.) The longest peak absorption wavelength listed for lipid-bound dye is $678 \pm 7$, slightly below NIR, with an associated emission spectrum of $770 \pm 60.$ Since photon energy is inversely proportional to wavelength, each absorbed and re-emitted photon will lose roughly $1-678/770 = 0.12,$ or 12% of its energy through vibrational relaxation. Not every absorbed photon will be re-emitted, although quantum yields can be upwards of 90%. As round numbers, either an 85% to 15% or a 90% to 10% energy split in optical vs vibrational relaxation seems to be in the ball park depending on quantum yield and heat losses.
 
-Based on Leslie Lowe's review (*ibid*.) absorption coefficients between 0.023/mm and 0.05/mm [were estimated](http://brain-initiative.github.io/know_brainR/Rmds/absorption.html) for a micromolar concentration of dye. These are comperable to absorption coefficients in tissue as shown below.
+Based on Leslie Loew's review (*ibid*.) absorption coefficients between 0.023/mm and 0.05/mm [were estimated](http://brain-initiative.github.io/know_brainR/Rmds/absorption.html) for a micromolar concentration of dye. These are comperable to absorption coefficients in tissue as shown below.
 
 ```{r echo=FALSE}
 data.frame(tissue=c("CSF", "Gray matter", "White matter", "Fat", "Muscle", 
