@@ -83,7 +83,7 @@ idx <- temp[,1] >= 900
 relative_rate <- sum(temp[idx,2])/sum(temp[idx,3]) 
 ```
 
-Most experiments using voltage sensitive dyes, monitor a fixed band of wavelengths. (See Leslie M. Lowe [Design and Use of Organic Voltage Sensitive Dyes](http://scholar.google.com/scholar?q=Design+and+Use+of+Organic+Voltage+Sensitive+Dyes&btnG=Submit&hl=en&as_sdt=0%2C21).) Putative polarized and depolarized spectra of dyes which emit in near infrared are shown below. Suppose these spectra were realistic and that wavelengths exceeding 900 nm were monitored. The ratio of polarized to depolarized emission rates would then be 1.32.
+Most experiments using voltage sensitive dyes, monitor a fixed band of wavelengths. (See Leslie M. Loew [Design and Use of Organic Voltage Sensitive Dyes](http://scholar.google.com/scholar?q=Design+and+Use+of+Organic+Voltage+Sensitive+Dyes&btnG=Submit&hl=en&as_sdt=0%2C21).) Putative polarized and depolarized spectra of dyes which emit in near infrared are shown below. Suppose these spectra were realistic and that wavelengths exceeding 900 nm were monitored. The ratio of polarized to depolarized emission rates would then be 1.32.
 
 ```{r echo=FALSE, fig.show='hold', fig.align='center'}
 matplot(temp[,1], temp[,2:3], type='l', lwd=2, col=1:2, lty=1, xlab="Wavelength (nm)", ylab="Probability Density", main="Putative NIR/VSD Emission Spectrum")
