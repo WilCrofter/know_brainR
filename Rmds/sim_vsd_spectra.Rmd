@@ -5,27 +5,47 @@ date: "May 31, 2015"
 output: html_document
 ---
 
-This note is to specify an approximate model of VSD absorption and re-emission and the variation of those properties with membrane potential. In the absence of exact data, I'll use a stylized form such as the example shown below.
+This note is to specify an approximate model of VSD absorption and re-emission and the variation of those properties with membrane potential. Until exact data becomes available, I'll rely on a stylized form  the example shown below.
 
-<br/><br/><center>![spectrum][chang]</center>
-Source: [Payne Y. Chang](http://www.paynesnotebook.net/Research/Interests/index.html)<br/><br/>
+<br/><br/><center>![spectrum][loew]</center>
+Source: L. M. Loew [Design and Use of Organic Voltage Sensitive Dyes](http://www.newbooks-services.de/MediaFiles/Texts/8/9781441965578_Excerpt_001.pdf) (ungated pdf).<br/><br/>
 
-There is a slight skew in the example, as would be expected if the frequency spectrum, i.e., flourescence as a function of frequency rather than a function of wavelength, were Gaussian. A Gaussian frequency spectrum is what I'll assume for both emission and absorption.
+There is a slight skew in the above curves, as would be expected if the frequency spectrum, i.e., relative fluorescence as a function of frequency rather than as a function of wavelength, were unimodal and symmetric. The shapes in the figure can, in fact, be approximated by using a Gaussian frequency spectrum with a mean corresponding to an (arbitrary) peak wavelength of 675 nm, i.e., a frequency of $\frac{300}{675}\:PHz$, and supposing that 150 nm corresponds to 2.5 standard deviations in frequency, i.e.,$$sd = \frac{1}{2.5}\left(\frac{300}{675-125}-\frac{300}{675}\right).$$
 
-The example's red curve can be approximated by using a Gaussian mean corresponding to the peak wavelength of 675 nm, i.e., a frequency of $\frac{300}{675}\:PHz$, and supposing that an edge of the spectrum, roughly 525 nm, corresponds to 3 standard deviations in frequency, i.e.,$$sd = \frac{1}{3}\left(\frac{300}{525}-\frac{300}{675}\right).$$(The curve is given as a probability density function.)
-
-```{r fig.align='center', fig.show='hold', fig.width=5}
+```{r fig.align='center', fig.show='hold', fig.width=7.5, echo=FALSE}
 fmean <- 300/675
-fsd <- (300/525 - fmean)/3
+fsd <- (300/525 - fmean)/2.5
 # Changing the variable from frequency to wavelength introduces the factor of 300/lambda^2
-spec <- function(lambda)dnorm(300/lambda, fmean, fsd)*300/lambda^2
-lambda <- seq(500, 900, length.out = 100)
-plot(lambda, spec(lambda), type='l', col="red", lwd=3, xlab="wavelength (nm)", ylab="", main = "Stylized VSD emission spectrum")
+spec <- function(lambda, shift=0)dnorm(300/(lambda-shift), fmean, fsd)*300/(lambda-shift)^2
+lambda <- seq(550, 850, length.out = 100)
+plot(lambda, spec(lambda+20), type='l', col="gray", lwd=3, xlab="wavelength (nm)", ylab="", yaxt="n", bty='n', main = "Stylized VSD spectra")
+lines(lambda, spec(lambda), col="black", lwd=3)
+legend('topright', c("Polarized", "Depolarized"), lwd=3, col=c("black", "gray"), bty='n')
 ```
 
-Peak emission and absorption wavelengths for various lipid-bound chromophores are given in Leslie Loew's review, [Design and Use of Organic Voltage Sensitive Dyes](http://www.newbooks-services.de/MediaFiles/Texts/8/9781441965578_Excerpt_001.pdf) (ungated pdf). Spectrum widths are not indicated in the review but widths of several hundred nanometers seem typical elsewhere in the literature.
+Peak emission and absorption wavelengths for various lipid-bound chromophores are given in Leslie Loew's review, (*ibid*.) Spectrum bandwidths are not indicated in the review but widths of several hundred nanometers seem common elsewhere in the literature. Hence, my choice of +/- 150 nm above.
 
-As indicated in the example, spectral shifts due to changes in membrane potential must also be modeled. 
+A convenient model based on the above can be created with the following code. Its use and interpretation are discussed below. 
+
+```{r}
+# peak -- peak wavelength in nanometers
+# width -- width (support) of the spectrum in nanometers
+# Returns a function which gives relative fluorescence or absorbance as a function of
+# wavelength and shift due to depolarization.
+vsdSpectrum <- function(peak, width=300){
+   # Create a function for a curve with a 675 nm peak
+  # NOTE: the factor 300/lambda^2 comes from a change of variable
+  # from frequency to wavelength.
+  fsd <- (300/(675-.5*width) - 300/675)/2.5
+  fcal <- function(lambda)dnorm(300/lambda, 300/675, fsd)*300/lambda^2
+  # Return a function which translates the calibrated curve
+  # to the correct peak wavelength and shift, and normalizes
+  # it so its peak value is 1.
+  function(lambda, depolarization_shift=0){
+    fcal(lambda + depolarization_shift + 675 - peak)/fcal(675)
+  }
+}
+```
 
 
-[chang]: ../images/vsd_spectrum.png
+[loew]: ../images/loew.png
