@@ -5,7 +5,9 @@ date: "May 31, 2015"
 output: html_document
 ---
 
-This note is to specify an approximate model of VSD absorption and re-emission and the variation of those properties with membrane potential. Until exact data becomes available, I'll rely on a stylized form  the example shown below.
+### Stylized form of VSD spectra
+
+This note is to specify an approximate model of VSD absorption and re-emission and the variation of those properties with membrane potential. Until exact data becomes available, I'll rely on a stylized form as shown the example below.
 
 <br/><br/><center>![spectrum][loew]</center>
 Source: L. M. Loew [Design and Use of Organic Voltage Sensitive Dyes](http://www.newbooks-services.de/MediaFiles/Texts/8/9781441965578_Excerpt_001.pdf) (ungated pdf).<br/><br/>
@@ -25,12 +27,12 @@ legend('topright', c("Polarized", "Depolarized"), lwd=3, col=c("black", "gray"),
 
 Peak emission and absorption wavelengths for various lipid-bound chromophores are given in Leslie Loew's review, (*ibid*.) Spectrum bandwidths are not indicated in the review but widths of several hundred nanometers seem common elsewhere in the literature. Hence, my choice of +/- 150 nm above.
 
-A convenient model based on the above can be created with the following code. Its use and interpretation are discussed below. 
+A convenient model based on the above can be created with the following code (which also appears in R/utilities.R.) Its use and interpretation are discussed below. 
 
 ```{r}
 # peak -- peak wavelength in nanometers
 # width -- width (support) of the spectrum in nanometers
-# Returns a function which gives relative fluorescence or absorbance as a function of
+# Returns a function which gives relative fluorescence or absorption as a function of
 # wavelength and shift due to depolarization.
 vsdSpectrum <- function(peak, width=300){
    # Create a function for a curve with a 675 nm peak
@@ -47,5 +49,48 @@ vsdSpectrum <- function(peak, width=300){
 }
 ```
 
+### Interpretation
 
+For simulations, I'll assume that voltage-induced variations in an absorption spectrum correspond to proportional variations in a dye's absorption coefficient, $\mu_a.$ Thus, if depolarization causes a -15% change in the absorption spectrum at a certain wavelength, I'll assume the absorption coefficient changes by -15% as well.
+
+I've [estimated](http://brain-initiative.github.io/know_brainR/Rmds/absorption.html) that absorption coefficients of 1 micromolar concentrations of VSD will be about the same as those of gray matter. In this case, a variation of -15% in a dye's coefficient would result in a -7.5% variation in the region's.
+
+After dye absorbs a photon, it will lose some energy through vibration then either emit a photon at a longer wavelength or relax entirely through heat. If it re-emits a photon, it will do so at a longer wavelength as governed by its *emission* spectrum. Interpreting its emission spectrum as a curve of relative emission rates, the mean wavelength of re-emission can be calculated as if the spectrum were a probability distribution:$$E\left(\lambda_{em}\right) = \frac{\int_{\lambda_{abs}}^{\infty}\lambda S_{em}(\lambda)d\lambda}{\int_{\lambda_{abs}}^{\infty}S_{em}(\lambda)d\lambda}$$
+
+One of the chromophores listed in Leslie Loew's review (*ibid*.) has a lipid-bound absorption spectrum with peak at 678 nm, and a lipid-bound emission spectrum with peak at 770 nm. If, in a polarized state, the dye is excited by an external source at 750 nm, the average emission wavelength will be 828 nm as shown in the figure.
+
+```{r fig.align='center', fig.show = 'hold', echo=FALSE, fig.width=8}
+S_abs <- vsdSpectrum(678)
+S_em <- vsdSpectrum(770)
+lambda <- seq(500, 1000, by=10)
+idx <- lambda > 750
+n <- sum(idx)
+matplot(lambda, cbind(S_abs(lambda), S_em(lambda)), type='n', xlab="wavelength (nm)", ylab = "", yaxt='n', lty=1, lwd = 3, col=c("blue", "red"), main="Styryl dye chromophore [7–1–4]\nPolarized")
+polygon(c(lambda[idx], lambda[idx][n:1], 750, 750), c(rep(0, n), S_em(lambda[idx][n:1]), S_em(750), 0), col="pink", border=NA)
+lines(lambda, S_em(lambda), lwd=3, col="red")
+lines(lambda, S_abs(lambda), lwd=3, col="blue")
+segments(750, 0, 750, S_abs(750), lty=2, lwd=7, col="blue")
+avg_em <- integrate(function(lambda)lambda*S_em(lambda), 750, 1500)$value/integrate(S_em, 750, 1500)$value
+segments(avg_em, 0, avg_em, S_em(avg_em), lty=2, lwd=7, col="red")
+legend('topright', c(expression(S[abs]), expression(S[em]), "excitation (750 nm)", "avg emission (828 em)"), col=c("blue", "red"), lwd=c(3, 3, 7, 7), lty=c(1, 1, 2, 2))
+```
+
+Since energy is inversely proportional to wavelength re-emission will involve an energy loss of $1-750/878 \approx 0.094$, a little less than 10%. A dye with a quantum yield of 95%, will fail to re-emit 5% of absorbed photons, which would total a little less than 15% loss to vibration and heat. In a photoacoustic scenario, since the speed of thermal diffusion in tissue should be much less than the speed of sound, I believe most of this ~15% would dissipate sonically.
+
+If depolarization shifts both spectra to the left by 30 nm, the excitation remains the same, but the average re-emission wavelength decreases to 820 nm, resulting in re-emission loss of $1 - 750/820 \approx 0.085$, about 1% less than before. (Of course, absorption will decrease, in this case, by about 32%, so total emitted energy, optical plus acoustic, will decrease by a similar amount.)
+
+```{r fig.align='center', fig.show = 'hold', echo=FALSE, fig.width=8}
+shft <- 30
+matplot(lambda, cbind(S_abs(lambda, shft), S_em(lambda, shft)), type='n', xlab="wavelength (nm)", ylab = "", yaxt='n', lty=1, lwd = 3, col=c("blue", "red"), main="Styryl dye chromophore [7–1–4]\nDepolarized")
+polygon(c(lambda[idx], lambda[idx][n:1], 750, 750), c(rep(0, n), S_em(lambda[idx][n:1], shft), S_em(750,shft), 0), col="pink", border=NA)
+lines(lambda, S_em(lambda, shft), lwd=3, col="red")
+lines(lambda, S_abs(lambda, shft), lwd=3, col="blue")
+segments(750, 0, 750, S_abs(750, shft), lty=2, lwd=7, col="blue")
+text(750, S_abs(750, shft), "-32%", col="blue", pos=2, cex=1.5)
+avg_em <- integrate(function(lambda)lambda*S_em(lambda,shft), 750, 1500)$value/integrate(function(lambda)S_em(lambda, shft), 750, 1500)$value
+segments(avg_em, 0, avg_em, S_em(avg_em, shft), lty=2, lwd=7, col="red")
+legend('topright', c(expression(S[abs]), expression(S[em]), "excitation (750 nm)", "avg emission (820 nm)"), col=c("blue", "red"), lwd=c(3, 3, 7, 7), lty=c(1, 1, 2, 2))
+```
+
+ 
 [loew]: ../images/loew.png
