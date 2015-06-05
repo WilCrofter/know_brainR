@@ -306,3 +306,21 @@ disp_slice <- function(slice, main){
   par(mar=mar, bty=bty, mai=mai)
 
 }
+
+# peak -- peak wavelength in nanometers
+# width -- width (support) of the spectrum in nanometers
+# Returns a function which gives relative fluorescence or absorption as a function of
+# wavelength and shift due to depolarization.
+vsdSpectrum <- function(peak, width=300){
+  # Create a function for a curve with a 675 nm peak
+  # NOTE: the factor 300/lambda^2 comes from a change of variable
+  # from frequency to wavelength.
+  fsd <- (300/(675-.5*width) - 300/675)/2.5
+  fcal <- function(lambda)dnorm(300/lambda, 300/675, fsd)*300/lambda^2
+  # Return a function which translates the calibrated curve
+  # to the correct peak wavelength and shift, and normalizes
+  # it so its peak value is 1.
+  function(lambda, depolarization_shift=0){
+    fcal(lambda + depolarization_shift + 675 - peak)/fcal(675)
+  }
+}
