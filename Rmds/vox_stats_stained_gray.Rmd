@@ -10,11 +10,13 @@ source("../R/utilities.R")
 source("../R/alpha.R")
 ```
 
-[Earlier](voxel_level_stats.html) probabilities of scattering, absorption, and encountering a boundary were estimated for voxels of the 11 BrainWeb tissue types. This note estimates corresponding statistics for stained gray matter using the same approach.
+[Earlier](voxel_level_stats.html), probabilities of scattering, absorption, and encountering a boundary were estimated for voxels of the 11 BrainWeb tissue types. This note estimates corresponding statistics for stained gray matter using the same approach.
 
-The absorption coefficient of stained gray matter will be the sum of $\mu_a \approx 0.0335\:mm^{-1},$ the absorption coefficient, $\mu_{a.dye},$ of the stain. The stain's coefficient will depend on two things, its concentration and the local extent of depolarization. A 1 micromolar concentration of dye [was estimated] to have about the same absorption coefficient as gray matter itself. Depolarization might reduce that by as much as 30%.
+The absorption coefficient of stained gray matter will be the sum of $\mu_a \approx 0.0335\:mm^{-1},$ the absorption coefficient, $\mu_{a.dye},$ of the stain. The stain's coefficient will depend on two things, its concentration and the local extent of depolarization. A 1 micromolar concentration of dye [was estimated](absorption.html) to have about the same absorption coefficient as gray matter itself. Depolarization might reduce that by as much as 30%.
 
 Concentrations of 5 micromolars may not be unreasonable, so I'll estimate statistics for 14 concentrations ranging from 2/3 to 5 micromolars by thirds. We've previously estimated a (full, not reduced) scattering coefficient of $\mu_s \approx 10\:mm^{-1}$ for gray matter. Staining should not affect it.
+
+### Scattering probabilities
 
 Following the procedure in [Voxel Level Statistics](voxel_level_stats.html),
 
@@ -37,12 +39,78 @@ for(i in 1:14){
 scatter
 ```
 
-```{r echo=FALSE, fig.align='center, fig.show='hold'}
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
 scatter <- read.table("../data/pscatter_stained_gray.csv", sep=",", header=TRUE)
 scatter
-cnctr <- seq(2/3, 5, by=1/3) # concentrations
-plot(cnctr, scatter$p_scatter, xlab="VSD concentration (micromolar)", ylab="Scattering probability", main="Probability of scattering as opposed to absorption\nor encountering a boundary", pch=19, col='blue')
-mdl <- lm(scatter$p_scatter ~ cnctr)
-abline(mdl, lwd=3, lty=2, col='blue')
-text(3, .857, expression(P(scatter) %~~% 0.86 - 0.002412 %*% concentration), cex=1.25)
 ```
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+plot(scatter$mu_a, scatter$p_scatter, xlab=expression(mu[a.total]), ylab="Scattering probability", main="Probability of scattering as opposed to absorption\nor encountering a boundary", pch=19, col='blue')
+mdl <- lm(p_scatter ~ mu_a, scatter)
+abline(mdl, lwd=3, lty=2, col='blue')
+text(0.15, .857, expression(P(scatter) %~~% 0.86 - 0.07 %*% mu[a.total]), cex=1.25)
+```
+
+A photon's probability of scattering, as opposed to being absorbed or encountering a voxel boundary, is linear in $\mu_a,$ at least over this range of $\mu_a$ values.
+
+### Conditional probabilites of absorption and encountering a boundary
+
+Since scattering is much more likely than either absorption or encountering a boundary, estimates of the last two values are more reliably estimated by first estimating them conditional on not scattering. Again, following [Voxel Level Statistics](voxel_level_stats.html),
+
+```{r eval=FALSE} 
+ranseed <- 1433679705
+other <- data.frame(id=scatter$id, tissue=scatter$tissue, mu_a=scatter$mu_a,
+                      mu_s = scatter$mu_s, cp_absorb=NA, cp_bound=NA, std_err=NA)
+for(i in 12:14){
+  mua <- scatter[i, "mu_a"]
+  mus <- scatter[i, "mu_s"]
+  temp <- pother(mua,mus,1e+6,ranseed+i)
+  other[i, "cp_absorb"] <- temp$cpabsorb
+  other[i, "cp_bound"] <- temp$cpbound
+  other[i,"std_err"] <- temp$se
+}
+other
+```
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+other <- read.table("../data/pother_stained_gray.csv", sep=",", header=TRUE)
+other
+```
+
+The estimated probabilities are again linear over this range of $\mu_a$ values.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+plot(other$mu_a, other$cp_absorb, xlab=expression(mu[a.total]), ylab="Conditional absorption probability", main="Probability of absorption conditional on not scattering", pch=19, col='blue')
+mdl <- lm(cp_absorb ~ mu_a, other)
+abline(mdl, lwd=3, lty=2, col='blue')
+text(0.123, 0.08, expression(paste("P( absorption | not scattering) = ", 0.001 + 0.421 %*% mu[a.total])), cex=1.25)
+```
+
+To get unconditional probabilities from the conditional probabilities just estimated, we must multiply each by the probability of not scattering. Making a table of final results:
+
+```{r eval=FALSE}
+vox_probs <- scatter[,1:5]
+vox_probs[,"p_absorb"] <- (1-vox_probs[,"p_scatter"])*other[,"cp_absorb"]
+vox_probs[,"p_boundary"] <- (1-vox_probs[,"p_scatter"])*other[,"cp_bound"]
+vox_probs
+```
+
+```{r echo=FALSE}
+vox_probs <- read.table("../data/vox_probs_stained_gray.csv", sep=",", header=TRUE)
+vox_probs
+```
+
+Although the unconditional probabilites are nominally quadratic, since they are the product of two linear functions of $\mu_{a.total}$, they are essentially linear over the range of interest,
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+plot(vox_probs$mu_a, vox_probs$p_absorb, xlab=expression(mu[a.total]), main=expression(paste("Absorption probability as a function of ", mu[a.total])), ylab="Probability of absorption ", pch=19, col='blue')
+mdl <- lm(p_absorb ~ mu_a, vox_probs)
+abline(mdl, lwd=3, lty=2, col='blue')
+text(0.115, 0.012, expression(paste("P(absorption) = ", 0.002 + 0.065 %*% (mu[a.total]-0.0335))), cex=1.25)
+```
+
+### Conclusion
+
+Probabilities of reflection vs refraction at an encountered boundary are dependent only on indices of refraction on either side of the boundary. Indices of refraction should not be sensitive to small variations in $\mu_{a.total},$ hence should be the same as for unstained gray matter. These were estimated previously.
+
+Linearity of the probability of a boundary encounter is not as graphically apparent than that of the two complementary probabilities of scattering and absorption. However, the three probabilites must add to 1, so a linear expression for boundary encounters could be derived from expressions for the other two. This may prove convenient in the future.
