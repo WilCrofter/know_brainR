@@ -42,7 +42,7 @@ mdl <- HH_model()
 
 The solver, `mdl`, is an R function which takes three arguments. The first is a vector of times (in milliseconds) at which samples of solution are desired. The remaining two represent excitation and inhibition conductances, ge and gi, as in Equation 3 above. Since the model is a single compartment, ge and gi do not vary spatially, but they are time varying. As such, they are assumed to be R functions of a single argument, time.
 
-To illustrate, the following code calculates the model's response a pulse excitation conductance of 0.05 mS beginning at 10 msec and ending at 50 msec. The inhibition conductance is uniformly zero. The value of 0.05 mS corresponds to a rise time, C/ge, of 20 msec which approximates 
+To illustrate, the following code calculates the model's response a pulse excitation conductance of 0.05 mS beginning at 10 msec and ending at 50 msec. The inhibition conductance is uniformly zero. The value of 0.05 mS corresponds to a rise time, C/ge, of 20 msec.
 
 ```{r}
 ge <- function(t)0.05*(t >= 10 & t <= 50)
@@ -51,9 +51,27 @@ times <- seq(0, 100, by=1)
 V <- mdl(times, ge, gi)
 ```
 
-```{r fig.align='center', echo=FALSE, fig.show='hold'}
+```{r fig.align='center', echo=FALSE, fig.show='hold', fig.width=4, fig.height=6}
+par(mfrow=c(2,1))
 matplot(times, cbind(ge(times), gi(times)), type='l', lwd=3, lty=1, xlab="t (msec)", ylab="conductance (mS)", main="Driving force", col=c("darkgreen", "red"))
 legend('topright', c("ge", "gi"), lwd=3, lty=1, col=c("darkgreen", "red"))
-plot(V, type='l', lwd=3, xlab="t (msec)", ylab="membrane potential (mv)", main="Response")
+plot(V[,1],V[,2], type='l', lwd=3, xlab="t (msec)", ylab="membrane potential (mV)", main="Response")
+par(mfrow=c(1,1))
 ```
 
+Suppose 5 such compartments were subjected to this same stimulus in sequence after a delay of, say, ten milliseconds per compartment. Would their mean response resemble the response of a single compartment to, say, the average stimulus?
+
+```{r echo=FALSE, fig.align='center', fig.show='hold', fig.width=9}
+times <- seq(0, 200, by=1)
+V <-mdl(times, ge, gi)
+for(i in 2:5){
+  V <- cbind(V, mdl(times, function(t)ge(t-10*(i-1)), gi)[,2])
+}
+U <- mdl(times, function(t)(ge(t)+ge(t-10)+ge(t-20)+ge(t-30)+ge(t-40))/5, gi)
+matplot(V[,1], V[,2:6], type='l', lty=1, col=2:6, xlab="t (msec)", ylab="membrane potential (mV)", main="Mean response of 5 compartments to delayed stimuli vs\nresponse of 1 compartment to mean stimulus")
+lines(V[,1], rowMeans(V[,2:6]), lwd=3)
+lines(U[,1], U[,2], lwd=3, lty=2)
+legend('topright', c("Mean response", "Response to mean","0 msec delay", "10 msec delay", "20 msec delay", "30 msec delay", "40 msec delay"), lty=c(1,2,1,1,1,1,1), lwd=c(3, 3, rep(1,5)), col=c(1,1:5))
+```
+
+In this case the answer appears to be yes.
