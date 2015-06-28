@@ -33,3 +33,27 @@ In a simulation this assumption, taken at face value, would require about 25 com
 VSD signal from a ferret visual cortex.<br/>
 Source: [Eriksson et. al. (2008)](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0002673)</center>
 
+Function HH_model, in this project's file, /R/hodgkin_huxley.R, returns a solver for a single compartment, Hodgkin-Huxley model. Called without arguments, as below, it will create a model with default values, V0=-80, C=1, gl=0.045, Ee=0, Ei=-75, El=-80, where V0 is initial membrane potential.
+
+```{r}
+source("../R/hodgkin_huxley.R")
+mdl <- HH_model()
+```
+
+The solver, `mdl`, is an R function which takes three arguments. The first is a vector of times (in milliseconds) at which samples of solution are desired. The remaining two represent excitation and inhibition conductances, ge and gi, as in Equation 3 above. Since the model is a single compartment, ge and gi do not vary spatially, but they are time varying. As such, they are assumed to be R functions of a single argument, time.
+
+To illustrate, the following code calculates the model's response a pulse excitation conductance of 0.05 mS beginning at 10 msec and ending at 50 msec. The inhibition conductance is uniformly zero. The value of 0.05 mS corresponds to a rise time, C/ge, of 20 msec which approximates 
+
+```{r}
+ge <- function(t)0.05*(t >= 10 & t <= 50)
+gi <- function(t)0.0
+times <- seq(0, 100, by=1)
+V <- mdl(times, ge, gi)
+```
+
+```{r fig.align='center', echo=FALSE, fig.show='hold'}
+matplot(times, cbind(ge(times), gi(times)), type='l', lwd=3, lty=1, xlab="t (msec)", ylab="conductance (mS)", main="Driving force", col=c("darkgreen", "red"))
+legend('topright', c("ge", "gi"), lwd=3, lty=1, col=c("darkgreen", "red"))
+plot(V, type='l', lwd=3, xlab="t (msec)", ylab="membrane potential (mv)", main="Response")
+```
+
