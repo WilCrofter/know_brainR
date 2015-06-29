@@ -35,7 +35,48 @@ HH_model <- function(V0=-80, C=1, gl=0.045, Ee=0, Ei=-75, El=-80){
     }
     ode(V0, t, dV, parameters)
   }
-} 
+}
+
+# Heuristic algorithms to generate 5 positive time series of varying correlation
+# and smoothness
+
+# Generate a matrix which, when multiplied by its transpose, gives 5x5
+# correlation matrix with off-diagonals approximately equal to the
+# correlation given.
+mtrx <- function(correlation){
+  b <- correlation/2.416
+  a <- sqrt(1-4*b^2)
+  matrix(b, 5, 5) + diag(a-b, 5, 5)
+}
+
+# Generate a 5xn matrix of normal covariates with approximately
+# the given pairwise correlation, smooth them with a moving
+# average of length specified, use the result as steps in a
+# random walk, subtract the minimum to ensure non-negativity,
+# and multiply the totals by a raised cosine window
+walks <- function(n, correlation, moving_average){
+  M <- mtrx(correlation) %*% matrix(rnorm(5*(n+moving_average)), 5, n+moving_average)
+  M <- sapply(1:n, function(k)rowMeans(M[,k+0:(moving_average-1)]))
+  for(i in 1:5){
+    M[i,] <- cumsum(M[i,])
+  }
+  M <- M - min(M)
+  w <- .5*(1-cos(2*pi*seq(0,1,length.out=n)))
+  for(i in 1:5){
+    M[i,] <- M[i,]*w
+  }
+  M/max(M)
+}
+
+# Given a 5xn matrix of time series return 5 functions of t which return interpolated
+# values of the functions, and a 6th function which returns the same for their average
+gs <- function(M){
+  ans <- list()
+  for(i in 1:5)ans[[i]] <- approxfun(M[i,], rule=2)
+  ans[[6]] <- approxfun(colMeans(M), rule=2)
+  ans
+}
+
 
 
 

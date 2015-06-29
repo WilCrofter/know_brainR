@@ -74,4 +74,45 @@ lines(U[,1], U[,2], lwd=3, lty=2)
 legend('topright', c("Mean response", "Response to mean","0 msec delay", "10 msec delay", "20 msec delay", "30 msec delay", "40 msec delay"), lty=c(1,2,1,1,1,1,1), lwd=c(3, 3, rep(1,5)), col=c(1,1:5))
 ```
 
-In this case the answer appears to be yes.
+In this case the system of five compartments behaves almost linearly despite the quadratic terms, conductance times voltage, in its governing equation. Suppose five compartments are simultaneously subjected to stimuli which differ in magnitude. Will aproximate linearity hold then?
+
+```{r echo=FALSE, fig.align='center', fig.show='hold', fig.width=9}
+times <- seq(0, 200, by=1)
+V <-mdl(times, ge, gi)
+for(i in 2:5){
+  V <- cbind(V, mdl(times, function(t).9^(i-1)*ge(t), gi)[,2])
+}
+U <- mdl(times, function(t)(sum(0.9^(1:5))*ge(t))/5, gi)
+matplot(V[,1], V[,2:6], type='l', lty=1, col=2:6, xlab="t (msec)", ylab="membrane potential (mV)", main="Mean response to stimuli of different amplitudes vs\nresponse to mean stimulus")
+lines(V[,1], rowMeans(V[,2:6]), lwd=3)
+lines(U[,1], U[,2], lwd=3, lty=2)
+legend('topright', c("Mean response", "Response to mean","x1", "x0.8", "x0.7", "x0.66", "x0.6"), lty=c(1,2,1,1,1,1,1), lwd=c(3, 3, rep(1,5)), col=c(1,1:5))
+
+set.seed(1435610812) # System time at time of coding
+W <- walks(50, .8, 10)
+W <- W * 0.1/max(W)
+ges <- gs(W)
+```
+
+Again, the system behaves with approximate linearity, hence the five compartments could be lumped into one. Consider the following excitation stimuli which were randomly generated with controlled correlation and temporal smoothness using convenient heuristics.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold', fig.width=8}
+matplot(t(rbind(colMeans(W), W)), type='l', lwd=c(3,1,1,1,1,1), lty=1, xlab="t (msec)", ylab="conductance (mS)", main="Randomly generated conductances with\ncontrolled correlation and smoothness")
+legend("topleft", c("Mean", "1", "2", "3", "4", "5"), lwd=c(3,rep(1,5)), lty=1, col=1:6)
+```
+
+As the following plots show, the mean response is again very close to the response of a single compartment to the mean stimulus. 
+
+```{r echo=FALSE, fig.align='center', fig.show='hold', fig.width=8}
+times <- seq(0, 100, by=1)
+V <-mdl(times, ges[[1]], gi)
+for(i in 2:5){
+  V <- cbind(V, mdl(times, ges[[i]], gi)[,2])
+}
+U <- mdl(times, ges[[6]], gi)
+matplot(V[,1], V[,2:6], type='l', lty=1, col=2:6, xlab="t (msec)", ylab="membrane potential (mV)", main="Mean response to randomly generated stimuli vs\nresponse to mean stimulus")
+lines(V[,1], rowMeans(V[,2:6]), lwd=3)
+lines(U[,1], U[,2], lwd=3, lty=2)
+legend('topright', c("Mean response", "Response to mean", "Response to 1", "Response to 2", "Response to 3", "Response to 4", "Response to 5"), lty=c(1,2,1,1,1,1,1), lwd=c(3, 3, rep(1,5)), col=c(1,1:5))
+```
+
