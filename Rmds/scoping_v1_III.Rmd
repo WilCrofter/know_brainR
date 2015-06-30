@@ -1,0 +1,58 @@
+---
+title: "Simulation of neuronal activity, III"
+author: "W. Bauer"
+date: "June 30, 2015"
+output: html_document
+---
+
+The [previous note](scoping_v1_II.html) discussed the possibility of simulating neuronal activity on the scale of one Hodgkin-Huxley compartment per voxel. It estimated that 25 compartments per 1 mm^3^ voxel might be necessary, but preliminary runs suggested as few as five might be adequate: The mean response of five compartments to five individual stimuli was closely approximated by the response of a single compartment to the average of the five individual stimuli.
+
+Here we are interested in comparing the mean response of 25 compartments to the response of a single compartment to the average of the 25 stimuli. The stimuli will consist of stylized, but otherwise random, excitations from 0 to 50 ms, followed by similar inhibitory stimuli beginning at 30 ms and lasting until 80 ms, as illustrated below.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold', fig.width=9}
+source("../R/hodgkin_huxley.R")
+set.seed(1435694664) # system time at time of coding
+w1 <- (0.05*walks(50, 0.2, 2, m=2))[1,]
+w2 <- (0.05*walks(50, 0.2, 2, m=2))[1,]
+par(mfrow=c(1,2))
+matplot(1:100, cbind(c(w1,rep(0,50)), c(rep(0,30), w2, rep(0,20))), type='l', lty=1, lwd=3, col=c("green", "red"), xlab="t (msec)", ylab="conductance (mS)", main="Typical stimuli")
+legend('topright', c("excitation", "inhibition"), lty=1, lwd=3, col=c("green","red"))
+ge <- approxfun(1:50,w1,rule=2)
+gi <- approxfun(31:80, w2, rule=2)
+mdl <- HH_model()
+V <- mdl(1:100,ge,gi)
+plot(V[,1], V[,2], type='l', lwd=3, xlab="t (msec)", ylab="membrane potential (mV)", main="Response")
+par(mfrow=c(1,1))
+```
+
+The following shows a histogram of 100 trials in which the correlation coefficient was computed between the mean response of 25 compartments and the response of 1 compartment to the mean stimulus. As can be seen correlation coefficients are very high, averging 0.98. This implies the two have essentially the same shape, consistent with observations in the literature. It does not imply they have the same amplitude since the correlation coefficient just measures the cosine of the angle between the two. However, since shape and timing are of primary interest, the result supports the adequacy of simulation of neuronal activity on scales of one compartment per voxel.
+
+```{r echo=FALSE}
+onerun <- function(){
+  mdl <- HH_model()
+  # Create 25 excitatory functions and 25 inhibitory at delays of 0 and 30, resp.
+  gew <- 0.1*walks(50, .5, 5, m=25)
+  giw <- 0.1*walks(50, .5, 5, m=25)
+  ges <- gs(gew, tau=0)
+  gis <- gs(giw, tau=30)
+  # Create mean stimuli as functions which interporlate the mean data points
+  gemean <- approxfun(1:50, colMeans(gew), rule=2)
+  gimean <- approxfun(31:80, colMeans(giw), rule=2)
+  # Compute individual responses
+  times <- seq(0, 100, by=1)
+  V <-mdl(times, ges[[1]], gis[[1]])
+  for(i in 2:25){
+    V <- cbind(V, mdl(times, ges[[i]], gis[[i]])[,2])
+  }
+  # Compute the mean response
+  VM <- rowMeans(V[,2:26])
+  # Compute response to mean stimulus
+  U <- mdl(times, gemean, gimean)
+  # Return the correlation of mean response and response to mean stimulus
+  cor(VM, U[,2])
+}
+
+temp <- sapply(1:100, function(n)onerun())
+hist(temp, main="Correlation coefficients of mean response and\nresponse to mean (100 trials)", xlab="Correlation coefficient")
+```
+
