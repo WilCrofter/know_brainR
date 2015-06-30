@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Simulation of neuronal activity, II](Rmds/scoping_v1_II.html)
 -   [Voxel level statistics for stained gray matter](Rmds/vox_stats_stained_gray.html)
 -   [Simulated VSD spectra](Rmds/sim_vsd_spectra.html)
 -   [Foveal area of BrainWeb phantom's primary visual cortex](Rmds/foveal_17.html)
