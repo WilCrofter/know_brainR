@@ -5,6 +5,8 @@ date: "June 21, 2015"
 output: html_document
 ---
 
+*Summary: This note dicusses Hodgkin-Huxley models of brain volumes involving multiple neurons and afferents. Preliminary simulations support the idea that single compartment Hodgkin-Huxley models can accurately simulate collective activity of volumes on millimeter scales. Although model dynamics are formally quadratic, they appear to behave almost linearly under reasonably realistic conditions. The average response of multiple compartments is closely approximated by the response of a single compartment to the average stimulus.*
+
 According to the project proposal,
 
 > we believe NIR fluorescence imaging can provide millimeter scale spatial resolution (on par with PET) Coupled with a superbly enhanced temporal resolution from the sub-hour scale in PET to real-time (sub-sec scale), this is expected to provide a transformative paradigm for in vivo imaging of the human brain.
@@ -89,19 +91,19 @@ lines(U[,1], U[,2], lwd=3, lty=2)
 legend('topright', c("Mean response", "Response to mean","x1", "x0.8", "x0.7", "x0.66", "x0.6"), lty=c(1,2,1,1,1,1,1), lwd=c(3, 3, rep(1,5)), col=c(1,1:5))
 
 set.seed(1435610812) # System time at time of coding
-W <- walks(50, .8, 10)
+W <- walks(50, .4, 5)
 W <- W * 0.1/max(W)
 ges <- gs(W)
 ```
 
-Again, the system behaves with approximate linearity, hence the five compartments could be lumped into one. Consider the following excitation stimuli which were randomly generated with controlled correlation and temporal smoothness using convenient heuristics.
+Again, the system behaves with approximate linearity, hence the five compartments could be lumped into one. Consider the following excitation stimuli which were randomly generated, using convenient heuristics to control pairwise correlation and temporal smoothness.
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold', fig.width=8}
 matplot(t(rbind(colMeans(W), W)), type='l', lwd=c(3,1,1,1,1,1), lty=1, xlab="t (msec)", ylab="conductance (mS)", main="Randomly generated conductances with\ncontrolled correlation and smoothness")
 legend("topleft", c("Mean", "1", "2", "3", "4", "5"), lwd=c(3,rep(1,5)), lty=1, col=1:6)
 ```
 
-As the following plots show, the mean response is again very close to the response of a single compartment to the mean stimulus. 
+As the following plots show, the mean response of five compartments is again well approximated by the response of a single compartment to the mean stimulus. I have not done systematic trials, but this result is typical of the few trials I have done. So far, it appears that single compartment Hodgkin-Huxley models on millimeter scales would be adequate for present purposes. 
 
 ```{r echo=FALSE, fig.align='center', fig.show='hold', fig.width=8}
 times <- seq(0, 100, by=1)
@@ -115,4 +117,5 @@ lines(V[,1], rowMeans(V[,2:6]), lwd=3)
 lines(U[,1], U[,2], lwd=3, lty=2)
 legend('topright', c("Mean response", "Response to mean", "Response to 1", "Response to 2", "Response to 3", "Response to 4", "Response to 5"), lty=c(1,2,1,1,1,1,1), lwd=c(3, 3, rep(1,5)), col=c(1,1:5))
 ```
+
 
