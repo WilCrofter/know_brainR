@@ -70,8 +70,10 @@ walks <- function(n, correlation, moving_average, m=5){
 
 # Given a mxn matrix of time series return m functions of t which return interpolated
 # values of the functions, and an m+1st function which returns the same for their average.
-gs <- function(M){
+# Parameter tau is a delay which applies to all functions.
+gs <- function(M, tau=1){
   ans <- list()
+  t <- seq(tau, tau+ncol(M), by=1)
   m <- nrow(M)
   for(i in 1:m)ans[[i]] <- approxfun(M[i,], rule=2)
   ans[[m+1]] <- approxfun(colMeans(M), rule=2)
