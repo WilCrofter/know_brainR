@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Estimating safe concentration of VSD](Rmds/safe_dose.html)
 -   [Simulation of neuronal activity, III](Rmds/scoping_v1_III.html)
 -   [Simulation of neuronal activity, II](Rmds/scoping_v1_II.html)
 -   [Voxel level statistics for stained gray matter](Rmds/vox_stats_stained_gray.html)

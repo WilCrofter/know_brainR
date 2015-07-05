@@ -1,0 +1,21 @@
+---
+title: "Estimating safe concentration of VSD"
+author: "D. F. Wong and W. Bauer"
+date: "July 5, 2015"
+output: html_document
+---
+
+This informal estimate is the result of a question which arose in the context of computer simulations.
+
+[Indocyanine green](https://en.wikipedia.org/wiki/Indocyanine_green) is a dye currently in clinical use which has structure and molecular weight similar to those of VSDs. It is used in this estimate as a proxy.
+
+The intravenous LD~50~ dose for rats (i.e., the dose which kills half the animals) is 87 mg/kg. A safe dose might be 10^4^-10^5^ below this. Assuming the lower figure of 10^4^, a safe IV dose for a 70 kg (154 pound) human would be $87 \times 10^{-4} \times 70 = 0.6090\:mg.$
+
+Around 5% of an injected 0.6 mg, i.e., 30 $\mu g,$ might end up in the brain, as opposed to being trapped in liver, spleen, or kidney. The molar mass of Indocyanine green is 775 $g/mol$ (*op. cit.*) or, equivalently, 775 $\mu g/\mu mol.$ Thus, we would have a total of $$\frac{30}{775}\frac{\mu g}{\mu g / \mu mol} = 0.0387\:\mu mol$$of dye in the brain. 
+
+A 1 micromolar concentration would require that this amount of dye be concentrated in 0.0387 liters, or $0.0387 \times 10^6 = 38700$ mm^3^ of brain volume. For comparison, two layers of the foveal region of human primary visual cortex are about 300 mm^3^ in volume. This region will probably be the initial focus of simulations.
+
+Using nanoparticle packaging and microbubbles modulated by focused ultrasound, it may be possible to concentrate dye in brain volumes as small as 10 mm^3^. (We refer here to the "grain of rice" comparison made by Richard Price in his talk of Jan 29th,  "Delivery of Systemically Administered Nanoparticles to the Brain with Focused Ultrasound.")
+
+This estimate, if in the ball park, indicates we can stain significant volumes of gray matter at concentrations of at least 1 micromolar, and smaller regions of interest at much higher concentrations provided they are not toxic to brain cells.
+
