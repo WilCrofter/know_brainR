@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [What's going on here?](Rmds/summary_7_15.html)
 -   [Estimating safe concentration of VSD](Rmds/safe_dose.html)
 -   [Simulation of neuronal activity, III](Rmds/scoping_v1_III.html)
 -   [Simulation of neuronal activity, II](Rmds/scoping_v1_II.html)

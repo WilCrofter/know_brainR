@@ -1,0 +1,20 @@
+---
+title: "What's going on here?"
+author: "W. Bauer"
+date: "July 8, 2015"
+output: html_document
+---
+
+Since this site is getting unexpected attention, I thought I should explain what's going on. In a phrase, we are prototyping a "forward model," i.e., computer code to simulate more costly or risky physical experiments.
+
+Prototyping is an important word. A software prototype, in my opinion, should aim for ballpark accuracy (or better if you can get it,) reasonable run times and, above all, an architecture which facilitates replacement of prototype modules as better techniques, information, and faster code are developed.
+
+Some of our modules, such as the photon-level simulator, seem reasonably solid. Others, such as the code documented in [Simulated VSD spectra](Rmds/sim_vsd_spectra.html) are essentially placeholders. We try to avoid gross inaccuracy, but our priority is to get all the required pieces in place, by a wing and a prayer if necessary.
+
+The main anatomical piece consists of McGill's [BrainWeb "crisp" phantom](http://brainweb.bic.mni.mcgill.ca/cgi/brainweb1?alias=phantom_1.0mm_normal_crisp) in which voxels are labeled by predominant tissue type: gray matter, white matter, skull, CSF, etc. We have what we hope are representative ranges for both [optical](Rmds/jacques.html) and [acoustic](Rmds/acoustic_properties.html) properties for each tissue type.
+
+Our photon-level code uses standard Monte Carlo techniques to simulate scattering, absorption, reflection, and refraction in the BrainWeb phantom. It's initial use was to [verify](Rmds/scattering_and_direction.html) that, after 1 mm of travel, a photon's final direction is random with respect to its initial direction. Then, using [averages generated at photon level](Rmds/voxel_level_stats.html), we've protoyped a more efficient voxel-level simulator which is deterministic. Because photons propagate independently of one another, it is also linear. This means results of basic runs can be superimposed to represent more complex situations.
+
+In May, the inverse problem group expressed a wish to simulate, in the BrainWeb phantom, a rough equivalent of a ferret study by Per Roland. To do so, we've [identified](Rmds/foveal_17.html) the foveal area of the phantom's primary visual cortex and have studied the [applicabilty of a compartment-per-voxel Hodgkin-Huxley model](Rmds/scoping_v1_III.html) to simulating neural activity in this (or another) area.
+
+It remains to simulate the optical and/or acoustic response of a dye to excitation in the presence of neuronal activity. To do so we have estimated [safe concentrations of dye](Rmds/safe_dose.html) and [relative energy levels of optical and acoustic responses](Rmds/sim_vsd_spectra.html) of what amounts to a fictitious dye. Now that acoustic response data from real dye has been developed we will attempt to build a module consistent with that data.
