@@ -7,6 +7,8 @@
 
 #### Notes in reverse chronological order
 -   [What's going on here?](Rmds/summary_7_15.html)
+-   [Two photon excitation should be considered](Rmds/two_photon.html)
+-   [pH  vs. membrane potential](Rmds/pH_vs_Vm.html)
 -   [Estimating safe concentration of VSD](Rmds/safe_dose.html)
 -   [Simulation of neuronal activity, III](Rmds/scoping_v1_III.html)
 -   [Simulation of neuronal activity, II](Rmds/scoping_v1_II.html)

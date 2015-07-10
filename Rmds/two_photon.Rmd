@@ -1,0 +1,14 @@
+---
+title: "Two photon excitation should be considered"
+author: "W. Bauer"
+date: "July 10, 2015"
+output: html_document
+---
+
+Reference: Steven L Jacques (2013)  Optical properties of biological tissues: a review, [Phys. Med. Biol. 58 R37](http://iopscience.iop.org/0031-9155/58/11/R37/article)
+
+This note summarizes a Skype conversation between Les Loew, Dean Wong, and me. The bottom line is that two-photon excitation offers advantages which are likely to be useful. Two photon excitation takes place when a dye molecule absorbs two photons essentially simultaneously. This has at least two advantages from our point of view.
+
+The first advantage is that, since two photons are absorbed, the energy of each may be half the required excitation energy. Hence, the excitation wavelength may be twice the wavelength needed for single-photon excitation. Absorption and scattering decrease with wavelength, though the decrease appears to be more gradual than we'd like, (see the reference,) thus enabling better concentration of excitation intensity.
+
+The second advantage is that the probability of two-photon absorption is proportional to the square, rather than the first power, of intensity. This would result in more concentrated absorption.
