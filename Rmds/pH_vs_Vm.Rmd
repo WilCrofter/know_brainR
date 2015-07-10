@@ -1,0 +1,25 @@
+---
+title: "pH  vs. membrane potential"
+author: "W. Bauer"
+date: "July 9, 2015"
+output: html_document
+---
+
+In the recent R24 report, the Photoacoustic NeuroImaging subproject published photoacoustic responses of several pH-sensitive dyes embedded in a gel phantom. It would be useful if computer-simulated responses could be made consistent with these physical measurements. Since, *in silico*, we intend use Hodgkin-Huxley compartments to simulate neuronal activity, some correspondence between variations in membrane potential and variations in pH must first be drawn.
+
+A constant of proportionality is provided by the Nernst equation:$$\Delta V_m = -\frac{2.303RT}{F}\Delta pH,$$where $R$ is the gas constant, $T$ is body temperature, $F$ is Faraday's constant, and $V_m$ is in volts. Its applicability here is admittedly approximate and relies on an assumption that chemical and electrical potentials reach equilibrium on shorter time scales than those characteristic of bulk neuronal activity.
+
+```{r}
+T <- 310 # body temp, degrees K
+R <- 8.314 # gas constant J/(K.mol)
+F <- 96485 # Faraday's constant, coulombs/mol
+(nernst_factor <- -2.303*R*T/F) # J/coulomb = volts
+```
+
+Converting to pH units per millivolt:
+
+```{r}
+(pH_per_mV <- -1/(1000*nernst_factor)) # pH units per millivolt
+```
+
+Thus,$$\Delta pH \approx -0.016 \Delta V_m$$where $V_m$ is in millivolts.
