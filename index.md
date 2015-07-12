@@ -6,7 +6,8 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
--   [What's going on here?](Rmds/summary_7_15.html)
+-   [Photoacoustic response estimated from experimental data](Rmds/pa_pressure_from_experiment.html)
+-   [What's going on here? (July 15 2015)](Rmds/summary_7_15.html)
 -   [Two photon excitation should be considered](Rmds/two_photon.html)
 -   [pH  vs. membrane potential](Rmds/pH_vs_Vm.html)
 -   [Estimating safe concentration of VSD](Rmds/safe_dose.html)
