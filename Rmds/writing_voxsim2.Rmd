@@ -1,0 +1,29 @@
+---
+title: "Writing vox sim 2"
+author: "W. Bauer"
+date: "August 2, 2015"
+output: html_document
+---
+
+These are development notes for a second NIR voxel-level simulator--preconceptions, problems, general architecture. It is meant primarily as a reference for the developers. It is not likely to be of general interest.
+
+The point is to simulate diffusive propagation of NIR photons, using only relative photon density per voxel and relevant statistics estimated from simulation of individual photon statistics. The first prototype worked out the core logic and was finalized in [file voxSim.R](https://github.com/brain-initiative/know_brainR/blob/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e/R/voxSim.R) of commit [72e86c8bb7](https://github.com/brain-initiative/know_brainR/tree/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e).
+
+### Architecture
+
+Simulation will require a large state array and two tables of statistics developed at photon level. Because the state array would typically be large, multiple copies should be avoided. Passing the state array as a parameter would result in a copy. A conventional way to avoid this in R would be to embed the state array in the syntactical scope of the simulator, i.e., to write a function which both loads the data and defines the simulator at run-time, returning the newly defined simulator upon exit. The returned simulator, which retains a reference to the environment in which it was defined (its syntactical scope,) thus has direct access to the data, obviating the need to pass data as a parameter.
+
+A reasonable architecture is thus to write a function which internally defines a core simulator and embeds all the necessary data and other functionality in its run-time environment.
+
+### Parameters
+
+This prototype would require several parameters, the first being the number of steps to simulate. About 500 steps correspond to a nanosecond of time.
+
+The remaining parameters are functions.
+
+**Initial State.** 
+* The first of the functional arguments would initialize a state array for the phantom region of interest. The state array is 4 dimensional, the first dimension holding the state of an individual voxel and and the remaining 3 identifying the voxel itself. This prototype, like the first, would use a state consisting of 3 numbers respectively labeled tissue, energy, and cum_absorbed. Thus state[1, i, j, k] is the tissue identifier of voxel i,j,k, state[2, i, j, k] is its internal energy and state[3, i, j, k] is the cumulative energy absorbed by its chromophores and dyes.
+
+
+
+
