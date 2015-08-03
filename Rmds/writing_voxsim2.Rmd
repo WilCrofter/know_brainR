@@ -5,15 +5,29 @@ date: "August 2, 2015"
 output: html_document
 ---
 
-These are development notes for a second NIR voxel-level simulator--preconceptions, problems, general architecture. It is meant primarily as a reference for the developers. It is not likely to be of general interest.
+These are development notes for a second voxel-level simulator--preconceptions, problems, general architecture. It is meant primarily as a reference for the developers. It is not likely to be of general interest.
 
-The point is to simulate diffusive propagation of NIR photons, using only relative photon density per voxel and relevant statistics estimated from simulation of individual photon statistics. The first prototype worked out the core logic and was finalized in [file voxSim.R](https://github.com/brain-initiative/know_brainR/blob/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e/R/voxSim.R) of commit [72e86c8bb7](https://github.com/brain-initiative/know_brainR/tree/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e).
+The point is to simulate diffusive propagation of NIR photons using only relative photon density per voxel and relevant statistics estimated from simulation of individual photon trajectories. The first prototype worked out the core logic and was finalized in [file voxSim.R](https://github.com/brain-initiative/know_brainR/blob/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e/R/voxSim.R) of commit [72e86c8bb7](https://github.com/brain-initiative/know_brainR/tree/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e).
 
-### Architecture
+### Architecture considerations
 
-Simulation will require a large state array and two tables of statistics developed at photon level. Because the state array would typically be large, multiple copies should be avoided. Passing the state array as a parameter would result in a copy. A conventional way to avoid this in R would be to embed the state array in the syntactical scope of the simulator, i.e., to write a function which both loads the data and defines the simulator at run-time, returning the newly defined simulator upon exit. The returned simulator, which retains a reference to the environment in which it was defined (its syntactical scope,) thus has direct access to the data, obviating the need to pass data as a parameter.
+A voxel-level state array will typically be large, and passing it as a parameter would result in a copy. A conventional way to avoid this problem in R is to embed the array in an environment. Environments, unlike most R objects, are passed by reference i.e., not copied. All references to an environment point to the same object.
 
-A reasonable architecture is thus to write a function which internally defines a core simulator and embeds all the necessary data and other functionality in its run-time environment.
+Despite its efficiency relative to photon-level simulation, voxel-level simulation in the manner anticipated requires about 500 steps per nanosecond. Since the system is linear, use cases are likely to consist of elementary runs over short spans of time, with results scaled and superimposed to simulate more complex scenarios. What counts as a result, hence what should be saved, is likely to vary. Some plug-in mechanism to customize output is therefore desireable. It could be as simple as a function passed to the simulator as a parameter.
+
+NIR sources will vary. Anticipated use cases include: externally applied NIR lasers which may be constant, pulsed, or otherwise modulated; fluorescent dyes emanating from multiple voxels of gray matter stained at various concentrations and in various states of polarization, pH, or lactate concentration. Thus, a plug-in mechanism for excitation is also desireable.
+
+If the state array is to be wrapped and passed in an environment, it seems most flexible to decouple its preparation from the simulator module itself. The same can be said for excitation and output options, and for tables of absorption and flow statistics which govern dynamics. All of these will vary with the particular run or experiment of interest. The simulator module can ignore the manner in which they are prepared, as long as the way in which they interface with the simulator module is fixed. An interface architecture is thus indicated.
+
+To define an interface, a step of the core simulator must be considered. A step works as follows. First, for each voxel, the proportion of photons absorbed and the proportion hitting each face of its boundary are calculated. (The rest will be internally scattered. Proportions are estimated from photon-level simulations.) The proportion absorbed is added to an appropriate state variable. Second, for each pair of adjacent voxels, the flow across their common boundary is calculated. Third, for each voxel, the net loss (to absorption and outward flow) and gain (from inward flow) are calculated and subtracted or added to its state.
+
+Excitation amounts to adding photons to certain voxels. For excitation by external laser, this would amount to adding photons to voxels in selected regions of the scalp surface. For emission from a voxel of stained gray matter, this would amount to calculating for each voxel the proportion of absorbed photons which would fluoresce in approximately 1/500 ns, subtracting the result from the appropriate state variable, and adding it to the proportion of photons actively propagating in the voxel. Such calculations can be done between steps of the simulator.
+
+Similarly, calculations for output can be done between simulator steps. If these two functions, and perhaps unanticipated others, were invoked in a uniform way, e.g., with the same parameters in the same order, they could be stored in an array of functions and executed sequentially between steps. Standardizing in this way would provide a simple plug-in mechanism without having to constrain the number or the functionality of plug-ins before the fact.
+
+Since it may be decided, after a number of simulator steps, that more iterations are necessary, the simulator should return at least the environment containing the final state. That being the case, everything needed for additional interations could also be wrapped in the same environment. This would be convenient and would tend to prevent errors such as mixing up data meant for one experiment with that of another. And if everything is to be wrapped upon return from the simulator, it may as well be wrapped before entry.
+
+Thus, the simulator will expect an environment containing an initial state array, the number of iterations already performed (perhaps 0,) tables of absorption and flow statistics, and an array of functions to be executed between steps.
 
 ### Parameters
 
