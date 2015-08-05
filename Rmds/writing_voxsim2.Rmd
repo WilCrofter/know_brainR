@@ -5,17 +5,17 @@ date: "August 2, 2015"
 output: html_document
 ---
 
-These are development notes for a second voxel-level simulator--preconceptions, problems, general architecture. It is meant primarily as a reference for the developers. It is not likely to be of general interest.
+These are development notes for a second voxel-level simulator--preconceptions, problems, architecture. It is meant primarily as a reference for developers. It is not likely to be of general interest.
 
 The point is to simulate diffusive propagation of NIR photons using only relative photon density per voxel and relevant statistics estimated from simulation of individual photon trajectories. The first prototype worked out the core logic and was finalized in [file voxSim.R](https://github.com/brain-initiative/know_brainR/blob/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e/R/voxSim.R) of commit [72e86c8bb7](https://github.com/brain-initiative/know_brainR/tree/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e).
 
-### Architecture considerations
+### Simulator architecture
 
 A voxel-level state array will typically be large, and passing it as a parameter would result in a copy. A conventional way to avoid this problem in R is to embed the array in an environment. Environments, unlike most R objects, are passed by reference i.e., not copied. All references to an environment point to the same object.
 
-Despite its efficiency relative to photon-level simulation, voxel-level simulation in the manner anticipated requires about 500 steps per nanosecond. Since the system is linear, use cases are likely to consist of elementary runs over short spans of time, with results scaled and superimposed to simulate more complex scenarios. What counts as a result, hence what should be saved, is likely to vary. Some plug-in mechanism to customize output is therefore desireable. It could be as simple as a function passed to the simulator as a parameter.
+Despite its efficiency relative to photon-level simulation, voxel-level simulation in the manner anticipated requires about 500 steps per nanosecond. Since the system is linear, use cases are likely to consist of elementary runs over short spans of time, with results scaled, delayed, and superimposed to simulate more complex scenarios. What counts as a result, hence what should be saved, is likely to vary. Some plug-in mechanism to customize output is therefore desirable. It could be as simple as a function passed to the simulator as a parameter.
 
-NIR sources will vary. Anticipated use cases include: externally applied NIR lasers which may be constant, pulsed, or otherwise modulated; fluorescent dyes emanating from multiple voxels of gray matter stained at various concentrations and in various states of polarization, pH, or lactate concentration. Thus, a plug-in mechanism for excitation is also desireable.
+NIR sources will vary. Anticipated use cases include: externally applied NIR lasers which may be constant, pulsed, or otherwise modulated; fluorescent dyes emanating from multiple voxels of gray matter stained at various concentrations and in various states of polarization, pH, or lactate concentration. Thus, a plug-in mechanism for excitation is also desirable.
 
 If the state array is to be wrapped and passed in an environment, it seems most flexible to decouple its preparation from the simulator module itself. The same can be said for excitation and output options, and for tables of absorption and flow statistics which govern dynamics. All of these will vary with the particular run or experiment of interest. The simulator module can ignore the manner in which they are prepared, as long as the way in which they interface with the simulator module is fixed. An interface architecture is thus indicated.
 
@@ -27,17 +27,7 @@ Similarly, calculations for output can be done between simulator steps. If these
 
 Since it may be decided, after a number of simulator steps, that more iterations are necessary, the simulator should return at least the environment containing the final state. That being the case, everything needed for additional interations could also be wrapped in the same environment. This would be convenient and would tend to prevent errors such as mixing up data meant for one experiment with that of another. And if everything is to be wrapped upon return from the simulator, it may as well be wrapped before entry.
 
-Thus, the simulator will expect an environment containing an initial state array, the number of iterations already performed (perhaps 0,) tables of absorption and flow statistics, and an array of functions to be executed between steps.
+### Initialization
 
-### Parameters
-
-This prototype would require several parameters, the first being the number of steps to simulate. About 500 steps correspond to a nanosecond of time.
-
-The remaining parameters are functions.
-
-**Initial State.** 
-* The first of the functional arguments would initialize a state array for the phantom region of interest. The state array is 4 dimensional, the first dimension holding the state of an individual voxel and and the remaining 3 identifying the voxel itself. This prototype, like the first, would use a state consisting of 3 numbers respectively labeled tissue, energy, and cum_absorbed. Thus state[1, i, j, k] is the tissue identifier of voxel i,j,k, state[2, i, j, k] is its internal energy and state[3, i, j, k] is the cumulative energy absorbed by its chromophores and dyes.
-
-
-
+The simulator would thus expect an environment containing an initial state array, the number of iterations already performed (perhaps 0,) tables of absorption and flow statistics, and an array of functions to be executed between steps.
 
