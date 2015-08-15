@@ -5,7 +5,7 @@ date: "August 2, 2015"
 output: html_document
 ---
 
-These are development notes for a second voxel-level simulator--preconceptions, problems, architecture. It is meant primarily as a reference for developers. It is not likely to be of general interest.
+These are development notes for a second voxel-level simulator--preconceptions, problems, architecture. They are meant primarily as reference for developers. They are not likely to be of general interest.
 
 The point is to simulate diffusive propagation of NIR photons using only relative photon density per voxel and relevant statistics estimated from simulation of individual photon trajectories. The first prototype worked out the core logic and was finalized in [file voxSim.R](https://github.com/brain-initiative/know_brainR/blob/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e/R/voxSim.R) of commit [72e86c8bb7](https://github.com/brain-initiative/know_brainR/tree/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e).
 
@@ -27,7 +27,58 @@ Similarly, calculations for output can be done between simulator steps. If these
 
 Since it may be decided, after a number of simulator steps, that more iterations are necessary, the simulator should return at least the environment containing the final state. That being the case, everything needed for additional interations could also be wrapped in the same environment. This would be convenient and would tend to prevent errors such as mixing up data meant for one experiment with that of another. And if everything is to be wrapped upon return from the simulator, it may as well be wrapped before entry.
 
-### Initialization
+### Data preparation
 
-The simulator would thus expect an environment containing an initial state array, the number of iterations already performed (perhaps 0,) tables of absorption and flow statistics, and an array of functions to be executed between steps.
+The simulator would thus expect an environment containing an initial state array, the number of iterations already performed (perhaps 0,) tables of absorption and flow statistics, and an array of functions to be executed between steps. The last, being custom, would require nothing special for their preparation.
+
+#### Tables
+
+Tables of absorption and flow require data from photon-level runs. Photon-level runs should eventually be automated. However, adequate data for immediate purposes has already been generated, so creating tables from the existing data takes precedence. The data itself is in files `data/vox_probs.csv`, `data/vox_probs_stained_gray.csv`, and `data/boundary_crossing_probs.csv`. The first two files contain estimated probabilities of absorption, scattering, and voxel boundary encounters based on tissue type and reasonable estimates of optical properties. Their content should be combined into a single table (data frame) when they are loaded. The third file contains a table of boundary crossing probabilities based on pairs of tissue types.
+
+The second file contains statistics for gray matter stained at various concentrations. Since boundary crossing statistics should not be affected by staining, the third file has no distinct entries for stained tissue types. Such entries, however, will be needed.
+
+Tables themselves do not require much memory, but they are manipulated during simulation. It may be prudent, therefore, minimize them by including only data which is needed for a run.
+
+#### State array
+
+The state array structure used by the previous prototype seems adequate. It is a 4D array. The first dimension holds the state and the remaining 3 identifying the voxel. The state consists of 3 numbers: `tissue`, `energy`, and `cum_absorbed`. Thus `state[1, i, j, k]` is the tissue identifier of voxel `i,j,k`. Currently, this is a number between 0 and 11, for the 11 tissue types of the BrainWeb phantom and air, and a number between 21 and 34 for various concentrations of dye in gray matter. In addition, `state[2, i, j, k]` is the internal energy of voxel `i,j,k` and `state[3, i, j, k]` is the cumulative energy absorbed by its chromophores and dyes.
+
+Initially, the `energy` and `cum_absorbed` fields of all voxel states should be 0, but perhaps a function to do otherwise should be included.
+
+In general, simulations will involve a sub-volume of the BrainWeb phantom, rather than the phantom as a whole. A function to select that volume should be part of the toolchain which initializes a state array.
+
+Moreover, which voxels are to be stained and in what concentration will vary. Thus a function to stain portions of a selected sub-volume should also be part of the initialization toolchain. Concentration should probably be a parameter of this function.
+
+If the state array is prepared prior to preparation of tables, information as to which tissue types are needed can then be used to minimize table size.
+
+#### Functions to be executed between steps
+
+This would just be an array of functions, perhaps passed as a parameter.
+
+#### Anticipated Architecture
+
+1. Prepare state array.
+    a. Load a sub-volume of the phantom into state array (a custom function)
+    b. Stain selected voxels (a custom function related to the first)
+    c. Extract required tissue types
+    d. Perform any custom initializations (a possibly empty array of custom functions)
+2. Prepare tables
+    a. Load tables (a custom function giving tables in standard format)
+    b. Discard entries not required by 1.c. above
+    c. Fill in missing boundary crossing stats (a custom function)
+3. Return an environment containing
+    a. Step count of 0
+    b. Initialized state array
+    c. Tables
+    d. An array of functions to be executed between steps
+
+### Code
+
+Coding began with data prep. Data, of course, is required before simulation code can be tested.
+
+1. Prepare state array
+    a. Coding suggests that 1.a, and 1.b are best combined in a single function which returns a completely initialized phantom as a raw byte volume.
+    b. Incorporating the raw byte volume into a state array should be a piece of standard code, as should extracting unique tissue types.
+    c. Custom initializations can remain with a default of NULL.
+
 
