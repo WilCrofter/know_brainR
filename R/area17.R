@@ -1,4 +1,4 @@
-## Utility to prepare BrainWeb phantom Area 17 for voxel-level simulation.
+## Utilities for voxel-level simulation on BrainWeb phantom Area 17.
 
 #' Return a volume of the BrainWeb phantom which contains its primary visual cortex
 #' (area 17) with foveal area properly stained.
@@ -33,7 +33,9 @@ raw2numeric <- function(raw_array){
 
 #' Return the indices of the voxels on the scalp surface within
 #' an 11x11 square area surrounding voxel x=z=20 of the area17 volume.
-excitationArea17 <- function(e){
+#' @param e an environment such that e$state is the state of area 17
+#' @return a 121x3 array of scalp coordinates
+scalpArea17 <- function(e){
   ans <- integer()
   for(ix in seq(20-5, 20+5)){
     for(iz in seq(20-5, 20+5)){
@@ -44,3 +46,24 @@ excitationArea17 <- function(e){
   ans
 }
 
+#' A utility to provide excitation at the scalp for simulations involving
+#' area 17. This utility itself should not be provided, since an excitation
+#' function must have only one parameter--the environment containing the state.
+#' Instead, provide a function such as function(e)excitationForArea17(e,500),
+#' i.e., a derivative function where the parameter n is fixed.
+#' @param e environment containing the state
+#' @param n the number of steps for which unit excitation should be provided.
+#' @return none. The function has a side effect upon e$state.
+excitationForArea17 <- function(e, n){
+  if(!exists(scalp_indices, envir=e, inherits=FALSE)){
+    e$scalp_indices <- scalpArea17(e)
+  }
+  if(e$step <= n){
+    for(i in 1:nrow(e$scalp_indices)){
+      e$state[2, scalp_indices[i,1], scalp_indices[i,2], scalp_incices[i,3]] <-
+        1 + e$state[2, scalp_indices[i,1], scalp_indices[i,2], scalp_incices[i,3]]
+    }
+  }
+  invisible()
+}
+  
