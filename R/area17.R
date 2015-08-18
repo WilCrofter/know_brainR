@@ -1,7 +1,7 @@
 ## Utilities for voxel-level simulation on BrainWeb phantom Area 17.
 
-#' Return a volume of the BrainWeb phantom which contains its primary visual cortex
-#' (area 17) with foveal area properly stained.
+#' Returns an initialized state array for a volume of the BrainWeb phantom 
+#' which includes its primary visual cortex (area 17) with foveal area properly stained.
 #' @param fname_BrainWeb_Phantom path to the BrainWeb file
 #' @param fovealTissueID an integer between 21 and 34 (inclusive) indicating level of dye concentration. 
 brainWebArea17 <- function(fname_BrainWeb_Phantom, fovealTissueID){
@@ -18,17 +18,11 @@ brainWebArea17 <- function(fname_BrainWeb_Phantom, fovealTissueID){
       a17[ix, min(which(as.integer(a17[ix,,iz])==3)), iz] <- fovealTissueID
     }
   }
-  a17
-}
-
-#' Convert an array from type raw to type numeric
-#' @param raw_array an array of type raw
-#' @return an equivalent array of type numeric
-raw2numeric <- function(raw_array){
-  d <- dim(raw_array)
-  raw_array <- as.numeric(raw_array)
-  dim(raw_array) <- d
-  raw_array
+  d <- dim(a17)
+  ans <- numeric(3*prod(dim(a17)))
+  dim(ans) <- c(3, dim(a17))
+  ans[1,,,] <- raw2numeric(a17)
+  ans
 }
 
 #' Return the indices of the voxels on the scalp surface within

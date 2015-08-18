@@ -72,13 +72,6 @@ This would just be an array of functions, perhaps passed as a parameter.
     c. Tables
     d. An array of functions to be executed between steps
 
-### Code
+### Critque and revision
 
-Coding began with data prep. Data, of course, is required before simulation code can be tested.
-
-1. Prepare state array
-    a. Coding suggests that 1.a, and 1.b are best combined in a single function which returns a completely initialized phantom as a raw byte volume.
-    b. Incorporating the raw byte volume into a state array should be a piece of standard code, as should extracting unique tissue types.
-    c. Custom initializations can remain with a default of NULL.
-
-
+Prototype code suggests a single custom function should load the phantom and return it as an initialized state array (steps 1.a, 1.b, and 1.d above.) The reason for this is that associated custom functions, such as the one which provides excitation between simulation steps, must handle the phantom in the form of a state array. Rather than carry two forms, such as raw bytes and a state array, further into code it seems better to standardize data as a state array right off the bat. T
