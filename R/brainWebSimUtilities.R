@@ -8,8 +8,10 @@ raw2numeric <- function(raw_array){
   raw_array
 }
 
-#' Prepare statistical tables for voxel-level simulation on BrainWeb volumes
+#' Return functions to access statistical tables for voxel-level simulation 
+#' on BrainWeb volumes.
 brainWebTables <- function(vox_prob_files, boundary_crossing_files){
+  # Load tables into this environment
   readandmerge <- function(files){
     ltabs <- lapply(files, function(f)read.table(f, header=TRUE, sep=',', as.is=TRUE))
     ans <- ltabs[[1]]
@@ -17,21 +19,23 @@ brainWebTables <- function(vox_prob_files, boundary_crossing_files){
     ans
   }
   vox_probs <- readandmerge(vox_prob_files)
+  # Tag vox_probs rows by id for easy lookup
+  rownames(vox_probs) <- vox_probs$id
   bdry_probs <- readandmerge(boundary_crossing_files)
-  # Boundary probs for stained gray matter (id > 20) will be the same as for
-  # gray matter itself. Augment tables to reflect this
-  # First determine id's for stained gray matter
-  idx <- vox_probs$id > 20
-  ids <- vox_probs$id[idx]
-  tissues <- vox_probs$tissue[idx]
-  # append repetitions of gray matter columns for each stain identifier
-  for(n in 1:length(ids))bdry_probs[,tissues[n]] <- bdry_probs[, "Gray.Matter"]
-  # append repetitions of gray matter row for each stain identifier
-  gmr <- bdry_probs[bdry_probs$source_tissue == "Gray Matter",]
-  for(n in 1:length(ids)){
-    gmr[1,1] <- tissues[n]
-    bdry_probs <- rbind(bdry_probs, gmr)
+  # Remove readandmerge so it doesn't end up in the environment 
+  # of the returned functions.
+  rm(readandmerge)
+  # Function to return absorption probabilities
+  pAbsorption <- function(id)bdry_probs[as.character(id),"p_absorb"]
+  # Function to return probability of hitting a boundary
+  pBoundary <- function(id)bdry_probs[as.character(id),"p_boundary"]
+  # Function to return probability of flow from id1 to id2
+  pFlow <- function(id1, id2){
+    # id's exceeding 11 are gray matter
+    if(id1 > 11)id1 <- 2
+    if(id2 > 11)id2 <- 2
+    bdry_probs[id1, 2 + id2]
   }
-  list(vox_probs=vox_probs, bdry_probs=bdry_probs)
+  list(pAbsorption=pAbsorption, pBoundary=pBoundary, pFlow=pFlow)
 } 
 

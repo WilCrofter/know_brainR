@@ -126,32 +126,35 @@ img {
 </ol></li>
 </ol>
 </div>
-</div>
-<div id="critque-and-revision" class="section level3">
-<h3>Critque and revision</h3>
+<div id="critique-based-on-initial-coding-attempts." class="section level4">
+<h4>Critique based on initial coding attempts.</h4>
 <ol style="list-style-type: decimal">
 <li>State array
 <ul>
-<li>Prototype coding suggests a single custom function should load the phantom and return it as an initialized state array (steps 1.a, 1.b, and 1.d above.) The reason for this is that associated custom functions, such as the one which provides excitation between simulation steps, must handle the phantom in the form of a state array. Rather than carry two forms, such as raw bytes and a state array, further into code it seems better to standardize data as a state array right off the bat.</li>
+<li>Coding suggests a single custom function should load the phantom and return it as an initialized state array (steps 1.a, 1.b, and 1.d above.) The reason for this is that associated custom functions, such as the one which provides excitation between simulation steps, must handle the phantom in the form of a state array. Rather than carry two forms, such as raw bytes and a state array, further into code it seems better to standardize data as a state array right off the bat.</li>
 </ul></li>
 <li>Tables
 <ul>
-<li>Prototype coding suggests that expanding the table of boundary crossing statistics is awkward, hence error prone. Keeping the tables simple and mapping tissue id’s to table rows or columns seems better.</li>
+<li>Coding suggests that expanding the table of boundary crossing statistics is awkward, hence error prone. Keeping the tables simple and mapping tissue id’s to table rows or columns seems better.</li>
 <li>In the first simulator prototype, the boundary crossing case is handled by the following function, <code>flow_fractions</code>. Lookup in the <code>boundary_probs</code> table could be replaced by a function. This option seems most flexible.</li>
 </ul>
 <pre class="r"><code>flow_fractions &lt;- function(M1, M2, bdry_probs){
   ans &lt;- numeric(length(M1))
   d &lt;- dim(ans) &lt;- dim(M1)
   for(i in 1:(d[1])){
-for(j in 1:(d[2])){
-  for(k in 1:d[3]){
-    ans[i,j,k] &lt;- bdry_probs[M1[i,j,k], 2+M2[i,j,k]]
-  }
-}
+    for(j in 1:(d[2])){
+      for(k in 1:d[3]){
+        ans[i,j,k] &lt;- bdry_probs[M1[i,j,k], 2+M2[i,j,k]]
+      }
+    }
   }
   ans
-}</code></pre></li>
+}</code></pre>
+<ul>
+<li>In other words, rather than supplying a pair of tables, data prep should supply a pair of custom functions which take tissue id’s as arguments and return appropriate stats.</li>
+</ul></li>
 </ol>
+</div>
 </div>
 
 

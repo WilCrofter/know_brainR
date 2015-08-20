@@ -1,5 +1,7 @@
 ## Utilities for voxel-level simulation on BrainWeb phantom Area 17.
 
+source("R/brainWebSimUtilities.R", local=TRUE)
+
 #' Returns an initialized state array for a volume of the BrainWeb phantom 
 #' which includes its primary visual cortex (area 17) with foveal area properly stained.
 #' @param fname_BrainWeb_Phantom path to the BrainWeb file
