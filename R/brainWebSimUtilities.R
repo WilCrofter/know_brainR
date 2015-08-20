@@ -26,9 +26,9 @@ brainWebTables <- function(vox_prob_files, boundary_crossing_files){
   # of the returned functions.
   rm(readandmerge)
   # Function to return absorption probabilities
-  pAbsorption <- function(id)bdry_probs[as.character(id),"p_absorb"]
+  pAbsorption <- function(id)vox_probs[as.character(id),"p_absorb"]
   # Function to return probability of hitting a boundary
-  pBoundary <- function(id)bdry_probs[as.character(id),"p_boundary"]
+  pBoundary <- function(id)vox_probs[as.character(id),"p_boundary"]
   # Function to return probability of flow from id1 to id2
   pFlow <- function(id1, id2){
     # id's exceeding 11 are gray matter
