@@ -8,9 +8,9 @@ raw2numeric <- function(raw_array){
   raw_array
 }
 
-#' Return functions to access statistical tables for voxel-level simulation 
+#' Return an array of functions to access statistical tables for voxel-level simulation 
 #' on BrainWeb volumes.
-brainWebTables <- function(vox_prob_files, boundary_crossing_files){
+brainWebAccessors <- function(vox_prob_files, boundary_crossing_files){
   # Load tables into this environment
   readandmerge <- function(files){
     ltabs <- lapply(files, function(f)read.table(f, header=TRUE, sep=',', as.is=TRUE))
@@ -36,6 +36,6 @@ brainWebTables <- function(vox_prob_files, boundary_crossing_files){
     if(id2 > 11)id2 <- 2
     bdry_probs[id1, 2 + id2]
   }
-  list(pAbsorption=pAbsorption, pBoundary=pBoundary, pFlow=pFlow)
+  c(pAbsorption=pAbsorption, pBoundary=pBoundary, pFlow=pFlow)
 } 
 

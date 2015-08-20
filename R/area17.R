@@ -50,7 +50,7 @@ scalpArea17 <- function(e){
 #' @param e environment containing the state
 #' @param n the number of steps for which unit excitation should be provided.
 #' @return none. The function has a side effect upon e$state.
-excitationForArea17 <- function(e, n){
+laserExcitationForArea17 <- function(e, n){
   if(!exists(scalp_indices, envir=e, inherits=FALSE)){
     e$scalp_indices <- scalpArea17(e)
   }
@@ -62,4 +62,31 @@ excitationForArea17 <- function(e, n){
   }
   invisible()
 }
-  
+
+#' Return an environment containing:
+#' 1. An initialized state array for area17
+#' 2. Three accessor functions, pAbsorption(id), pBoundary(id), and pFlow(id1, id2)
+#' 3. An array of functions to execute in sequence between simulation steps
+#' 4. A variable, step, initialized to 0.
+#' @param fname_BrainWeb_Phantom path to the BrainWeb phantom
+#' @param fovealTissueID id of stained gray matter, an integer between 21 and 34
+#' @param vox_prob_files an array of paths to csv files of absorption and boundary encounter statistics
+#' @param boundary_crossing_files an array of paths to files with boundary crossing probabilities 
+#' @param between steps an array of functions of the form function(e), where e is an environment
+#' to be executed between simulator steps
+area17env <- function(fname_BrainWeb_Phantom, fovealTissueID, 
+                      vox_prob_files, boundary_crossing_files,
+                      between_stps){
+  # instantiate everything in the run-time environment of this function
+  step <- 0
+  state <- brainWebArea17(fname_BrainWeb_Phantom, fovealTissueID)
+  temp <- brainWebAccessors(vox_prob_files, boundary_crossing_files)
+  pAbsorbtion <- temp$pAbsorption
+  pBoundary <- temp$pBoundary
+  pFlow <- temp$pFlow
+  # remove temp, but keep the calling parameters for reference even though
+  # they are not required for simulation
+  rm(temp)
+  # return the run-time environment of this function
+  return(environment())
+}
