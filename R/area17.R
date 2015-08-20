@@ -68,23 +68,23 @@ laserExcitationForArea17 <- function(e, n){
 #' 2. Three accessor functions, pAbsorption(id), pBoundary(id), and pFlow(id1, id2)
 #' 3. An array of functions to execute in sequence between simulation steps
 #' 4. A variable, step, initialized to 0.
-#' @param fname_BrainWeb_Phantom path to the BrainWeb phantom
+#' @param path2data path to the directory containing the BrainWeb phantom and stat tables.
 #' @param fovealTissueID id of stained gray matter, an integer between 21 and 34
-#' @param vox_prob_files an array of paths to csv files of absorption and boundary encounter statistics
-#' @param boundary_crossing_files an array of paths to files with boundary crossing probabilities 
 #' @param between steps an array of functions of the form function(e), where e is an environment
 #' to be executed between simulator steps
-area17env <- function(fname_BrainWeb_Phantom, fovealTissueID, 
-                      vox_prob_files, boundary_crossing_files,
-                      between_stps){
+area17env <- function(path2data, fovealTissueID, between_stps){
   # instantiate everything in the run-time environment of this function
   step <- 0
-  state <- brainWebArea17(fname_BrainWeb_Phantom, fovealTissueID)
+  path2_BrainWeb_Phantom <- file.path(path2data, "subject04_crisp_v.rawb")
+  state <- brainWebArea17(path2_BrainWeb_Phantom, fovealTissueID)
+  vox_prob_files <- file.path(path2data, c("vox_probs.csv", 
+                                           "vox_probs_stained_gray.csv"))
+  boundary_crossing_files <- file.path(path2data, "boundary_crossing_probs.csv")
   temp <- brainWebAccessors(vox_prob_files, boundary_crossing_files)
   pAbsorbtion <- temp$pAbsorption
   pBoundary <- temp$pBoundary
   pFlow <- temp$pFlow
-  # remove temp, but keep the calling parameters for reference even though
+  # remove temp, but keep the file paths and parameters for reference even though
   # they are not required for simulation
   rm(temp)
   # return the run-time environment of this function
