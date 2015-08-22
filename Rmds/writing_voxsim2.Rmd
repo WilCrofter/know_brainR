@@ -1,0 +1,141 @@
+---
+title: "Writing vox sim 2"
+author: "W. Bauer"
+date: "August 2, 2015"
+output: html_document
+---
+
+These are development notes for a second voxel-level simulator--preconceptions, problems, architecture. They are meant primarily as reference for developers. They are not likely to be of general interest.
+
+The point is to simulate diffusive propagation of NIR photons using only relative photon density per voxel and relevant statistics estimated from simulation of individual photon trajectories. The first prototype worked out the core logic and was finalized in [file voxSim.R](https://github.com/brain-initiative/know_brainR/blob/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e/R/voxSim.R) of commit [72e86c8bb7](https://github.com/brain-initiative/know_brainR/tree/72e86c8bb70bbc7957afd94e2ffd50fd5dcd121e).
+
+### Simulator architecture
+
+A voxel-level state array will typically be large, and passing it as a parameter would result in a copy. A conventional way to avoid this problem in R is to embed the array in an environment. Environments, unlike most R objects, are passed by reference i.e., not copied. All references to an environment point to the same object.
+
+Despite its efficiency relative to photon-level simulation, voxel-level simulation in the manner anticipated requires about 500 steps per nanosecond. Since the system is linear, use cases are likely to consist of elementary runs over short spans of time, with results scaled, delayed, and superimposed to simulate more complex scenarios. What counts as a result, hence what should be saved, is likely to vary. Some plug-in mechanism to customize output is therefore desirable. It could be as simple as a function passed to the simulator as a parameter.
+
+NIR sources will vary. Anticipated use cases include: externally applied NIR lasers which may be constant, pulsed, or otherwise modulated; fluorescent dyes emanating from multiple voxels of gray matter stained at various concentrations and in various states of polarization, pH, or lactate concentration. Thus, a plug-in mechanism for excitation is also desirable.
+
+If the state array is to be wrapped and passed in an environment, it seems most flexible to decouple its preparation from the simulator module itself. The same can be said for excitation and output options, and for tables of absorption and flow statistics which govern dynamics. All of these will vary with the particular run or experiment of interest. The simulator module can ignore the manner in which they are prepared, as long as the way in which they interface with the simulator module is fixed. An interface architecture is thus indicated.
+
+To define an interface, a step of the core simulator must be considered. A step works as follows. First, for each voxel, the proportion of photons absorbed and the proportion hitting each face of its boundary are calculated. (The rest will be internally scattered. Proportions are estimated from photon-level simulations.) The proportion absorbed is added to an appropriate state variable. Second, for each pair of adjacent voxels, the flow across their common boundary is calculated. Third, for each voxel, the net loss (to absorption and outward flow) and gain (from inward flow) are calculated and subtracted or added to its state.
+
+Excitation amounts to adding photons to certain voxels. For excitation by external laser, this would amount to adding photons to voxels in selected regions of the scalp surface. For emission from a voxel of stained gray matter, this would amount to calculating for each voxel the proportion of absorbed photons which would fluoresce in approximately 1/500 ns, subtracting the result from the appropriate state variable, and adding it to the proportion of photons actively propagating in the voxel. Such calculations can be done between steps of the simulator.
+
+Similarly, calculations for output can be done between simulator steps. If these two functions, and perhaps unanticipated others, were invoked in a uniform way, e.g., with the same parameters in the same order, they could be stored in an array of functions and executed sequentially between steps. Standardizing in this way would provide a simple plug-in mechanism without having to constrain the number or the functionality of plug-ins before the fact.
+
+Since it may be decided, after a number of simulator steps, that more iterations are necessary, the simulator should return at least the environment containing the final state. That being the case, everything needed for additional interations could also be wrapped in the same environment. This would be convenient and would tend to prevent errors such as mixing up data meant for one experiment with that of another. And if everything is to be wrapped upon return from the simulator, it may as well be wrapped before entry.
+
+### Data preparation
+
+The simulator would thus expect an environment containing an initial state array, the number of iterations already performed (perhaps 0,) tables of absorption and flow statistics, and an array of functions to be executed between steps. The last, being custom, would require nothing special for their preparation.
+
+#### Tables
+
+Tables of absorption and flow require data from photon-level runs. Photon-level runs should eventually be automated. However, adequate data for immediate purposes has already been generated, so creating tables from the existing data takes precedence. The data itself is in files `data/vox_probs.csv`, `data/vox_probs_stained_gray.csv`, and `data/boundary_crossing_probs.csv`. The first two files contain estimated probabilities of absorption, scattering, and voxel boundary encounters based on tissue type and reasonable estimates of optical properties. Their content should be combined into a single table (data frame) when they are loaded. The third file contains a table of boundary crossing probabilities based on pairs of tissue types.
+
+The second file contains statistics for gray matter stained at various concentrations. Since boundary crossing statistics should not be affected by staining, the third file has no distinct entries for stained tissue types. Such entries, however, will be needed.
+
+Tables themselves do not require much memory, but they are manipulated during simulation. It may be prudent, therefore, minimize them by including only data which is needed for a run.
+
+#### State array
+
+The state array structure used by the previous prototype seems adequate. It is a 4D array. The first dimension holds the state and the remaining 3 identifying the voxel. The state consists of 3 numbers: `tissue`, `energy`, and `cum_absorbed`. Thus `state[1, i, j, k]` is the tissue identifier of voxel `i,j,k`. Currently, this is a number between 0 and 11, for the 11 tissue types of the BrainWeb phantom and air, and a number between 21 and 34 for various concentrations of dye in gray matter. In addition, `state[2, i, j, k]` is the internal energy of voxel `i,j,k` and `state[3, i, j, k]` is the cumulative energy absorbed by its chromophores and dyes.
+
+Initially, the `energy` and `cum_absorbed` fields of all voxel states should be 0, but perhaps a function to do otherwise should be included.
+
+In general, simulations will involve a sub-volume of the BrainWeb phantom, rather than the phantom as a whole. A function to select that volume should be part of the toolchain which initializes a state array.
+
+Moreover, which voxels are to be stained and in what concentration will vary. Thus a function to stain portions of a selected sub-volume should also be part of the initialization toolchain. Concentration should probably be a parameter of this function.
+
+If the state array is prepared prior to preparation of tables, information as to which tissue types are needed can then be used to minimize table size.
+
+#### Functions to be executed between steps
+
+This would just be an array of functions, perhaps passed as a parameter.
+
+#### Anticipated Architecture
+
+1. Prepare state array.
+    a. Load a sub-volume of the phantom into state array (a custom function)
+    b. Stain selected voxels (a custom function related to the first)
+    c. Extract required tissue types
+    d. Perform any custom initializations (a possibly empty array of custom functions)
+2. Prepare tables
+    a. Load tables (a custom function giving tables in standard format)
+    b. Discard entries not required by 1.c. above
+    c. Fill in missing boundary crossing stats (a custom function)
+3. Return an environment containing
+    a. Step count of 0
+    b. Initialized state array
+    c. Tables
+    d. An array of functions to be executed between steps
+
+#### Revisions based on initial coding attempts.
+
+1. State array
+    + Coding suggests a single custom function should load the phantom and return it as an initialized state array (steps 1.a, 1.b, and 1.d above.) The reason for this is that associated custom functions, such as the one which provides excitation between simulation steps, must handle the phantom in the form of a state array. Rather than carry two forms, such as raw bytes and a state array, further into code it seems better to standardize data as a state array right off the bat.
+2. Tables
+    + Coding suggests that expanding the table of boundary crossing statistics is awkward, hence error prone. Keeping the tables simple and mapping tissue id's to table rows or columns seems better.
+    + In the first simulator prototype, the boundary crossing case is handled by the following function, `flow_fractions`. Lookup in the `boundary_probs` table could be replaced by a function. This option seems most flexible.
+    ```{r}
+    flow_fractions <- function(M1, M2, bdry_probs){
+      ans <- numeric(length(M1))
+      d <- dim(ans) <- dim(M1)
+      for(i in 1:(d[1])){
+        for(j in 1:(d[2])){
+          for(k in 1:d[3]){
+            ans[i,j,k] <- bdry_probs[M1[i,j,k], 2+M2[i,j,k]]
+          }
+        }
+      }
+      ans
+    }
+```
+    + In other words, rather than supplying a pair of tables, data prep should supply a custom functions which take tissue id's as arguments and return appropriate stats. Say, `pAbsorption(id)`, `pBoundary(id)`, and `pFlow(id1, id2)`. This will require some restructuring of the first prototype simulator.
+
+### Simulator prototype
+
+#### Considerations
+
+Time-memory experiments unambiguously favor maximum use of memory. In R, componentwise arithmetic on arrays is relegated to compiled libraries which, of course, are much faster than interpreted loops. For the simulator under development the cumulative speed difference makes interpreted loops a non-starter.
+
+The arrays in question are equal in size to the phantom volume. In the case of the Area 17 volume, this is a bit less than a megabyte. Since R uses virtual memory which is unlimited on my development system (and many other \*nix systems) the absolute amount of memory required is not a problem. (It could be a problem on Windows machines.) There may be performance penalties associated with frequent memory allocation, so I'll try to avoid that.
+
+The two basic simulator steps are calculation of absorption per voxel, and calculation of flow between voxels. The former could be a multiplication of two arrays followed by an addition and subtraction of two arrays. The latter seems to require multiplication by 6 different arrays (1 per voxel face) and as many additions and subtractions.
+
+#### Code
+
+File `R/voxSim.R` contains a simulator implemented along the lines outlined above. It requires 7 arrays each equal in size to the voxelized volume interest. These are stored in the enviroment which encloses the voxelized volume itself, and created automatically if they don't already exist. They contain, for each voxel, absorption statistics and outflow statistics for each of the 6 voxel faces.
+
+File `R/brainWebSimUtilities.R` contains data preparation utilities for BrainWeb volumes in general, and `R/area17.R` contains utilities for the BrainWeb phantom's primary visual cortex (foveal area) in particular. This volume contains 39x80x39 = 106470 pixels.
+
+Using these utilities, data preparation requires three arguments, the directory containing csv files of voxel level statistics, an identifier indicating the concentration of dye in the foveal area, and a function (or vector of functions) to be executed between simulation steps. These are, respectively, `"../data"`, `22`, and `function(e)laserExcitationForArea17(e,1)` in the call below. The call is wrapped in a timer for performance estimation.
+
+```{r}
+source("../R/area17.R")
+source("../R/brainWebSimUtilities.R")
+source("../R/voxSim.R")
+system.time(
+  a17 <- area17env("../data", 22, function(e)laserExcitationForArea17(e, 1))
+)
+```
+
+The simulator will initialize absorption and flow arrays automatically, if needed. It's done external to the simulator, below, to estimate initialization's performance.
+
+```{r }
+system.time(
+  initSimStatArrays(a17)
+)
+```
+
+Finally, 500 simulation steps (1 nanosecond) are applied to the already initialized volume. System times (AMD dual-core 3.6 GHz) are obviously not prohibitive.
+
+```{r}
+system.time(
+  voxSim(a17, 500)
+)
+```
+
+Testing and verificaiton remain to be done.
