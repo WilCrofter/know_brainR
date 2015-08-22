@@ -1,80 +1,118 @@
 
-fracAbs <- function(e){
-  nx = dim(e$state)[2]
-  ny = dim(e$state)[3]
-  nz = dim(e$state)[4]
+initSimData <- function(e){
+  # initialize arrays of statistics
   # Fraction of voxel energies absorbed per step
-  frac_abs <- sapply(as.vector(e$state[1,,,]), function(i)e$pAbsorbtion(i))
-  dim(frac_abs) <- c(nx,ny,nz)
-  frac_abs
-}
-
-# Stub for outflow in +x direction.
-# TODO: figure out how to control dimension and direction
-fracBdry <- function(e){
-  nx = dim(e$state)[2]
-  ny = dim(e$state)[3]
-  nz = dim(e$state)[4]
-  # Fraction of voxel photons encountering boundary per step
-  ans <- sapply(as.vector(e$state[1,,,]), function(i)e$pBoundary(i))/6
-  dim(ans) <- c(nx,ny,nz)
+  e$absorbed <- array(sapply(as.vector(e$state[1,,,]), e$pAbsorbtion),
+                      c(nx,ny,nz))
+  # Fraction of voxel photons encountering each of 6 voxel boundaries
+  bdry <- array(sapply(as.vector(e$state[1,,,]), function(i)e$pBoundary(i))/6,
+                c(nx,ny,nz))
   v1 <- as.vector(e$state[1,-nx,,])
   v2 <- as.vector(e$state[1,-1,,])
-  ans[-nx,,] <- ans[-nx,,]*array(mapply(e$pFlow, v1, v2), c(nx-1,ny,nz))
-  ans
+  e$xplus <- e$xminus <- bdry
+  e$xplus[-nx,,] <- e$xplus[-nx,,]*array(mapply(e$pFlow, v1, v2), c(nx-1,ny,nz))
+  e$xminus[-1,,] <- e$xminus[-1,,]*array(mapply(e$pFlow, v2, v1), c(nx-1,ny,nz))
+  v1 <- as.vector(e$state[1,,-ny,])
+  v2 <- as.vector(e$state[1,,-1,])
+  e$yplus <- e$yminus <- bdry
+  e$yplus[,-ny,] <- e$yplus[,-ny,]*array(mapply(e$pFlow, v1, v2), c(nx,ny-1,nz))
+  e$yminus[,-1,] <- e$yminus[,-1,]*array(mapply(e$pFlow, v2, v1), c(nx,ny-1,nz))
+  v1 <- as.vector(e$state[1,,,-nz])
+  v2 <- as.vector(e$state[1,,,-1])
+  e$zplus <- e$zminus <- bdry
+  e$zplus[,,-nz] <- e$zplus[,,-nz]*array(mapply(e$pFlow, v1, v2), c(nx,ny,nz-1))
+  e$zminus[,,-1] <- e$zminus[,,-1]*array(mapply(e$pFlow, v2, v1), c(nx,ny,nz-1))
+  TRUE
 }
-
-testme <- function(e){
-temp <- fracBdry(e)
-e$state[1,20:21,40,20]
-print(temp[20,40,20])
-# [1] 0.02311349
-print(e$pBoundary(22)*e$pFlow(22,2))
-# [1] 0.1386809
-}
-
 
 voxSim <- function(e, nsteps){
   nx = dim(e$state)[2]
   ny = dim(e$state)[3]
   nz = dim(e$state)[4]
-  while(e$step < e$step + nsteps){
-    # copying the current state of energy seems necessary
+  for(istep in 1:nsteps){
     energy <- e$state[2,,,]
-    for(iy in 1:ny){
-      for(ix in 1:nx){
-        for(iz in 1:nz){
-          id <- e$state[1,ix,iy,iz]
-          if(id == 0)next # don't care about background
-          erg <- energy[ix,iy,iz]
-          # Absorption
-          ab <- erg*e$pAbsorbtion(id)
-          e$state[2,ix,iy,iz] <- e$state[2,ix,iy,iz] - ab
-          e$state[3,ix,iy,iz] <- e$state[3,ix,iy,iz] + ab
-          # Boundary encounters
-          bd <- erg*e$pBoundary(id)/6 # (per boundary)
-          # Flow across each boundary TODO: fix
-          dx <- c(ix-1, ix+1); dx <- dx[dx >= 1 & dx <= nx]
-          dy <- c(iy-1, iy+1); dy <- dy[dy >= 1 & dy <= ny]
-          dz <- c(iz-1, iz+1); dz <- dz[dz >= 1 & dz <= nz]
-          for(i in dx){
-            for(j in dy){
-              for(k in dz){
-                outflow <- erg*bd*e$pFlow(id, e$state[1,i,j,k])
-                e$state[2,ix,iy,iz] <- e$state[2,ix,iy,iz] - outflow
-                e$state[2,i,j,k] <- e$state[2,i,j,k] + outflow
-              }
-            }
-          }
-          # Treat volume boundaries as absorbing barriers
-          if(ix == 1 | ix == nx)e$state[3,ix,iy,iz] <- e$state[3,ix,iy,iz] + bd
-          if(iy == 1 | iy == ny)e$state[3,ix,iy,iz] <- e$state[3,ix,iy,iz] + bd
-          if(iz == 1 | iz == nz)e$state[3,ix,iy,iz] <- e$state[3,ix,iy,iz] + bd
-        }
-      }
-    }
+    # Absorption
+    a <- energy*e$absorbed
+    e$state[3,,,] <- e$state[3,,,] + a
+    e$state[2,,,] <- e$state[2,,,] - a
+    # Flow
+    #  in +x direction
+    outflow <- energy*e$xplus
+    e$state[2,,,] <- e$state[2,,,] - outflow
+    e$state[2,-1,,] <- e$state[2,-1,,] + outflow[-nx,,]
+    #  in -x direction
+    outflow <- energy*e$xminus
+    e$state[2,,,] <- e$state[2,,,] - outflow
+    e$state[2,-nx,,] <- e$state[2,-nx,,] + outflow[-1,,]
+    #  in +y direction
+    outflow <- energy*e$yplus
+    e$state[2,,,] <- e$state[2,,,] - outflow
+    e$state[2,,-1,] <- e$state[2,,-1,] + outflow[,-ny,]
+    #  in -y direction
+    outflow <- energy*e$yminus
+    e$state[2,,,] <- e$state[2,,,] - outflow
+    e$state[2,,-ny,] <- e$state[2,,-ny,] + outflow[,-1,]
+    #  in +z direction
+    outflow <- energy*e$zplus
+    e$state[2,,,] <- e$state[2,,,] - outflow
+    e$state[2,,,-1] <- e$state[2,,,-1] + outflow[,,-nz]
+    #  in -z direction
+    outflow <- energy*e$zminus
+    e$state[2,,,] <- e$state[2,,,] - outflow
+    e$state[2,,,-nz] <- e$state[2,,,-nz] + outflow[,,-1]
     # TODO: between steps
     e$step <- e$step + 1
   }
   e
+}
+
+testAbsorption <- function(e, ntests, seed){
+  set.seed(seed)
+  nx = dim(e$state)[2]
+  ny = dim(e$state)[3]
+  nz = dim(e$state)[4]
+  for(k in 1:ntests){
+    ix <- sample(nx, 1)
+    iy <- sample(ny, 1)
+    iz <- sample(nz, 1)
+    if(!isTRUE(all.equal(e$absorbed[ix,iy,iz], e$pAbsorbtion(e$state[1,ix,iy,iz])))){
+      stop(paste("Absorption problem", ix, iy, iz))
+    }
+  }
+  return(TRUE)
+}
+
+testFlow <- function(e, ntests, seed){
+  set.seed(seed)
+  nx = dim(e$state)[2]
+  ny = dim(e$state)[3]
+  nz = dim(e$state)[4]
+  for(k in 1:ntests){
+    ix <- sample(nx-1, 1)
+    iy <- sample(ny-1, 1)
+    iz <- sample(nz-1, 1)
+    id1 <- e$state[1,ix,iy,iz]
+    id2 <- e$state[1,ix+1, iy, iz]
+    id3 <- e$state[1,ix, iy+1, iz]
+    id4 <- e$state[1,ix, iy, iz+1]
+    if(!isTRUE(all.equal(e$xplus[ix,iy,iz], e$pFlow(id1,id2)*e$pBoundary(id1)/6))){
+      stop(paste("xplus problem", ix, iy, iz))
+    }
+    if(!isTRUE(all.equal(e$xminus[ix+1,iy,iz], e$pFlow(id2, id1)*e$pBoundary(id2)/6))){
+      stop(paste("xminus problem",  ix+1, iy, iz))
+    }
+    if(!isTRUE(all.equal(e$yplus[ix,iy,iz], e$pFlow(id1,id3)*e$pBoundary(id1)/6))){
+      stop(paste("yplus problem",  ix, iy, iz))
+    }
+    if(!isTRUE(all.equal(e$yminus[ix,iy+1,iz], e$pFlow(id3,id1)*e$pBoundary(id3)/6))){
+      stop(paste("yminus problem",  ix, iy+1, iz))
+    }
+    if(!isTRUE(all.equal(e$zplus[ix,iy,iz], e$pFlow(id1,id4)*e$pBoundary(id1)/6))){
+      stop(paste("zplus problem", ix, iy, iz))
+    }
+    if(!isTRUE(all.equal(e$zminus[ix,iy,iz+1], e$pFlow(id4,id1)*e$pBoundary(id4)/6))){
+      stop(paste("zminus problem",  ix, iy, iz+1))
+    }
+  }
+  return(TRUE)
 }
