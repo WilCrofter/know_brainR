@@ -126,8 +126,8 @@ img {
 </ol></li>
 </ol>
 </div>
-<div id="critique-based-on-initial-coding-attempts." class="section level4">
-<h4>Critique based on initial coding attempts.</h4>
+<div id="revisions-based-on-initial-coding-attempts." class="section level4">
+<h4>Revisions based on initial coding attempts.</h4>
 <ol style="list-style-type: decimal">
 <li>State array
 <ul>
@@ -151,10 +151,15 @@ img {
   ans
 }</code></pre>
 <ul>
-<li>In other words, rather than supplying a pair of tables, data prep should supply a pair of custom functions which take tissue id’s as arguments and return appropriate stats.</li>
+<li>In other words, rather than supplying a pair of tables, data prep should supply a custom functions which take tissue id’s as arguments and return appropriate stats. Say, <code>pAbsorption(id)</code>, <code>pBoundary(id)</code>, and <code>pFlow(id1, id2)</code>. This will require some restructuring of the first prototype simulator.</li>
 </ul></li>
 </ol>
 </div>
+</div>
+<div id="simulator-prototyping" class="section level3">
+<h3>Simulator prototyping</h3>
+<p>Time-memory experiments unambiguously favor maximum use of memory. In R, componentwise arithmetic on arrays is relegated to compiled libraries which, of course, are much faster than interpreted loops. For the simulator under development the cumulative speed difference makes interpreted loops a non-starter.</p>
+<p>The arrays in question are equal in size to the phantom volume. In the case of the Area 17 volume, this is a bit less than a megabyte. Since R uses virtual memory which is unlimited on my development system (and most other *nix systems) so the <em>extent</em> of memory usage has no theoretical limit, but</p>
 </div>
 
 

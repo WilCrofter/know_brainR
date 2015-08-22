@@ -94,3 +94,11 @@ This would just be an array of functions, perhaps passed as a parameter.
     }
 ```
     + In other words, rather than supplying a pair of tables, data prep should supply a custom functions which take tissue id's as arguments and return appropriate stats. Say, `pAbsorption(id)`, `pBoundary(id)`, and `pFlow(id1, id2)`. This will require some restructuring of the first prototype simulator.
+
+### Simulator prototyping
+
+Time-memory experiments unambiguously favor maximum use of memory. In R, componentwise arithmetic on arrays is relegated to compiled libraries which, of course, are much faster than interpreted loops. For the simulator under development the cumulative speed difference makes interpreted loops a non-starter.
+
+The arrays in question are equal in size to the phantom volume. In the case of the Area 17 volume, this is a bit less than a megabyte. Since R uses virtual memory which is unlimited on my development system (and many other \*nix systems) the absolute amount of memory required is not a problem. (It could be a problem on Windows machines.) There may be performance penalties associated with frequent memory allocation, so I'll try to avoid that.
+
+The two basic simulator steps are calculation of absorption per voxel, and calculation of flow between voxels. The former could be a multiplication of two arrays followed by an addition and subtraction of two arrays. The latter seems to require multiplication by 6 different arrays (1 per voxel face) and as many additions and subtractions.

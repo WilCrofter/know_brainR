@@ -26,11 +26,12 @@ brainWebAccessors <- function(vox_prob_files, boundary_crossing_files){
   # of the returned functions.
   rm(readandmerge)
   # Function to return absorption probabilities
-  pAbsorption <- function(id)vox_probs[as.character(id),"p_absorb"]
+  pAbsorption <- function(id)if(id==0){1}else{vox_probs[as.character(id),"p_absorb"]}
   # Function to return probability of hitting a boundary
-  pBoundary <- function(id)vox_probs[as.character(id),"p_boundary"]
+  pBoundary <- function(id)if(id==0){0}else{vox_probs[as.character(id),"p_boundary"]}
   # Function to return probability of flow from id1 to id2
   pFlow <- function(id1, id2){
+    if(id1==0)return(0)
     # id's exceeding 11 are gray matter
     if(id1 > 11)id1 <- 2
     if(id2 > 11)id2 <- 2
