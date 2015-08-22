@@ -156,10 +156,41 @@ img {
 </ol>
 </div>
 </div>
-<div id="simulator-prototyping" class="section level3">
-<h3>Simulator prototyping</h3>
+<div id="simulator-prototype" class="section level3">
+<h3>Simulator prototype</h3>
+<div id="considerations" class="section level4">
+<h4>Considerations</h4>
 <p>Time-memory experiments unambiguously favor maximum use of memory. In R, componentwise arithmetic on arrays is relegated to compiled libraries which, of course, are much faster than interpreted loops. For the simulator under development the cumulative speed difference makes interpreted loops a non-starter.</p>
-<p>The arrays in question are equal in size to the phantom volume. In the case of the Area 17 volume, this is a bit less than a megabyte. Since R uses virtual memory which is unlimited on my development system (and most other *nix systems) so the <em>extent</em> of memory usage has no theoretical limit, but</p>
+<p>The arrays in question are equal in size to the phantom volume. In the case of the Area 17 volume, this is a bit less than a megabyte. Since R uses virtual memory which is unlimited on my development system (and many other *nix systems) the absolute amount of memory required is not a problem. (It could be a problem on Windows machines.) There may be performance penalties associated with frequent memory allocation, so I’ll try to avoid that.</p>
+<p>The two basic simulator steps are calculation of absorption per voxel, and calculation of flow between voxels. The former could be a multiplication of two arrays followed by an addition and subtraction of two arrays. The latter seems to require multiplication by 6 different arrays (1 per voxel face) and as many additions and subtractions.</p>
+</div>
+<div id="code" class="section level4">
+<h4>Code</h4>
+<p>File <code>R/voxSim.R</code> contains a simulator implemented along the lines outlined above. It requires 7 arrays each equal in size to the voxelized volume interest. These are stored in the enviroment which encloses the voxelized volume itself, and created automatically if they don’t already exist. They contain, for each voxel, absorption statistics and outflow statistics for each of the 6 voxel faces.</p>
+<p>File <code>R/brainWebSimUtilities.R</code> contains data preparation utilities for BrainWeb volumes in general, and <code>R/area17.R</code> contains utilities for the BrainWeb phantom’s primary visual cortex (foveal area) in particular. This volume contains 39x80x39 = 106470 pixels.</p>
+<p>Using these utilities, data preparation requires three arguments, the directory containing csv files of voxel level statistics, an identifier indicating the concentration of dye in the foveal area, and a function (or vector of functions) to be executed between simulation steps. These are, respectively, <code>&quot;../data&quot;</code>, <code>22</code>, and <code>function(e)laserExcitationForArea17(e,1)</code> in the call below. The call is wrapped in a timer for performance estimation.</p>
+<pre class="r"><code>source(&quot;../R/area17.R&quot;)
+source(&quot;../R/brainWebSimUtilities.R&quot;)
+source(&quot;../R/voxSim.R&quot;)
+system.time(
+  a17 &lt;- area17env(&quot;../data&quot;, 22, function(e)laserExcitationForArea17(e, 1))
+)</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.066   0.056   0.123</code></pre>
+<p>The simulator will initialize absorption and flow arrays automatically, if needed. It’s done external to the simulator, below, to estimate initialization’s performance.</p>
+<pre class="r"><code>system.time(
+  initSimStatArrays(a17)
+)</code></pre>
+<pre><code>##    user  system elapsed 
+##  20.756   0.123  20.915</code></pre>
+<p>Finally, 500 simulation steps (1 nanosecond) are applied to the already initialized volume. System times (AMD dual-core 3.6 GHz) are obviously not prohibitive.</p>
+<pre class="r"><code>system.time(
+  voxSim(a17, 500)
+)</code></pre>
+<pre><code>##    user  system elapsed 
+##   68.84    0.90   70.39</code></pre>
+<p>Testing and verificaiton remain to be done.</p>
+</div>
 </div>
 
 
