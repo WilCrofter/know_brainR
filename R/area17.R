@@ -1,7 +1,5 @@
 ## Utilities for voxel-level simulation on BrainWeb phantom Area 17.
 
-source("R/brainWebSimUtilities.R", local=TRUE)
-
 #' Returns an initialized state array for a volume of the BrainWeb phantom 
 #' which includes its primary visual cortex (area 17) with foveal area properly stained.
 #' @param fname_BrainWeb_Phantom path to the BrainWeb file
@@ -81,7 +79,7 @@ area17env <- function(path2data, fovealTissueID, between_stps){
                                            "vox_probs_stained_gray.csv"))
   boundary_crossing_files <- file.path(path2data, "boundary_crossing_probs.csv")
   temp <- brainWebAccessors(vox_prob_files, boundary_crossing_files)
-  pAbsorbtion <- temp$pAbsorption
+  pAbsorption <- temp$pAbsorption
   pBoundary <- temp$pBoundary
   pFlow <- temp$pFlow
   # remove temp, but keep the file paths and parameters for reference even though

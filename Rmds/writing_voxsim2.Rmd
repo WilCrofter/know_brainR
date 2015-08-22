@@ -95,10 +95,47 @@ This would just be an array of functions, perhaps passed as a parameter.
 ```
     + In other words, rather than supplying a pair of tables, data prep should supply a custom functions which take tissue id's as arguments and return appropriate stats. Say, `pAbsorption(id)`, `pBoundary(id)`, and `pFlow(id1, id2)`. This will require some restructuring of the first prototype simulator.
 
-### Simulator prototyping
+### Simulator prototype
+
+#### Considerations
 
 Time-memory experiments unambiguously favor maximum use of memory. In R, componentwise arithmetic on arrays is relegated to compiled libraries which, of course, are much faster than interpreted loops. For the simulator under development the cumulative speed difference makes interpreted loops a non-starter.
 
 The arrays in question are equal in size to the phantom volume. In the case of the Area 17 volume, this is a bit less than a megabyte. Since R uses virtual memory which is unlimited on my development system (and many other \*nix systems) the absolute amount of memory required is not a problem. (It could be a problem on Windows machines.) There may be performance penalties associated with frequent memory allocation, so I'll try to avoid that.
 
 The two basic simulator steps are calculation of absorption per voxel, and calculation of flow between voxels. The former could be a multiplication of two arrays followed by an addition and subtraction of two arrays. The latter seems to require multiplication by 6 different arrays (1 per voxel face) and as many additions and subtractions.
+
+#### Code
+
+File `R/voxSim.R` contains a simulator implemented along the lines outlined above. It requires 7 arrays each equal in size to the voxelized volume interest. These are stored in the enviroment which encloses the voxelized volume itself, and created automatically if they don't already exist. They contain, for each voxel, absorption statistics and outflow statistics for each of the 6 voxel faces.
+
+File `R/brainWebSimUtilities.R` contains data preparation utilities for BrainWeb volumes in general, and `R/area17.R` contains utilities for the BrainWeb phantom's primary visual cortex (foveal area) in particular. This volume contains 39x80x39 = 106470 pixels.
+
+Using these utilities, data preparation requires three arguments, the directory containing csv files of voxel level statistics, an identifier indicating the concentration of dye in the foveal area, and a function (or vector of functions) to be executed between simulation steps. These are, respectively, `"../data"`, `22`, and `function(e)laserExcitationForArea17(e,1)` in the call below. The call is wrapped in a timer for performance estimation.
+
+```{r}
+source("../R/area17.R")
+source("../R/brainWebSimUtilities.R")
+source("../R/voxSim.R")
+system.time(
+  a17 <- area17env("../data", 22, function(e)laserExcitationForArea17(e, 1))
+)
+```
+
+The simulator will initialize absorption and flow arrays automatically, if needed. It's done external to the simulator, below, to estimate initialization's performance.
+
+```{r }
+system.time(
+  initSimStatArrays(a17)
+)
+```
+
+Finally, 500 simulation steps (1 nanosecond) are applied to the already initialized volume. System times (AMD dual-core 3.6 GHz) are obviously not prohibitive.
+
+```{r}
+system.time(
+  voxSim(a17, 500)
+)
+```
+
+Testing and verificaiton remain to be done.
