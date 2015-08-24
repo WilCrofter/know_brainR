@@ -1,0 +1,89 @@
+---
+title: "Initial runs with voxSim 2"
+author: "W. Bauer"
+date: "August 23, 2015"
+output: html_document
+---
+
+VoxSim 2, our second and possibly final prototype, can simulate NIR propagation in volumes of the BrainWeb phantom with reasonable performance. Data preparation is geared for the [foveal area of the left primary visual cortex](foveal_17.html). (The foveal area is on a gyrus, fairly close to the scalp, while most of primary visual cortex is in the [Calacarine sulcus extending deep into the brain's interior](scoping_v1.html).)
+
+I'd like to estimate the rates at which photons are absorbed in the foveal region per unit of NIR excitation from a source on the scalp. This, of course, will vary with concentration of dye so a number of runs will be necessary. We'd first like to know how many simulation steps are adequate for a good estimate.
+
+Since the system is linear, it suffices to track the progress of an impulse of excitation injected on the first step. To track the system's total energy and the total energy absorbed in the foveal region, custom functions will be necessary. Tracking total energy is simple:
+
+```{r}
+totalEnergy <- function(e){
+  # initialize a total_energy vector in e if necessary
+  if(!exists("total_energy", envir=e, inherits=FALSE))e$total_energy <- numeric(0)
+  # append current value to the record
+  e$total_energy <- c(e$total_energy, sum(e$state[2,,,]))
+}
+```
+
+Tracking total energy absorbed in the stained area requires that the stained area be indentified. Refer to `R/area17.R`, lines 16-20 for the initialization logic shown below.
+
+```{r}
+absorbedStained <- function(e){
+  # initialize if necessary
+  if(!exists("stained_area", envir=e, inherits=FALSE)){
+    e$absorbed_stained <- numeric()
+    e$stained_area <- matrix(0,3,0)
+    for(ix in seq(20-5, 20+5)){
+      for(iz in seq(20-5, 20+5)){
+        e$stained_area <- 
+          cbind(e$stained_area,
+                c(ix, which(e$state[1,ix,,iz] == e$fovealTissueID), iz))
+      }
+    }
+  }
+  # compute currrent value
+  cval <- sum(apply(e$stained_area, 2, function(v){e$state[3,v[1],v[2],v[3]]}))
+  # append current value to record
+  e$absorbed_stained <- c(e$absorbed_stained, cval)
+}
+```
+
+I'll make runs at both extremes of dye concentrations. These correspond to foveal tissue ID's of 21 and 34 respectively.
+
+```{r}
+source("../R/voxSim.R")
+source("../R/brainWebSimUtilities.R")
+source("../R/area17.R")
+
+#  a function to illuminate an area of the scalp on the first step only
+impulse <- function(e)laserExcitationForArea17(e,1)
+
+# an array of functions to be executed between simulation steps
+btw_fcts <- c(impulse, totalEnergy, absorbedStained)
+
+# phantom volume with low concentration of stain
+phantom_low <- area17env("../data", 21, btw_fcts)
+
+# phantom volume with high concentration of stain
+phantom_high <- area17env("../data", 34, btw_fcts)
+```
+
+The runs shown below were actually done prior to this writing. They were done in 500 step (1 nanosecond) increments until it was clear that the stained region had saturated. Saved results were then used to create the following plots.
+
+```{r eval=FALSE}
+voxSim(phantom_low, 5000)
+voxSim(phantom_high, 5000)
+plot(phantom_high$absorbed_stained, xlab="steps (500/ns)", ylab="absorbed fraction", main = "Absorption in stained area", col='red')
+points(phantom_low$absorbed_stained, col='black')
+legend("topleft", c(expression(0.67~~mu*molar), expression(5~~mu*molar)), col=1:2, pch=19)
+```
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+df <- read.csv("../data/init_runs_voxsim.csv")
+plot(df$abs.high, xlab="steps (500/ns)", ylab="absorbed fraction", main = "Absorption in stained area", col='red')
+points(df$abs.low, col='black')
+legend("topleft", c(expression(0.67~~mu*molar), expression(5~~mu*molar)), col=1:2, pch=19)
+```
+
+In both cases, at least 4000 steps (8 ns) are required for the stained area to saturate. Approximately the same amount are required for the initial 121 units of energy to dissipate. The energy plot is essentially the same for both concentrations so only one is shown.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+plot(df$erg.high, xlab="steps (500/ns)", ylab="units of energy", main = "Energy dissipation", log='y')
+```
+
+(The bend around step 1800 is admittedly curious. Bugs are always a possibility, but so far none are apparent.)
