@@ -15,7 +15,7 @@ brainWebArea17 <- function(fname_BrainWeb_Phantom, fovealTissueID){
   fovealTissueID <- as.raw(fovealTissueID)
   for(ix in seq(20-5, 20+5)){
     for(iz in seq(20-5, 20+5)){
-      a17[ix, min(which(as.integer(a17[ix,,iz])==3)), iz] <- fovealTissueID
+      a17[ix, min(which(as.integer(a17[ix,,iz])==2)), iz] <- fovealTissueID
     }
   }
   d <- dim(a17)
