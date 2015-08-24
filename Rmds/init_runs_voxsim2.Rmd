@@ -63,9 +63,9 @@ phantom_low <- area17env("../data", 21, btw_fcts)
 phantom_high <- area17env("../data", 34, btw_fcts)
 ```
 
-The runs shown below were actually done prior to this writing. They were done in 500 step (1 nanosecond) increments until it was clear that the stained region had saturated. Saved results were then used to create the following plots.
+Preliminary runs suggested that 5000 steps, 10 nanoseconds, would be required for full absorption. This is verified below.
 
-```{r eval=FALSE}
+```{r fig.align='center', fig.show='hold'}
 voxSim(phantom_low, 5000)
 voxSim(phantom_high, 5000)
 plot(phantom_high$absorbed_stained, xlab="steps (500/ns)", ylab="absorbed fraction", main = "Absorption in stained area", col='red')
@@ -73,17 +73,6 @@ points(phantom_low$absorbed_stained, col='black')
 legend("topleft", c(expression(0.67~~mu*molar), expression(5~~mu*molar)), col=1:2, pch=19)
 ```
 
-```{r echo=FALSE, fig.align='center', fig.show='hold'}
-df <- read.csv("../data/init_runs_voxsim.csv")
-plot(df$abs.high, xlab="steps (500/ns)", ylab="absorbed fraction", main = "Absorption in stained area", col='red')
-points(df$abs.low, col='black')
-legend("topleft", c(expression(0.67~~mu*molar), expression(5~~mu*molar)), col=1:2, pch=19)
-```
-
 In both cases, at least 4000 steps (8 ns) are required for the stained area to saturate. Approximately the same amount are required for the initial 121 units of energy to dissipate. The energy plot is essentially the same for both concentrations so only one is shown.
 
-```{r echo=FALSE, fig.align='center', fig.show='hold'}
-plot(df$erg.high, xlab="steps (500/ns)", ylab="units of energy", main = "Energy dissipation", log='y')
-```
-
-(The bend around step 1800 is admittedly curious. Bugs are always a possibility, but so far none are apparent.)
+(Subsequent runs have indicate that the bend around step 1800 corresponds to first encounters of light with gray matter.)
