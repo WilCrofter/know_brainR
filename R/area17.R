@@ -49,13 +49,13 @@ scalpArea17 <- function(e){
 #' @param n the number of steps for which unit excitation should be provided.
 #' @return none. The function has a side effect upon e$state.
 laserExcitationForArea17 <- function(e, n){
-  if(!exists(scalp_indices, envir=e, inherits=FALSE)){
+  if(!exists("scalp_indices", envir=e, inherits=FALSE)){
     e$scalp_indices <- scalpArea17(e)
   }
-  if(e$step <= n){
+  if(e$step < n){
     for(i in 1:nrow(e$scalp_indices)){
-      e$state[2, scalp_indices[i,1], scalp_indices[i,2], scalp_incices[i,3]] <-
-        1 + e$state[2, scalp_indices[i,1], scalp_indices[i,2], scalp_incices[i,3]]
+      e$state[2, e$scalp_indices[i,1], e$scalp_indices[i,2], e$scalp_indices[i,3]] <-
+        1 + e$state[2, e$scalp_indices[i,1], e$scalp_indices[i,2], e$scalp_indices[i,3]]
     }
   }
   invisible()
@@ -70,7 +70,7 @@ laserExcitationForArea17 <- function(e, n){
 #' @param fovealTissueID id of stained gray matter, an integer between 21 and 34
 #' @param between steps an array of functions of the form function(e), where e is an environment
 #' to be executed between simulator steps
-area17env <- function(path2data, fovealTissueID, between_stps){
+area17env <- function(path2data, fovealTissueID, between_steps){
   # instantiate everything in the run-time environment of this function
   step <- 0
   path2_BrainWeb_Phantom <- file.path(path2data, "subject04_crisp_v.rawb")

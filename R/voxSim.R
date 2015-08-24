@@ -14,6 +14,9 @@ voxSim <- function(e, nsteps){
   ny = dim(e$state)[3]
   nz = dim(e$state)[4]
   for(istep in 1:nsteps){
+    # Custom functions to be executed between steps
+    for(fct in e$between_steps)fct(e)
+    # Step:
     energy <- e$state[2,,,]
     # Absorption
     a <- energy*e$absorbed
@@ -44,7 +47,6 @@ voxSim <- function(e, nsteps){
     outflow <- energy*e$zminus
     e$state[2,,,] <- e$state[2,,,] - outflow
     e$state[2,,,-nz] <- e$state[2,,,-nz] + outflow[,,-1]
-    for(fct in e$between_steps)fct(e)
     e$step <- e$step + 1
   }
   e
