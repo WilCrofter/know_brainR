@@ -43,11 +43,11 @@
 
 Know brainR maintained by [WilCrofter](https://github.com/WilCrofter)
 
-[Download this project as a .zip file](https://github.com/WilCrofter/know_brainR/zipball/master)
+[Download this project as a .zip file](https://github.com/brain-initiative/know_brainR/zipball/master)
 
-[Download this project as a tar.gz file](https://github.com/WilCrofter/know_brainR/tarball/master)
+[Download this project as a tar.gz file](https://github.com/brain-initiative/know_brainR/tarball/master)
 
-[View on GitHub](https://github.com/WilCrofter/know_brainR)
+[View on GitHub](https://github.com/brain-initiative/know_brainR)
 
 [![Creative Commons
 License](https://i.creativecommons.org/l/by-nc-sa/3.0/us/88x31.png)](http://creativecommons.org/licenses/by-nc-sa/3.0/us/)\
