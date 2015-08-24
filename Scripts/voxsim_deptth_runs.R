@@ -1,3 +1,12 @@
+# Tracks energy density and absorption as a function of depth in a column beneath
+# the area of excitation at the scalp. This file merely sets up the run. Iterate
+# for 5000 steps after sourcing.
+
+# Source this file from the parent directory of these files
+source("R/voxSim.R")
+source("R/brainWebSimUtilities.R")
+source("R/area17.R")
+
 #  a function to illuminate an area of the scalp on the first step only
 impulse <- function(e)laserExcitationForArea17(e,1)
 
