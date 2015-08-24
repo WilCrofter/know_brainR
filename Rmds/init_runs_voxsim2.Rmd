@@ -73,6 +73,4 @@ points(phantom_low$absorbed_stained, col='black')
 legend("topleft", c(expression(0.67~~mu*molar), expression(5~~mu*molar)), col=1:2, pch=19)
 ```
 
-In both cases, at least 4000 steps (8 ns) are required for the stained area to saturate. Approximately the same amount are required for the initial 121 units of energy to dissipate. The energy plot is essentially the same for both concentrations so only one is shown.
-
-(Subsequent runs have indicate that the bend around step 1800 corresponds to first encounters of light with gray matter.)
+In both cases, at least 4000 steps (8 ns) are required for the stained area to saturate. Approximately the same amount are required for the initial 121 units of energy to dissipate. Energy will be covered in more detail subsequently, so the energy plot is omitted here.
