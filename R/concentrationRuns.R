@@ -33,3 +33,5 @@ for(ic in 21:34){
   ans <- rbind(ans, c(ic, max(e$absorbed_stained)))
   print(ic)
 }
+
+saveRDS(ans, file="ans.rda")
