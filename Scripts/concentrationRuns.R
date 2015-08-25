@@ -34,4 +34,5 @@ for(ic in 21:34){
   print(ic)
 }
 
-saveRDS(ans, file="ans.rda")
+colnames(ans) <- c("id", "absorption")
+write.csv(ans,file="data/concentration_runs.csv")
