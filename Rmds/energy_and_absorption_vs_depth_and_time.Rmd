@@ -1,0 +1,43 @@
+---
+title: "Energy and absorption vs depth & time, BrainWeb area 17"
+author: "W. Bauer"
+date: "August 24, 2015"
+output: html_document
+---
+
+The supporting run was done prior to compiling this note. The following code (not executed) shows what was done.
+
+```{r eval=FALSE}
+# From the project directory, the parent directory of R, Rmds etc:
+source("R/voxsim_depth_runs.R")
+# This results in an initialized phantom with stain concentration id=28 (midpoint.)
+# The prepared phantom is then stepped 5000 times
+voxSim(phantom, 5000)
+```
+
+Results were then saved as csv files, `data/energy_vs_depth.csv` and `data/absorption_vs_depth.csv`.
+
+Excitation consisted of an impulse of light at time 0 on an 11x11 voxel area of the scalp. There was no excitation at subsequent times. (Since the system is linear, response to more complex excitation can be found by shifts and superposition.)
+
+At intervals of 500 steps (1 nanosecond,) the script collected the fraction of photons absorbed and still in flux in an 11x11 voxel column extending from the scalp to the end of a BrainWeb volume which included the stained (id=28, concentration=3 $\mu$molar) area of the primary visual cortex. (For the volume itself see [these details](foveal_17.html).) Stained gray matter is at a depth of approximately 29 mm.
+
+The following plots of collected data give an idea of the course of events at various depths. 
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+erg <- read.table("../data/energy_vs_depth.csv", header = TRUE, as.is=TRUE, sep=",")
+absr <- read.table("../data/absorption_vs_depth.csv", header = TRUE, as.is=TRUE, sep=",")
+matplot(erg[,1], 1e-16+erg[,2:11], type='l', col=rainbow(10), lwd=3, log='y', xlab="depth (mm)", ylab="fraction of photons in flux", main="Energy in Flux")
+abline(v=29, lty=2)
+text(29, 1e-04, "Foveal region, Area 17", pos=4)
+lg <- gsub("X","", names(erg)[2:11])
+lg <- gsub("[.]", " ", lg)
+legend('topright', lg, lwd=3, lty=1:10, col=rainbow(10))
+
+matplot(absr[,1], 1e-16+absr[,2:11], type='l', col=rainbow(10), lwd=3, log='y', xlab="depth (mm)", ylab="fraction of photons absorbed", main="Energy Absorbed")
+abline(v=29, lty=2)
+text(29, 1e-02, "Foveal region, Area 17", pos=4)
+lg <- gsub("X","", names(absr)[2:11])
+lg <- gsub("[.]", " ", lg)
+legend('topright', lg, lwd=3, lty=1:10, col=rainbow(10))
+```
+
