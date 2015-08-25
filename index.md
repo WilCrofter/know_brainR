@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Variation of absorption with concentration of dye](Rmds/absorption_vs_concentration.html)
 -   [Energy and absorption vs depth & time, BrainWeb area 17](Rmds/energy_and_absorption_vs_depth_and_time.html)
 -   [Initial runs with voxSim 2](Rmds/init_runs_voxsim2.html)
 -   [Voxel level simulator, prototype 2, development notes](Rmds/writing_voxsim2.html)

@@ -1,0 +1,36 @@
+---
+title: "Variation of absorption with concentration of dye"
+author: "W. Bauer"
+date: "August 24, 2015"
+output: html_document
+---
+
+```{r echo=FALSE}
+rundata <- read.table("../data/concentration_runs.csv", sep=',', header=TRUE)
+concentrations <- seq(.67, 5, length.out=14)
+```
+
+This note shows that total absorption varies linearly with concentration for concentrations of dye in the range of .67 to 5 $\mu$molar. The foveal region of area 17 was stained with concentrations in that range and total absorption in that region recorded after 5000 simulation steps (10 nanoseconds,) [the amount required for saturation](init_runs_voxsim2.html). Runs were done prior to writing this note using `Scripts/concentrationRuns.R`.
+
+Here, *concentration* refers to the total amount of dye in a volume. How that dye might be distributed between neural membranes, glial membranes, interstitial fluid, the vascular bed and so on, isn't addressed.
+
+The following plot shows the linear relationship. Since units are relative, absorption is shown as multiples of absorption at 1 $\mu$molar.
+
+```{r echo=FALSE, fig.align='center', fig.show='hold'}
+rundata[,"absorption"] <- rundata[,"absorption"]/rundata[2,"absorption"]
+plot(concentrations, rundata[,"absorption"], cex=1.25, main="Variation of absorption with concentration", xlab=expression(paste("concentration (",mu,"molar)")), ylab="absorption")
+rundata[,"concentration"] <- concentrations
+mdl <- lm(absorption ~ concentration, rundata)
+abline(mdl, col='red', lwd=3, lty=2)
+text(3.4, 1.0, expression(absorption %~~% 0.73 + 0.31 %*% concentration), col='red', cex=1.25)
+```
+
+It is clear there is some concavity, and presumably more beyond this limited range, but the R^2^ for the red line is 99% within this range.
+
+```{r echo=FALSE}
+summary(mdl)
+```
+
+The rate of photon absorption in a voxel [varies linearly with its absorption coefficient](vox_stats_stained_gray.html). For many dyes, the aborption coefficient varies linearly with membrane potential or other indicators of neuronal activity. Thus, there is a linear relationship between absorption and neuronal activity in a stained region.
+
+
