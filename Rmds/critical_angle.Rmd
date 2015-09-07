@@ -1,0 +1,18 @@
+---
+title: "A note on critical angle"
+author: "R. Grdina, W. Bauer"
+date: "September 7, 2015"
+output: html_document
+---
+
+VoxSim 2, which simulates NIR propagation in tissue, is based on statistics estimated by Monte Carlo simulation of individual photons. While testing VoxSim 2, we noticed that boundary-crossing statistics were asymmetric, e.g., the probability of crossing from CSF to gray matter was not equal to the probability of crossing from gray matter to CSF. A portion of the table of probabilities is shown below, (three of eleven tissue types.)
+
+.     | CSF | Gray Matter | White Matter
+-------------|-----|-------------|-------------
+CSF          |  1.0 | 0.96 |  0.95
+Gray Matter  | 0.84 | 1.0 | 0.97
+White Matter |  0.81 | 0.90 | 1.0
+
+This concerned us until a review of Snell's Law reminded us that symmetry is not to be expected, since *critical angles* differ on opposite sides of a boundary.
+
+The critical angle is the angle of incidence above which reflection is guaranteed. If the tissues on either side of the boundary have indices of refraction $n_1$ and $n_2$ respectively, the critical angle for light incident from tissue 1 is the maximum angle, $\theta_1,$ such that$$|\frac{n_1}{n_2}sin(\theta_1)| \le 1$$while the critical angle for light incident from tissue 2 is the maximum angle, $\theta_2,$ such that$$|\frac{n_2}{n_1}sin(\theta_2)| \le 1.$$Thus, depending on the ratio, $\frac{n_1}{n_2},$ the probabilities of reflection will differ.
