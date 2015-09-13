@@ -206,7 +206,6 @@ White Matter |  0.81 | 0.90 | 1.0
     + proportion absorbed in each voxel
     + proportion crossing between voxels
     + add and subtract appropriate
-* Being tested; so far so good
 
 ## NIR Simulation: voxel-level
 
@@ -219,6 +218,18 @@ lg <- gsub("X","", names(absr)[2:11])
 lg <- gsub("[.]", " ", lg)
 legend('topright', lg, lwd=3, lty=1:10, col=rainbow(10))
 ```
+
+## NIR Simulation: caveats
+
+Currently, voxel-level simulation
+
+* Indicates **deeper** NIR penetration than is consistent with 
+    + X. D. Li, et. al., [Fluorescent diffuse photon density waves in homogeneous and heterogeneous turbid media](https://scholar.google.com/scholar?cluster=14532648682143150618&hl=en&as_sdt=0,21)
+* Indicates **shallower** NIR penetration than is consistent with:
+    + L. Nie, et. al., [Photoacoustic tomography through a whole adult human skull with a photon recycler](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3487537/)
+    + L. Wang and L. Gao [Photoacoustic microscopy and computed tomography: from bench to bedside](http://www.ncbi.nlm.nih.gov/pmc/articles/PMC4102891/)
+
+Analysis and testing are in progress.
 
 ## Simulation of neural activity
 
