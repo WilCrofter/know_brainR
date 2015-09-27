@@ -1,0 +1,23 @@
+---
+title: "Notes on MCX"
+author: "W. Bauer, R. Grdina"
+date: "September 26, 2015"
+output: html_document
+---
+
+At our Sept. 24 meeting, we (Rahmim, Jha, Grdina, Bauer,) agreed to look into [Monte Carlo eXtreme (MCX)](http://mcx.sourceforge.net/cgi-bin/index.cgi?Home) for possible use on an, as yet ill-defined, inverse problem. This note outlines what its installation and setup would entail. It will also discuss how a series of runs might be automated, to obviate the need for a lab technician or "grunt."
+
+MCX is a "fast photon transport simulator powered by GPU-based parallel computing". It is a free and open source project (GPL 2.0,) developed and maintained by Massachusetts General and Harvard with funding from NIH. It has been in use and development for ~14 years and is considered the gold standard in its field.
+
+MCX is available in several forms, including binaries for *nix and Windows systems, and as a MATLAB/Octave toolbox. We'll limit discussion to linux and OSX, since Windows systems have restrictions on virtual memory which could complicate handling large matrices. We'll also limit attention to the voxel-based version as opposed to the newer mesh-based version, MMC.
+
+There are two relevant programming interfaces, [CUDA](https://en.wikipedia.org/wiki/CUDA) and [OpenCL](https://en.wikipedia.org/wiki/OpenCL). MCX supports both, but since CUDA is common enough, (e.g., all NVIDIA cards and Amazon EC2 machine images,) and since provisioning for OpenCL differs only by a driver and a library, we'll just discuss the CUDA version. OpenCL has the dubious advantage of ability to run, very slowly, on non-GPU enabled platforms.
+
+#### Provisioning
+
+**Hardware.** The CUDA edition of MCX requires a compatible GPU (and driver.) Compatible cards for video gamers cost as little as ~$30 for a GTX 210 with 16 cores. Professional CUDA cards cost between $1k and $10k, e.g., the NVIDIA Tesla K80 with 4992 cores and 24 GB of memory costs about $5000. For cloud deployment, Amazon [G2 instances](http://aws.amazon.com/ec2/instance-types/) feature 1536 cores and 15 GB per GPU and cost about $0.65 per hour, per GPU. Amazon provides pre-configured GPU machine images with drivers installed.
+
+**Software.** In addition to drivers, a CUDA run-time library must be installed and be on the system search path. It's likely the relevant library is included in the [CUDA toolkit](https://developer.nvidia.com/cuda-toolkit). The usual point-and-click installation via browser would work for a local machine. A cloud instance is likely to require command line installation via [secure shell](https://en.wikipedia.org/wiki/Secure_Shell) using either [`wget`](https://en.wikipedia.org/wiki/Wget) or the appropriate package manager. For our local OS, both the toolkit and the CUDA library are available from the Ubuntu package repository. Installation would thus be a one line shell command, e.g., `sudo apt-get install libcuda1-340`. For another example, see [this Amazon page](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/install-LAMP.html).
+
+
+
