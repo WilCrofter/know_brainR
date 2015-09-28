@@ -13,11 +13,35 @@ MCX is available in several forms, including binaries for *nix and Windows syste
 
 There are two relevant programming interfaces, [CUDA](https://en.wikipedia.org/wiki/CUDA) and [OpenCL](https://en.wikipedia.org/wiki/OpenCL). MCX supports both, but since CUDA is common enough, (e.g., all NVIDIA cards and Amazon EC2 machine images,) and since provisioning for OpenCL differs only by a driver and a library, we'll just discuss the CUDA version. OpenCL has the dubious advantage of ability to run, very slowly, on non-GPU enabled platforms.
 
-#### Provisioning
+### Provisioning
 
 **Hardware.** The CUDA edition of MCX requires a compatible GPU (and driver.) Compatible cards for video gamers cost as little as ~$30 for a GTX 210 with 16 cores. Professional CUDA cards cost between $1k and $10k, e.g., the NVIDIA Tesla K80 with 4992 cores and 24 GB of memory costs about $5000. For cloud deployment, Amazon [G2 instances](http://aws.amazon.com/ec2/instance-types/) feature 1536 cores and 15 GB per GPU and cost about $0.65 per hour, per GPU. Amazon provides pre-configured GPU machine images with drivers installed.
 
-**Software.** In addition to drivers, a CUDA run-time library must be installed and be on the system search path. It's likely the relevant library is included in the [CUDA toolkit](https://developer.nvidia.com/cuda-toolkit). The usual point-and-click installation via browser would work for a local machine. A cloud instance is likely to require command line installation via [secure shell](https://en.wikipedia.org/wiki/Secure_Shell) using either [`wget`](https://en.wikipedia.org/wiki/Wget) or the appropriate package manager. For our local OS, both the toolkit and the CUDA library are available from the Ubuntu package repository. Installation would thus be a one line shell command, e.g., `sudo apt-get install libcuda1-340`. For another example, see [this Amazon page](http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/install-LAMP.html).
+**Libraries.** In addition to drivers, a CUDA run-time library must be installed and be on the system search path. It's likely that the relevant library is included in the [CUDA toolkit](https://developer.nvidia.com/cuda-toolkit). The usual point-and-click installation via browser would work for a local machine. A cloud instance is likely to require remote command line installation via [secure shell](https://en.wikipedia.org/wiki/Secure_Shell) using either [`wget`](https://en.wikipedia.org/wiki/Wget) or the appropriate package manager. For our local OS, both the toolkit and the CUDA library are available from the Ubuntu package repository. Installation would thus be a one line shell command, e.g., `sudo apt-get install libcuda1-340`.
 
+**MCX binaries.** MCX binaries for Windows, OSX, and Linux are available [from sourceforge](http://sourceforge.net/projects/mcx/files/mcx%20binary/0.9.7-2%20%28Dark%20Matter%20alpha%20update%202%29/) or (with registration) from the project page. Point-and-click download from a browser would be suitable for a local installation, `wget` via secure shell for installation in the cloud. Binaries are archived, hence must extracted and placed on the system search path. A Matlab/Octave toolbox, MCXLAB, and a standalone GUI, MCXSTUDIO, are also available. Presumably these would be suitable only for local interactive use, not for cloud computing. Download and installation instructions for MCXLAB are [here](http://mcx.sourceforge.net/cgi-bin/index.cgi?Doc/MCXLAB). Binaries for MCXSTUDIO do not appear to be available. (Pascal source is available at sourceforge.)
 
+**MCX source.** It is possible that, down the road, our project would want custom modifications of MCX. This is possible under GPL 2.0, provided the modified code is licensed and distributed similarly. The MCX source repository can be cloned using either [subversion](https://en.wikipedia.org/wiki/Apache_Subversion) or [git](https://en.wikipedia.org/wiki/Git_%28software%29), e.g.,
+```
+svn co https://svn.code.sf.net/p/mcx/svn/mcextreme_cuda/trunk mcx # or
+git clone git://git.code.sf.net/p/mcx/git mcx-git
+```
+An appropriate C/C++ toolchain must, of course, be installed on the development machine and, in the case of cloud deployment, on the remote virtual machine as well.
 
+**Data.** MCX requires a voxelized phantom with voxels labeled by integer tissue types. The [crisp BrainWeb  phantom](http://brainweb.bic.mni.mcgill.ca/cgi/brainweb1?alias=phantom_1.0mm_normal_crisp&download=1) is suitable. We have been using it for some time and have compiled [reasonable optical properties](http://brain-initiative.github.io/know_brainR/Rmds/jacques.html) for its 12 tissue types. Small adjustments to the data may be necessary. The phantom is a binary file of raw bytes and was created on a big-endian machine. The MCX software does not compensate for endian differences, so care must be taken to convert the phantom for little endian processors such as Intel/AMD based cloud instances. It also appears that MCX requires keys to be sequential, e.g., 1, 2, 3, ... 12, or 0, 1, ..., 11, and it is not clear whether 0 or 1 origin is expected. Such adjustments are easily done locally and the result can be transferred to the cloud if necessary by [secure copy](https://en.wikipedia.org/wiki/Secure_copy).
+
+### Running
+
+MCX can be used interactively on a local machine via Matlab. This may be advisable in certain circumstances, but is labor-intensive and slow. If significant runs are eventually  necessary, command line execution and script-based automation make far more sense.
+
+Command line MCX requires two data files, the phantom itself and a configuration file. Options and a sample configuration file are given in the [MCX Readme](http://sourceforge.net/p/mcx/svn/HEAD/tree/mcextreme_cuda/trunk/README.txt). (Scroll down.)
+
+Among other things, the configuration file specifies source and detector coordinates. In the case of emission from the foveal area of BrainWeb's left primary visual cortex, source coordinates were derived [here](http://brain-initiative.github.io/know_brainR/Rmds/foveal_17.html). Nearby scalp coordinates are easy to find. (They correspond to the first tissue type in the y direction which is not background.)
+
+Optical properties--scattering coefficients, absorption coefficients, anisotropy constants, and indices of refraction--for each tissue type are also listed in the configuration file. The format is a line giving the number of tissue types followed by one line per type which contains the above 4 properties. Reasonable properties for the 12 BrainWeb types can be found at our Github site [here](https://github.com/brain-initiative/know_brainR/blob/master/data/tissue_properties.csv).
+
+### Automating
+
+Source and detector coordinates are the most likely parameters to change from run to run. Thus a series of otherwise identical configuration files, can be produced programmatically from a list of source and detector coordinates and a fixed template. Any computer language supporting regular expressions could do this easily. A simple script in e.g., bash or python, could then run MCX on each configuration file in turn, perhaps emailing the job owner when the runs are complete.
+
+[Hackafé](https://github.com/umbc-hackafe) informs us that a continuous integration engine such as [Jenkins](https://jenkins-ci.org/) would be capable of automating more sophisticated tasks via a web interface. This is clearly overkill for now, but worth noting since labor is in short supply.

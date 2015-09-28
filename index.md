@@ -6,6 +6,7 @@
 ![Toy VSD Spectrum](images/toy_spectrum.png)
 
 #### Notes in reverse chronological order
+-   [Notes on MCX](Rmds/MCX.html)
 -   [A note on critical angles](Rmds/critical_angle.html)
 -   [Variation of absorption with concentration of dye](Rmds/absorption_vs_concentration.html)
 -   [Energy and absorption vs depth & time, BrainWeb area 17](Rmds/energy_and_absorption_vs_depth_and_time.html)
